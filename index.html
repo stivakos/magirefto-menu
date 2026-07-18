@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Merci Μαγειρευτό · Μενού — Λάρισα</title>
-<meta name="description" content="Μενού / Τιμοκατάλογος — Merci Μαγειρευτό, μαμαδίστικο φαγητό, Λάρισα. Take away & delivery.">
+<meta name="description" content="Μενού — Merci Μαγειρευτό, σπιτικό φαγητό, Λάρισα. Take away & delivery.">
 </head>
 <body>
 <style>
@@ -25,50 +25,44 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212;
   }
 
-  :root {
-    --paper:#FBF6EE; --raised:#FFFDF8; --ink:#3A2A17; --muted:#6E5A44; --faint:#9A836A;
-    --sea:#A6542E; --mist:#E4D6BE; --mist-2:#F1E7D5; --sand:#C8A24B; --sand-deep:#9C7A2E;
-    --leader:#D8C6A8; --hairline:#E7DCC8; --chip-bg:#F1E7D5; --sun:#E0A96D;
+  :root{
+    --paper:#0E1D34; --raised:#152740; --ink:#F1E7D5; --muted:#B9C4D4; --faint:#7F90A6;
+    --sea:#E0885A; --sand:#D9BE73; --sand-deep:#CBA85C; --leader:#33445E;
+    --hairline:#26374F; --chip-bg:#17293F; --mist-2:#0B1728; --pot:#E0885A;
     --display:"GFS Didot","Palatino Linotype",Palatino,Georgia,serif;
     --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   }
-  @media (prefers-color-scheme: dark){:root{
-    --paper:#1C160F; --raised:#241C12; --ink:#F0E6D6; --muted:#C3B199; --faint:#9E8A70;
-    --sea:#E0885A; --mist:#3A2E1E; --mist-2:#241C12; --sand:#CBA85C; --sand-deep:#E0C77E;
-    --leader:#4A3B28; --hairline:#2E2417; --chip-bg:#26200f; --sun:#C9975B;}}
-  :root[data-theme="light"]{
-    --paper:#FBF6EE; --raised:#FFFDF8; --ink:#3A2A17; --muted:#6E5A44; --faint:#9A836A;
-    --sea:#A6542E; --mist:#E4D6BE; --mist-2:#F1E7D5; --sand:#C8A24B; --sand-deep:#9C7A2E;
-    --leader:#D8C6A8; --hairline:#E7DCC8; --chip-bg:#F1E7D5; --sun:#E0A96D;}
-  :root[data-theme="dark"]{
-    --paper:#1C160F; --raised:#241C12; --ink:#F0E6D6; --muted:#C3B199; --faint:#9E8A70;
-    --sea:#E0885A; --mist:#3A2E1E; --mist-2:#241C12; --sand:#CBA85C; --sand-deep:#E0C77E;
-    --leader:#4A3B28; --hairline:#2E2417; --chip-bg:#26200f; --sun:#C9975B;}
-
   *{box-sizing:border-box;} html{-webkit-text-size-adjust:100%;}
   @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth;}}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.55;}
 
-  .cove{position:relative;overflow:hidden;background:linear-gradient(var(--mist-2),var(--paper));text-align:center;padding:3.25rem 1.25rem 2rem;border-bottom:1px solid var(--hairline);}
-  .cove-sun{position:absolute;top:2rem;right:9%;width:clamp(64px,15vw,104px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 35%,var(--sun),#c98a4e);opacity:.85;}
-  .brand{position:relative;font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,10vw,4.2rem);line-height:1.05;letter-spacing:.01em;margin:0;text-wrap:balance;}
-  .brand .merci{display:block;font-size:.42em;letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:var(--sea);margin:0 0 .35rem;}
-  .brand-sub{position:relative;margin:.9rem 0 0;font-size:.74rem;font-weight:600;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase;color:var(--muted);}
+  .cove{position:relative;overflow:hidden;background:linear-gradient(160deg,#122540,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
+  .pot{position:absolute;top:1.6rem;left:6%;width:clamp(78px,17vw,128px);height:auto;}
+  .steam{fill:none;stroke:#EAD9BE;stroke-width:4;stroke-linecap:round;opacity:.0;transform-origin:center;}
+  @media (prefers-reduced-motion:no-preference){
+    .steam{animation:steam 3.4s ease-in-out infinite;}
+    .steam.s2{animation-delay:.7s;} .steam.s3{animation-delay:1.4s;}
+  }
+  @media (prefers-reduced-motion:reduce){ .steam{opacity:.5;} }
+  @keyframes steam{0%{opacity:0;transform:translateY(6px) scaleY(.85);}
+    35%{opacity:.75;} 70%{opacity:.35;} 100%{opacity:0;transform:translateY(-6px) scaleY(1.1);}}
 
-  .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.65rem 1.1rem;max-width:44rem;margin:0 auto;scrollbar-width:none;}
+  .brand{position:relative;font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,10vw,4.2rem);line-height:1.05;letter-spacing:.01em;margin:0;text-wrap:balance;}
+  .brand .merci{display:block;font-size:.4em;letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:var(--sea);margin:0 0 .3rem;}
+  .brand-sub{position:relative;margin:.9rem 0 0;font-size:.74rem;font-weight:600;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase;color:var(--sand);}
+
+  .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:44rem;margin:0 auto;scrollbar-width:none;justify-content:center;}
   .rail-inner::-webkit-scrollbar{display:none;}
-  .chip{flex:0 0 auto;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.05rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.9rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
-  .chip-en{display:block;font-size:.56rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-top:.1rem;}
+  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.15rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.95rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}
-  .chip.is-active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
-  .chip:focus-visible,a:focus-visible{outline:2px solid var(--sea);outline-offset:2px;}
+  .chip.is-active{background:var(--sea);border-color:var(--sea);color:#10203A;}
+  .chip:focus-visible,a:focus-visible{outline:2px solid var(--sand);outline-offset:2px;}
 
   main{max-width:44rem;margin:0 auto;padding:.75rem 1.25rem 2rem;}
-  section{scroll-margin-top:4.6rem;padding-top:2.4rem;}
-  .sec-head{display:flex;align-items:baseline;gap:.75rem;border-bottom:2px solid var(--ink);padding-bottom:.55rem;}
-  .sec-head h2{font-family:var(--display);font-weight:400;font-size:clamp(1.7rem,5.5vw,2.1rem);margin:0;letter-spacing:.01em;}
-  .sec-head .en-label{margin-left:auto;font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--sand-deep);white-space:nowrap;}
+  section{scroll-margin-top:4.6rem;padding-top:2.6rem;}
+  .sec-head{display:flex;align-items:baseline;gap:.75rem;border-bottom:2px solid var(--sand-deep);padding-bottom:.55rem;}
+  .sec-head h2{font-family:var(--display);font-weight:400;font-size:clamp(1.8rem,6vw,2.3rem);margin:0;letter-spacing:.01em;color:var(--ink);}
   .items{list-style:none;margin:0;padding:0;}
   .item{padding:.72rem 0;border-bottom:1px solid var(--hairline);}
   .item:last-child{border-bottom:none;}
@@ -76,9 +70,10 @@
   .gr{font-weight:600;}
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
-  .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;}
+  .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
   .price-tba{color:var(--faint);font-weight:400;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
+  .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
 
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
@@ -90,511 +85,65 @@
 </style>
 
 <header class="cove">
-  <div class="cove-sun" aria-hidden="true"></div>
+  <svg class="pot" viewBox="0 0 130 130" aria-hidden="true">
+    <path class="steam s1" d="M50 44 C44 36 56 32 50 24 C44 16 56 12 52 6"/>
+    <path class="steam s2" d="M67 44 C61 36 73 32 67 24 C61 16 73 12 69 6"/>
+    <path class="steam s3" d="M84 44 C78 36 90 32 84 24 C78 16 90 12 86 6"/>
+    <rect x="30" y="60" width="70" height="46" rx="9" fill="#C9975B"/>
+    <rect x="30" y="60" width="70" height="14" rx="7" fill="#E0A96D"/>
+    <rect x="22" y="52" width="86" height="12" rx="6" fill="#E0885A"/>
+    <rect x="58" y="45" width="14" height="9" rx="4" fill="#E0885A"/>
+    <rect x="14" y="72" width="12" height="20" rx="6" fill="#B07C3F"/>
+    <rect x="104" y="72" width="12" height="20" rx="6" fill="#B07C3F"/>
+  </svg>
   <h1 class="brand" lang="el"><span class="merci">Merci</span>Μαγειρευτό</h1>
-  <p class="brand-sub">Μαμαδίστικο φαγητό · Λάρισα</p>
+  <p class="brand-sub">Σπιτικό φαγητό · Λάρισα</p>
 </header>
 
-<nav class="rail" aria-label="Κατηγορίες μενού / Menu categories">
+<nav class="rail" aria-label="Κατηγορίες μενού">
   <div class="rail-inner">
-    <a class="chip" href="#mageirefta">Ημέρας<span class="chip-en">Home-style</span></a>
-    <a class="chip" href="#kotopoulo">Κοτόπουλο<span class="chip-en">Chicken</span></a>
-    <a class="chip" href="#xoirino">Χοιρινό<span class="chip-en">Pork</span></a>
-    <a class="chip" href="#moschari">Μοσχάρι<span class="chip-en">Beef</span></a>
-    <a class="chip" href="#arni">Αρνί &amp; Κατσίκι<span class="chip-en">Lamb &amp; Goat</span></a>
-    <a class="chip" href="#souvla">Σούβλα &amp; Ψητά<span class="chip-en">Grill</span></a>
-    <a class="chip" href="#thalassina">Θαλασσινά &amp; Ψάρια<span class="chip-en">Seafood &amp; Fish</span></a>
-    <a class="chip" href="#makaronies">Ζυμαρικά<span class="chip-en">Pasta</span></a>
-    <a class="chip" href="#nistisima">Νηστίσιμα<span class="chip-en">Fasting / Vegan</span></a>
-    <a class="chip" href="#salates">Σαλάτες<span class="chip-en">Salads</span></a>
-    <a class="chip" href="#orektika">Ορεκτικά<span class="chip-en">Appetizers</span></a>
-    <a class="chip" href="#synodeytika">Συνοδευτικά<span class="chip-en">Sides</span></a>
-    <a class="chip" href="#glyka">Γλυκά<span class="chip-en">Desserts</span></a>
-    <a class="chip" href="#anapsyktika">Αναψυκτικά<span class="chip-en">Soft Drinks</span></a>
-    <a class="chip" href="#mpyres">Μπύρες<span class="chip-en">Beers</span></a>
-    <a class="chip" href="#krasia">Κρασιά<span class="chip-en">Wines</span></a>
-    <a class="chip" href="#kouver">Κουβέρ &amp; Ψωμί<span class="chip-en">Bread</span></a>
+    <a class="chip" href="#mageirefta">Μαγειρευτά</a>
+    <a class="chip" href="#tis-oras">Της ώρας</a>
+    <a class="chip" href="#synodeytika">Συνοδευτικά</a>
+    <a class="chip" href="#salates">Σαλάτες</a>
+    <a class="chip" href="#glyka">Γλυκά</a>
   </div>
 </nav>
 
 <main>
   <section id="mageirefta" aria-labelledby="h-mageirefta">
     <div class="sec-head">
-      <h2 id="h-mageirefta" lang="el">Ημέρας</h2>
-      <span class="en-label">Home-style</span>
+      <h2 id="h-mageirefta" lang="el">Μαγειρευτά</h2>
     </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Παστίτσιο</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μουσακάς</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μελτζάνες παπουτσάκι</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μακαρόνια με κιμά</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γίγαντες Καστοριάς</span><span class="dots"></span><span class="price">6,70 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φασολάδα Πρεσπών</span><span class="dots"></span><span class="price">6,70 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρεβύθια</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φακές</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γεμιστά</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φασολάκια πλατιά</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αρακάς</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπάμιες φούρνου</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες αυγολέμονο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κολοκυθάκι γεμιστό</span><span class="dots"></span><span class="price price-tba">—</span></div>
-        <p class="desc" lang="el">Με κιμά &amp; αυγολέμονο</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριάμ</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ιμάμ</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σπανακόρυζο</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανόρυζο</span><span class="dots"></span><span class="price">6,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πρασόρυζο</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γιουβαρλάκια</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόσουπα</span><span class="dots"></span><span class="price">7,50 €</span></div>
-        <p class="desc" lang="el">Με χωριάτικο κοτόπουλο</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαρόσουπα</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανόσουπα</span><span class="dots"></span><span class="price">5,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κολοκυθόσουπα νηστίσιμη</span><span class="dots"></span><span class="price">5,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σούπα μινεστρόνε</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μαγειρίτσα</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ψαρόσουπα</span><span class="dots"></span><span class="price">8,30 €</span></div>
-        <p class="desc" lang="el">Με κοκκινόψαρο &amp; λαβράκι</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαριδόσουπα</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-    </ul>
+    <p class="empty-note">— σύντομα —</p>
   </section>
 
-  <section id="kotopoulo" aria-labelledby="h-kotopoulo">
+  <section id="tis-oras" aria-labelledby="h-tis-oras">
     <div class="sec-head">
-      <h2 id="h-kotopoulo" lang="el">Κοτόπουλο</h2>
-      <span class="en-label">Chicken</span>
+      <h2 id="h-tis-oras" lang="el">Της ώρας</h2>
     </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με μπάμιες</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με ρύζι</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με πατάτες</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρολό κοτόπουλο</span><span class="dots"></span><span class="price">8,50 €</span></div>
-        <p class="desc" lang="el">Χειροποίητο ρολό</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Κόκκορας κοκκινιστός</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο γιουβέτσι</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο kokkiniστό</span><span class="dots"></span><span class="price">7,50 €</span></div>
-        <p class="desc" lang="el">Συνοδεύεται από ρύζι</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με αρακά</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με πιπεριές &amp; κρέμα γάλακτος</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο λεμονάτο</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με πατάτες τηγανητές</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τηγανιά κοτόπουλο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινή τηγανιά με μανιτάρια</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο a la creme με μανιτάρια</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με πατάτες φούρνου</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με πατάτες τηγανητές</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με ρύζι</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με μπάμιες στον φούρνο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο κοκκινιστό με λαζανάκι</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με φασολάκια</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπουτάκια κοτόπουλο με μανέστρα</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπούτι κοτόπουλο με κριθαράκι</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοτόπουλο με λαχανικά στον φούρνο</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλετάκια κοτόπουλο a la creme</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλετάκια κοτόπουλο a la creme με πέννες</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλετάκια κοτόπουλο a la creme με σκιουφιχτά</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο σχάρας</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο a la creme</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο μπούτι κοτόπουλο</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο μπούτι κοτόπουλο a la creme</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι κοτόπουλο μερίδα <span class="portion">300gr</span></span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι κοτόπουλο</span><span class="dots"></span><span class="price">7,50 €</span></div>
-        <p class="desc" lang="el">1 Τεμάχιο 300gr</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκια κοτόπουλο με πατάτες στον...</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι γαλοπούλα (μερίδα)</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεφτεδάκια κοτόπουλο</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι κοτόπουλο a la creme</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοπανάκι κοτόπουλο τηγανητό μερίδα</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ κοτόπουλο στη γάστρα</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ κοτόπουλο στη γάστρα με πατάτες</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="xoirino" aria-labelledby="h-xoirino">
-    <div class="sec-head">
-      <h2 id="h-xoirino" lang="el">Χοιρινό</h2>
-      <span class="en-label">Pork</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με λάχανο</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό λεμονάτο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινή τηγανιά</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινή πρασοτηγανιά</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζόλα χοιρινή φούρνου</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό κοκκινιστό κατσαρόλας</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με αρακά</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με μανιτάρια</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με πιπεριές</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με πιπεριές &amp; μανιτάρια</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με λαχανικά στον φούρνο</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με πράσο</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με πράσο στο φούρνο</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό κρασάτο</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με μελιτζάνες στο φούρνο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό κατσαρόλας με πατάτες γιαχνί</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό γάστρας με πατάτες baby</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινό με πατάτες στη γάστρα</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρολό χοιρινό</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ribs χοιρινά με πουρέ γλυκοπατάτας</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χοιρινές μπριζόλες λαιμού με πατάτες στ...</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζόλα χοιρινή σχάρας</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζόλα χοιρινή στο φούρνο με πατάτες</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζολάκια χοιρινά λαιμού μερίδα</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κέμπάπ χοιρινό</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ χοιρινό στη γάστρα</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ χοιρινό στη γάστρα με πατάτες</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοντοσούβλι χοιρινό μερίδα</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουβλάκια χοιρινά μερίδα <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κότσι χοιρινό στη γάστρα</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ χοιρινό</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ χοιρινό αλά κρεμ</span><span class="dots"></span><span class="price">11,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουτζουκάκια τηγανητά</span><span class="dots"></span><span class="price">7,50 €</span></div>
-        <p class="desc" lang="el">Δες τις επιλογές</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουτζουκάκια κοκκινιστά</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουτζουκάκια φούρνου</span><span class="dots"></span><span class="price">7,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεφτέδες σε σάλτσα</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεφτεδάκια φούρνου με πατάτες</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεφτεδάκια κοκκινιστά με πουρέ πατάτας</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Παπουτσάκια</span><span class="dots"></span><span class="price">7,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σκιουφιχτά με κιμά</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σπετσοφάι</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λουκάνικο με πράσο στον φούρνο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πανσέτα μερίδα <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="moschari" aria-labelledby="h-moschari">
-    <div class="sec-head">
-      <h2 id="h-moschari" lang="el">Μοσχάρι</h2>
-      <span class="en-label">Beef</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Μοσχάρι κοκκινιστό με ρύζι</span><span class="dots"></span><span class="price">9,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι κοκκινιστό</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι γιουβέτσι</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι στιφάδο</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι με μελιτζάνες</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι λεμονάτο</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι λεμονάτο με πατάτες</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι λεμονάτο με πουρέ πατάτας</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι λεμονάτο με ρύζι</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαράκι κοκκινιστό κατσαρόλας</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχάρι στιφάδο με δαμάσκηνα</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχάρι κοκκινιστό</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Οσομπούκο</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μάγουλα μοσχαρίσια με παπαρδέλες</span><span class="dots"></span><span class="price">11,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γλώσσα μοχαρίσια κοκκινιστή</span><span class="dots"></span><span class="price">11,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κότσι μοσχαρίσιο στη γάστρα</span><span class="dots"></span><span class="price">14,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Συκώτι μοσχαρίσιο φούρνου</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι μοσχαρίσιο</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι μοσχαρίσιο μερίδα</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι ανάμεικτο</span><span class="dots"></span><span class="price">7,90 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκια ανάμεικτα μερίδα</span><span class="dots"></span><span class="price">8,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπιφτέκι ανάμεικτο a la creme</span><span class="dots"></span><span class="price">8,90 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="arni" aria-labelledby="h-arni">
-    <div class="sec-head">
-      <h2 id="h-arni" lang="el">Αρνί &amp; Κατσίκι</h2>
-      <span class="en-label">Lamb &amp; Goat</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Αρνάκι φρικασέ</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κότσι αρνίσιο στη γάστρα</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αρνί σούβλας μερίδα <span class="portion">330gr</span></span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αρνί σούβλας 500gr</span><span class="dots"></span><span class="price">20,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αρνάκι με πατάτες φούρνου</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αρνάκι γάλακτος με πατάτες στον φούρνο</span><span class="dots"></span><span class="price">13,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Παιδάκια πρόβεια σχάρας μερίδα</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κατσικάκι σούβλας μερίδα <span class="portion">330gr</span></span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κατσικάκι σούβλας 500gr</span><span class="dots"></span><span class="price">20,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κατσικάκι σούβλας 1kg</span><span class="dots"></span><span class="price">40,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοντοσούβλι πρόβειο μερίδα</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοντοσούβλι κοτόπουλο μερίδα</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="souvla" aria-labelledby="h-souvla">
-    <div class="sec-head">
-      <h2 id="h-souvla" lang="el">Σούβλα &amp; Ψητά</h2>
-      <span class="en-label">Grill</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Rib-eye</span><span class="dots"></span><span class="price">30,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Rib eye Αργεντινής</span><span class="dots"></span><span class="price">28,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζόλα μοσχαρίσια μερίδα</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μοσχαρίσια μπριζόλα γάλακτος</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ μοσχαρίσιο</span><span class="dots"></span><span class="price">12,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ μοσχαρίσιο a la creme</span><span class="dots"></span><span class="price">13,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο</span><span class="dots"></span><span class="price">11,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο a la creme</span><span class="dots"></span><span class="price">12,90 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λουκάνικο χωριάτικο μερίδα</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ χοιρινό σούβλας μερίδα <span class="portion">330gr</span></span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ χοιρινό σούβλας 500gr</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεμπάπ χοιρινό σούβλας 1kg</span><span class="dots"></span><span class="price">20,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοκορέτσι φούρνου <span class="portion">180-200gr</span></span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοκορέτσι μερίδα</span><span class="dots"></span><span class="price">15,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοκορέτσι σούβλας 1kg</span><span class="dots"></span><span class="price">40,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κοκορέτσι σούβλας 500gr</span><span class="dots"></span><span class="price">22,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουβλάκια κοτόπουλο μπούτι μερίδα <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουβλάκι χοιρινό <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουβλάκι κοτόπουλο μπούτι <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λουκάνικο χωριάτικο <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πανσέτα χοιρινή <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπριζολάκι χοιρινό <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φαγκρί ψητό</span><span class="dots"></span><span class="price">24,00 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="thalassina" aria-labelledby="h-thalassina">
-    <div class="sec-head">
-      <h2 id="h-thalassina" lang="el">Θαλασσινά &amp; Ψάρια</h2>
-      <span class="en-label">Seafood &amp; Fish</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Καλαμάρι κοκκινιστό</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Καλαμάρι με κοφτό μακαρόνι</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Καλαμάρι κριθαρότο</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Καλαμαράκια τηγανητά</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουπιές με σπανάκι</span><span class="dots"></span><span class="price">9,50 €</span></div>
-        <p class="desc" lang="el">Φρέσκες</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουπιές κοκκινιστές</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουπιές κρασάτες κοκκινιστές</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουπιές κρασάτες</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουπιές στιφάδο φρέσκιες</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γιουβέτσι σουπιές</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χταπόδι με κοφτό μακαρόνι</span><span class="dots"></span><span class="price">9,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χταπόδι στιφάδο</span><span class="dots"></span><span class="price">10,00 €</span></div>
-        <p class="desc" lang="el">Φρέσκο</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Χταπόδι στιφάδο με δαμάσκηνα</span><span class="dots"></span><span class="price">8,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χταπόδι στο φούρνο με πατάτες</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χταπόδι στο φούρνο με ρύζι</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ριζότο θαλασσινών</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κριθαρότο με χταπόδι</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κριθαρότο με γαρίδες</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κριθαρότο θαλασσινών</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κριθαρότο λαχανικών</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαρίδες κοκκινιστές</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαρίδες τηγανητές</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαριδομακαρονάδα</span><span class="dots"></span><span class="price">11,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαριδοσαλάτα</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Θραψαλάκι τηγανητό</span><span class="dots"></span><span class="price">8,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος λεμονάτος</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος τηγανητός</span><span class="dots"></span><span class="price">11,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος στιφάδο</span><span class="dots"></span><span class="price">11,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος στιφάδο φούρνου</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος φούρνου με σκορδαλιά</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος σπανάκι</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γλώσσες τηγανητές</span><span class="dots"></span><span class="price">11,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γλώσσες πλακί</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαβράκι λεμονάτο</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαβράκι φούρνου</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαβράκι με λαχανικά στον φούρνο</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τσιπούρα λεμονάτη</span><span class="dots"></span><span class="price">13,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τσιπούρα φούρνου <span class="portion">400gr</span></span><span class="dots"></span><span class="price">13,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τσιπούρα φούρνου 500-600gr <span class="portion">500-600gr</span></span><span class="dots"></span><span class="price">25,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σκορπίνα λεμονάτη</span><span class="dots"></span><span class="price">14,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σολομός</span><span class="dots"></span><span class="price">13,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σολομός φούρνου</span><span class="dots"></span><span class="price">13,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φιλέτο σολομού με λαχανικά</span><span class="dots"></span><span class="price">12,70 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πέννες a la creme με σολομό</span><span class="dots"></span><span class="price">11,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γαλέος φιλέτο με ρύζι &amp; ανάμεικτα ψητά...</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="makaronies" aria-labelledby="h-makaronies">
-    <div class="sec-head">
-      <h2 id="h-makaronies" lang="el">Ζυμαρικά</h2>
-      <span class="en-label">Pasta</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Μακαρόνια καρμπονάρα</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μακαρόνια ολικής άλεσης με κιμά</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαζάνια με κιμά</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κανελόνια νηστίσιμα</span><span class="dots"></span><span class="price">7,30 €</span></div>
-        <p class="desc" lang="el">Με κιμά σόγιας</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουφλέ ζυμαρικών</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουφλέ ζυμαρικών νηστίσιμο</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουφλέ ζυμαρικών με τυριά &amp; μανιτάρια</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες με τόνο</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες κοκκινιστοί με κιμά</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες νηστίσιμοι με φρέσκι... <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">6,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες νηστίσιμοι με κρέμα...</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λαχανοντολμάδες νηστίσιμοι <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Γιουβέτσι με χταπόδι</span><span class="dots"></span><span class="price">9,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πέννες a la creme</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πέννες με κιμά</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πέννες με κιμά σόγιας vegan</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πέννες με μοσχάρι κοκκινιστό</span><span class="dots"></span><span class="price">10,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κεφτεδάκια κοκκινιστά με πέννες</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="nistisima" aria-labelledby="h-nistisima">
-    <div class="sec-head">
-      <h2 id="h-nistisima" lang="el">Νηστίσιμα</h2>
-      <span class="en-label">Fasting / Vegan</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Μουσακάς νηστίσιμος</span><span class="dots"></span><span class="price">7,50 €</span></div>
-        <p class="desc" lang="el">Με κιμά σόγιας</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Παστίτσιο νηστίσιμο</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Παστίτσιο vegan</span><span class="dots"></span><span class="price">6,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρολάκια μελιτζάνας με ντομάτα &amp; φέτα</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μελιτζανάτο φούρνου με ντομάτα &amp; φέτα</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μελιτζάνες γιαχνί</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μελιτζάνες με κόκκινη σάλτσα στο φούρνο</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρεβύθια κοκκινιστά φούρνου</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρεβύθια φούρνου με σπανάκι</span><span class="dots"></span><span class="price">5,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μανιτάρια στιφάδο</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κολοκυθάκια γεμιστά με αυγολέμονο</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κολοκυθάκια γεμιστά νηστίσιμα</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες ογκρατέν</span><span class="dots"></span><span class="price">7,30 €</span></div>
-        <p class="desc" lang="el">Με μανιτάρια</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες ογκρατέν με μανιτάρια</span><span class="dots"></span><span class="price">6,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες ογκρατέν με μανιτάρια &amp; μπεικόν</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="salates" aria-labelledby="h-salates">
-    <div class="sec-head">
-      <h2 id="h-salates" lang="el">Σαλάτες</h2>
-      <span class="en-label">Salads</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Χωριάτικη</span><span class="dots"></span><span class="price">6,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Αγγουροντομάτα</span><span class="dots"></span><span class="price">4,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μαρούλι</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πολίτικη</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Merci</span><span class="dots"></span><span class="price">7,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Merci Caesar&#x27;s</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Merci Caesar&#x27;s νηστίσιμη με γαρίδες...</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Φρουτοσαλάτα</span><span class="dots"></span><span class="price">5,00 €</span></div>
-        <p class="desc" lang="el">Με φρούτα εποχής</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατατοσαλάτα</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Λάχανο &amp; καρότο</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπρόκολο</span><span class="dots"></span><span class="price">4,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κουνουπίδι</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατζάρια</span><span class="dots"></span><span class="price">3,50 €</span></div>
-        <p class="desc" lang="el">Υγιεινή &amp; νόστιμη επιλογή</p></li>
-    </ul>
-  </section>
-
-  <section id="orektika" aria-labelledby="h-orektika">
-    <div class="sec-head">
-      <h2 id="h-orektika" lang="el">Ορεκτικά</h2>
-      <span class="en-label">Appetizers</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Φέτα</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τζατζίκι <span class="portion">100gr</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Τυροκαυτερή <span class="portion">100gr</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ουγγαρέζα <span class="portion">100gr</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Χτυπητή <span class="portion">100gr</span></span><span class="dots"></span><span class="price">2,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πίτα παραδοσιακή</span><span class="dots"></span><span class="price">0,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πίτα καλαμποκιού <span class="portion">Τεμάχιο</span></span><span class="dots"></span><span class="price">0,70 €</span></div></li>
-    </ul>
+    <p class="empty-note">— σύντομα —</p>
   </section>
 
   <section id="synodeytika" aria-labelledby="h-synodeytika">
     <div class="sec-head">
       <h2 id="h-synodeytika" lang="el">Συνοδευτικά</h2>
-      <span class="en-label">Sides</span>
     </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες τηγανητές</span><span class="dots"></span><span class="price">4,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες φούρνου</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πατάτες country</span><span class="dots"></span><span class="price">6,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ρύζι</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Πουρές πατάτας</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μακαρόνια βουτύρου</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μακαρόνια ολικής άλεσης</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-    </ul>
+    <p class="empty-note">— σύντομα —</p>
+  </section>
+
+  <section id="salates" aria-labelledby="h-salates">
+    <div class="sec-head">
+      <h2 id="h-salates" lang="el">Σαλάτες</h2>
+    </div>
+    <p class="empty-note">— σύντομα —</p>
   </section>
 
   <section id="glyka" aria-labelledby="h-glyka">
     <div class="sec-head">
       <h2 id="h-glyka" lang="el">Γλυκά</h2>
-      <span class="en-label">Desserts</span>
     </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Προφιτερόλ</span><span class="dots"></span><span class="price">3,80 €</span></div>
-        <p class="desc" lang="el">Γλυκιά απόλαυση</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Cheesecake</span><span class="dots"></span><span class="price">3,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σοκολατόπιτα</span><span class="dots"></span><span class="price">4,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Εκμέκ</span><span class="dots"></span><span class="price">3,80 €</span></div>
-        <p class="desc" lang="el">Γλυκιά απόλαυση</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Mousse σοκολάτα</span><span class="dots"></span><span class="price">3,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μπισκότο Oreo</span><span class="dots"></span><span class="price">3,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Banoffee</span><span class="dots"></span><span class="price">3,80 €</span></div>
-        <p class="desc" lang="el">Γλυκιά απόλαυση</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Pancake σοκολάτα &amp; μπισκότο <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">5,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κανταΐφι με κρέμα νηστίσιμη, ξηρό...</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Pancakes με μέλι <span class="portion">3 Τεμάχια</span></span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="anapsyktika" aria-labelledby="h-anapsyktika">
-    <div class="sec-head">
-      <h2 id="h-anapsyktika" lang="el">Αναψυκτικά</h2>
-      <span class="en-label">Soft Drinks</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola light 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola zero 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Fanta πορτοκαλάδα 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Fanta πορτοκαλάδα μπλε 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Fanta λεμονάδα 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Sprite 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Σουρωτή 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola 500ml</span><span class="dots"></span><span class="price">2,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola light 500ml</span><span class="dots"></span><span class="price">2,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Coca-Cola zero 500ml</span><span class="dots"></span><span class="price">2,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Amita Motion 330ml</span><span class="dots"></span><span class="price">2,20 €</span></div>
-        <p class="desc" lang="el">Φρεσκάδα &amp; βιταμίνες</p></li>
-      <li class="item"><div class="item-line"><span class="gr">Amita πορτοκάλι, βερύκοκο &amp; μήλο 250ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Νερό 500ml</span><span class="dots"></span><span class="price">0,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Νερό 1lt</span><span class="dots"></span><span class="price">1,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Νερό 1.5lt</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-    </ul>
-  </section>
-
-  <section id="mpyres" aria-labelledby="h-mpyres">
-    <div class="sec-head">
-      <h2 id="h-mpyres" lang="el">Μπύρες</h2>
-      <span class="en-label">Beers</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Heineken 330ml</span><span class="dots"></span><span class="price price-tba">—</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Μάμος 330ml</span><span class="dots"></span><span class="price">2,30 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Amster Radler 330ml</span><span class="dots"></span><span class="price">2,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Fix άνευ 330ml</span><span class="dots"></span><span class="price">2,50 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="krasia" aria-labelledby="h-krasia">
-    <div class="sec-head">
-      <h2 id="h-krasia" lang="el">Κρασιά</h2>
-      <span class="en-label">Wines</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Κρασί λευκό μοσχοφίλερο Κτήμα...</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κρασί ροζέ ξηρό Κτήμα Πουλτσίδης 187ml</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Κρασί κόκκινο ξηρό Κτήμα Πουλτσίδης...</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
-    </ul>
-  </section>
-
-  <section id="kouver" aria-labelledby="h-kouver">
-    <div class="sec-head">
-      <h2 id="h-kouver" lang="el">Κουβέρ &amp; Ψωμί</h2>
-      <span class="en-label">Bread</span>
-    </div>
-    <ul class="items">
-      <li class="item"><div class="item-line"><span class="gr">Ψωμί</span><span class="dots"></span><span class="price">0,50 €</span></div></li>
-      <li class="item"><div class="item-line"><span class="gr">Ψωμί μισό</span><span class="dots"></span><span class="price">1,00 €</span></div></li>
-    </ul>
+    <p class="empty-note">— σύντομα —</p>
   </section>
 </main>
 
@@ -603,7 +152,6 @@
   <p class="foot-place">Λάρισα · Take away &amp; Delivery</p>
   <p class="foot-hours" lang="el">Δευτέρα – Σάββατο, 12:00 – 15:30</p>
   <div class="legal">
-    <p lang="el">Οι αναγραφόμενες τιμές αφορούν παραγγελίες μέσω πλατφορμών delivery.</p>
     <p lang="el">Οι τιμές περιλαμβάνουν όλους τους νόμιμους φόρους. Ο καταναλωτής δεν έχει την υποχρέωση να πληρώσει εάν δε λάβει το νόμιμο παραστατικό στοιχείο (απόδειξη-τιμολόγιο).</p>
   </div>
 </footer>
