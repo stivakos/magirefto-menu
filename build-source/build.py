@@ -19,6 +19,8 @@ FONT_FACES = "\n".join(re.findall(r'@font-face\s*\{.*?\}',
 # MENU  — 5 fixed categories. Each item: dict(name, price, desc, portion).
 # price: "8,50 €" or None (renders "—").  Empty list = no dishes yet.
 # ---------------------------------------------------------------------------
+MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού (αλλάζει κάθε μέρα)
+
 MENU = [
     ("mageirefta", "Μαγειρευτά",   []),
     ("tis-oras",   "Της ώρας",     []),
@@ -71,6 +73,7 @@ CSS = """
 
   .cove{position:relative;overflow:hidden;background:linear-gradient(160deg,#122540,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
   .pot{position:absolute;top:1.6rem;left:6%;width:clamp(78px,17vw,128px);height:auto;}
+  .pan{position:absolute;top:2.2rem;right:6%;width:clamp(74px,16vw,120px);height:auto;}
   .steam{fill:none;stroke:#EAD9BE;stroke-width:4;stroke-linecap:round;opacity:.0;transform-origin:center;}
   @media (prefers-reduced-motion:no-preference){
     .steam{animation:steam 3.4s ease-in-out infinite;}
@@ -83,6 +86,7 @@ CSS = """
   .brand{position:relative;font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,10vw,4.2rem);line-height:1.05;letter-spacing:.01em;margin:0;text-wrap:balance;}
   .brand .merci{display:block;font-size:.4em;letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:var(--sea);margin:0 0 .3rem;}
   .brand-sub{position:relative;margin:.9rem 0 0;font-size:.74rem;font-weight:600;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase;color:var(--sand);}
+  .menu-date{position:relative;margin:.55rem 0 0;font-family:var(--display);font-size:clamp(1.15rem,4.5vw,1.5rem);color:var(--ink);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
   .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:44rem;margin:0 auto;scrollbar-width:none;justify-content:center;}
@@ -128,6 +132,17 @@ POT_SVG = '''<svg class="pot" viewBox="0 0 130 130" aria-hidden="true">
     <rect x="104" y="72" width="12" height="20" rx="6" fill="#B07C3F"/>
   </svg>'''
 
+POT_SVG_UNUSED = None
+PAN_SVG = '''<svg class="pan" viewBox="0 0 140 120" aria-hidden="true">
+    <path class="steam s1" d="M52 40 C46 32 58 28 52 20 C46 12 58 8 54 2"/>
+    <path class="steam s2" d="M70 40 C64 32 76 28 70 20 C64 12 76 8 72 2"/>
+    <ellipse cx="60" cy="78" rx="46" ry="30" fill="#B07C3F"/>
+    <ellipse cx="60" cy="73" rx="46" ry="30" fill="#C9975B"/>
+    <ellipse cx="60" cy="71" rx="37" ry="22" fill="#2C2013"/>
+    <ellipse cx="52" cy="65" rx="9" ry="5" fill="#E0885A" opacity=".7"/>
+    <rect x="100" y="66" width="40" height="11" rx="5.5" fill="#7A5326" transform="rotate(-16 100 66)"/>
+  </svg>'''
+
 HTML = f'''<!doctype html>
 <html lang="el">
 <head>
@@ -144,8 +159,10 @@ HTML = f'''<!doctype html>
 
 <header class="cove">
   {POT_SVG}
+  {PAN_SVG}
   <h1 class="brand" lang="el"><span class="merci">Merci</span>Μαγειρευτό</h1>
-  <p class="brand-sub">Σπιτικό φαγητό · Λάρισα</p>
+  <p class="brand-sub">Σπιτικό φαγητό</p>
+  <p class="menu-date" lang="el">{esc(MENU_DATE)}</p>
 </header>
 
 <nav class="rail" aria-label="Κατηγορίες μενού">
