@@ -231,7 +231,11 @@ CSS = """
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
   .foot-place{font-size:.72rem;font-weight:700;letter-spacing:.26em;text-indent:.26em;text-transform:uppercase;color:var(--sea);margin:0 0 1.2rem;}
-  .foot-hours{font-size:.9rem;color:var(--ink);margin:0 0 1rem;}
+  .foot-addr{font-size:.9rem;margin:.1rem 0 .1rem;}
+  .foot-addr a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--faint);}
+  .foot-hours{font-size:.9rem;color:var(--ink);margin:.5rem 0 .5rem;}
+  .foot-contact{font-size:1rem;font-weight:700;margin:0 0 1rem;}
+  .foot-contact a{color:var(--sand);text-decoration:none;}
   .legal{max-width:34rem;margin:0 auto;font-size:.76rem;line-height:1.6;color:var(--muted);}
   .legal p{margin:.35rem 0;}
 """
@@ -436,8 +440,10 @@ HTML = f'''<!doctype html>
 
 <footer>
   <p class="foot-brand" lang="el">Merci Μαγειρευτό</p>
-  <p class="foot-place">Λάρισα · Take away &amp; Delivery</p>
+  <p class="foot-place">Take away &amp; Delivery</p>
+  <p class="foot-addr"><a href="https://www.google.com/maps/search/?api=1&amp;query=%CE%9A%CE%B1%CF%81%CE%B4%CE%AF%CF%84%CF%83%CE%B7%CF%82+22+%CE%9B%CE%AC%CF%81%CE%B9%CF%83%CE%B1" target="_blank" rel="noopener">📍 Καρδίτσης 22, 41335 Λάρισα</a></p>
   <p class="foot-hours" lang="el">Δευτέρα – Σάββατο, 12:00 – 16:00</p>
+  <p class="foot-contact"><a href="tel:2414010332">☎ 2414010332</a> &nbsp;·&nbsp; <a href="tel:+306987992887">📱 698 799 2887</a></p>
   <div class="legal">
     <p lang="el">Οι τιμές περιλαμβάνουν όλους τους νόμιμους φόρους. Ο καταναλωτής δεν έχει την υποχρέωση να πληρώσει εάν δε λάβει το νόμιμο παραστατικό στοιχείο (απόδειξη-τιμολόγιο).</p>
   </div>
