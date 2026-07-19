@@ -202,8 +202,7 @@ CSS = """
   .order-sum small{color:var(--muted);font-size:.8rem;}
   .order-actions{max-width:44rem;margin:.55rem auto 0;display:flex;gap:.6rem;}
   .order-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:none;border-radius:14px;padding:.8rem 1rem;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;}
-  .order-btn.sms{flex:2 1 auto;background:#2FB457;color:#08351a;}
-  .order-btn.viber{flex:1 1 auto;background:#7360F2;color:#fff;}
+  .order-btn.sms{flex:1 1 auto;background:#2FB457;color:#08351a;}
   .order-btn:active{transform:scale(.97);}
   .order-clear{flex:0 0 auto;background:transparent;border:none;color:var(--faint);font-size:.8rem;cursor:pointer;text-decoration:underline;}
   main{padding-bottom:6rem;}
@@ -252,7 +251,6 @@ ORDER_JS = r'''
   var bar = document.getElementById("orderBar");
   var elTotal = document.getElementById("orderTotal");
   var elCount = document.getElementById("orderCount");
-  var btn = document.getElementById("orderBtn");
   var clearBtn = document.getElementById("orderClear");
   var toast = document.getElementById("toast");
   if (!bar) return;
@@ -362,19 +360,6 @@ ORDER_JS = r'''
     window.location.href = "sms:" + NUMBER + sep + "body=" + encodeURIComponent(txt);
   });
 
-  btn.addEventListener("click", function (e) {
-    e.preventDefault();
-    if (!validTime()) return;
-    var txt = buildText();
-    copyText(txt).then(function () {
-      showToast("📋 Η παραγγελία αντιγράφηκε! Ανοίγουμε το Viber — κάνε επικόλληση (paste) στη συνομιλία και στείλ' την.");
-    }).catch(function () {
-      showToast("Άνοιξε το Viber και γράψε μας την παραγγελία σου.");
-    }).finally(function () {
-      setTimeout(function () { window.location.href = "viber://chat?number=" + encodeURIComponent(NUMBER); }, 600);
-    });
-  });
-
   refresh();
 })();
 '''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False)) \
@@ -428,7 +413,6 @@ HTML = f'''<!doctype html>
   </div>
   <div class="order-actions">
     <a class="order-btn sms" id="orderSms" href="#" role="button">💬 Παραγγελία με SMS</a>
-    <a class="order-btn viber" id="orderBtn" href="#" role="button">Viber</a>
   </div>
   <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
 </div>
