@@ -111,9 +111,9 @@ sections_html = "\n\n".join(secs)
 
 CSS = """
   :root{
-    --paper:#0E1D34; --raised:#152740; --ink:#F1E7D5; --muted:#B9C4D4; --faint:#7F90A6;
-    --sea:#E0885A; --sand:#D9BE73; --sand-deep:#CBA85C; --leader:#33445E;
-    --hairline:#26374F; --chip-bg:#17293F; --mist-2:#0B1728; --pot:#E0885A;
+    --paper:#2B487A; --raised:#33528A; --ink:#F3ECDF; --muted:#C6CFDF; --faint:#93A2BE;
+    --sea:#E0885A; --sand:#E4CE94; --sand-deep:#D3B978; --leader:#4C67A0;
+    --hairline:#3D5A90; --chip-bg:#264270; --mist-2:#233C67; --pot:#E0885A;
     --display:"GFS Didot","Palatino Linotype",Palatino,Georgia,serif;
     --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   }
@@ -121,7 +121,11 @@ CSS = """
   @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth;}}
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.55;}
 
-  .cove{position:relative;overflow:hidden;background:linear-gradient(160deg,#122540,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
+  /* ---- faint large logo watermark ---- */
+  .wm{position:fixed;inset:0;z-index:0;pointer-events:none;background:url("assets/merci-logo.png") no-repeat center 43%;background-size:min(82vw,600px);opacity:.06;}
+  .cove,main,footer{position:relative;z-index:1;}
+
+  .cove{overflow:hidden;background:linear-gradient(160deg,#345699,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
   .pot{position:absolute;top:1.6rem;left:6%;width:clamp(78px,17vw,128px);height:auto;}
   .pan{position:absolute;top:2.2rem;right:6%;width:clamp(74px,16vw,120px);height:auto;}
   .steam{fill:none;stroke:#EAD9BE;stroke-width:4;stroke-linecap:round;opacity:.0;transform-origin:center;}
@@ -334,6 +338,8 @@ HTML = f'''<!doctype html>
 {FONT_FACES}
 {CSS}
 </style>
+
+<div class="wm" aria-hidden="true"></div>
 
 <header class="cove">
   {POT_SVG}
