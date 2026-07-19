@@ -146,7 +146,7 @@ CSS = """
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.55;}
 
   /* ---- faint large logo watermark ---- */
-  .wm{position:fixed;inset:0;z-index:0;pointer-events:none;background:url("assets/merci-logo.png") no-repeat center 43%;background-size:min(82vw,600px);opacity:.11;}
+  .wm{position:fixed;inset:0;z-index:0;pointer-events:none;background:url("assets/merci-logo.png") no-repeat center 43%;background-size:min(82vw,600px);opacity:.16;}
   .cove,main,footer{position:relative;z-index:1;}
 
   .cove{overflow:hidden;background:linear-gradient(160deg,#345699,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
