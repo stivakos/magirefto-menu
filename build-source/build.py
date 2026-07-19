@@ -16,59 +16,74 @@ DAILY_SOURCE = os.path.join(HERE, "..", "DAILY_MENU.xlsx")
 # GFS Didot fonts are vendored in the repo so the build runs anywhere (cloud/CI, no Mac).
 FONT_FACES = open(os.path.join(HERE, "fonts.css"), encoding="utf-8").read()
 
-MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού
 VIBER_NUMBER = "+306987992887"  # Viber μαγαζιού (για tel: link)
 VIBER_DISPLAY = "+30 698 799 2887"
 
-# category = dict(slug, label, note, items[]) ; item = dict(name, price, desc, portion)
-MENU = [
-    {"slug": "mageirefta", "label": "Μαγειρευτά", "items": [
-        {"name": "Κοτόσουπα",                        "price": 7.5},
-        {"name": "Γεμιστά",                          "price": 6.5},
-        {"name": "Παστίτσιο",                        "price": 8.5},
-        {"name": "Μουσακάς",                         "price": 8.5},
-        {"name": "Γίγαντες Καστοριάς",               "price": 6.7},
-        {"name": "Μοσχάρι γιουβέτσι",                "price": 9.5},
-        {"name": "Μοσχάρι με αρακά",                 "price": 9.5},
-        {"name": "Χταπόδι κριθαρότο",                "price": 10.5},
-        {"name": "Σουφλέ ζυμαρικών",                 "price": 7.5},
-        {"name": "Κεφτεδάκια τηγανητά & κοκκινιστά", "price": 7.5},
-    ]},
-    {"slug": "tis-oras", "label": "Της ώρας", "items": [
-        {"name": "Σνίτσελ κοτόπουλο",                "price": 8.5},
-        {"name": "Φιλέτο κοτόπουλο",                 "price": 8.0},
-        {"name": "Καλαμαράκια",                      "price": 9.0},
-        {"name": "Μπακαλιάρος τηγανητός",            "price": 10.0},
-        {"name": "Σολομός φούρνου",                  "price": 12.0},
-        {"name": "Φιλετίνια κοτόπουλο a la creme",   "price": 7.5},
-    ]},
-    {"slug": "synodeytika", "label": "Συνοδευτικά",
-     "note": "…και σε μερίδα για μεγαλύτερη απόλαυση!", "items": [
-        {"name": "Πατάτες τηγανητές",               "price": None},
-        {"name": "Πατάτες ψητές",                   "price": None},
-        {"name": "Πουρές πατάτας",                  "price": None},
-        {"name": "Ρύζι",                            "price": None},
-    ]},
-    {"slug": "salates", "label": "Σαλάτες", "items": [
-        {"name": "Αγγουροντομάτα",                  "price": 3.5},
-        {"name": "Χωριάτικη",                       "price": 5.0},
-        {"name": "Λάχανο - Καρότο",                 "price": 3.0},
-        {"name": "Μαρούλι",                         "price": 3.5},
-        {"name": "Παντζάρι",                        "price": 3.5},
-        {"name": "Κουνουπίδι",                      "price": 3.5},
-        {"name": "Φέτα (Π.Ο.Π.)",                   "price": 4.0},
-        {"name": "Φρουτοσαλάτα εποχής",             "price": 4.5},
-    ]},
-    {"slug": "glyka", "label": "Γλυκά", "items": [
-        {"name": "Πορτοκαλόπιτα",                   "price": 4.0},
-        {"name": "Σοκολατόπιτα",                    "price": 5.0},
-    ]},
-    {"slug": "anapsyktika", "label": "Αναψυκτικά / Ποτά", "items": [
-        {"name": "Νερό 330ml",                      "price": 0.5},
-        {"name": "Νερό 1,5lt",                      "price": 1.5},
-        {"name": "Coca-Cola / Zero / Light 330ml",  "price": 1.8},
-    ]},
+# ---------------------------------------------------------------------------
+# Daily menu = parsed from menu-today.txt (owner edits it, even from the phone
+# via GitHub) + dishes/prices looked up in DAILY_MENU.xlsx by Α/Α.
+#   ΗΜΕΡΟΜΗΝΙΑ: Δευτέρα 20/7/26
+#   Μαγειρευτά: 1 8 16 17
+#   Της ώρας: 2 3 9
+# ---------------------------------------------------------------------------
+import unicodedata, openpyxl
+
+CATEGORIES = [   # (site label, slug, xlsx tab name)
+    ("Μαγειρευτά",        "mageirefta",  "Μαγειρευτά"),
+    ("Της ώρας",          "tis-oras",    "Της ώρας"),
+    ("Συνοδευτικά",       "synodeytika", "Συνοδευτικά"),
+    ("Σαλάτες",           "salates",     "Σαλάτες"),
+    ("Γλυκά",             "glyka",       "Γλυκά"),
+    ("Αναψυκτικά / Ποτά", "anapsyktika", "Αναψυκτικά - Ποτά"),
 ]
+NOTES = {"synodeytika": "…και σε μερίδα για μεγαλύτερη απόλαυση!"}
+HIDE_PRICE = {"synodeytika"}          # συνοδευτικά: χωρίς τιμή στο site
+MENU_TXT = os.path.join(HERE, "..", "menu-today.txt")
+
+def _norm(s):                          # lower, strip accents & spaces/slashes
+    s = "".join(c for c in unicodedata.normalize("NFD", str(s))
+                if unicodedata.category(c) != "Mn")
+    return re.sub(r"[\s/]+", "", s).lower()
+
+MENU_DATE = ""
+selection = {}
+_slug_by_norm = {_norm(lbl): slug for lbl, slug, _ in CATEGORIES}
+for raw in open(MENU_TXT, encoding="utf-8"):
+    line = raw.strip()
+    if not line or line.startswith("#") or ":" not in line:
+        continue
+    key, val = line.split(":", 1)
+    kn = _norm(key)
+    if kn in ("ημερομηνια", "date"):
+        MENU_DATE = val.strip()
+    elif kn in _slug_by_norm:
+        selection[_slug_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
+
+_wb = openpyxl.load_workbook(DAILY_SOURCE, data_only=True)
+def _tab_rows(tab):
+    ws = _wb[tab]; d = {}
+    for r in range(2, ws.max_row + 1):
+        aa, name, price = ws.cell(r, 1).value, ws.cell(r, 2).value, ws.cell(r, 3).value
+        if aa is None or not name:
+            continue
+        try:
+            d[int(aa)] = (str(name).strip(), float(price) if price not in (None, "") else None)
+        except (TypeError, ValueError):
+            continue
+    return d
+
+MENU = []
+for label, slug, tab in CATEGORIES:
+    rows = _tab_rows(tab)
+    items = []
+    for n in selection.get(slug, []):
+        if n in rows:
+            name, price = rows[n]
+            items.append({"name": name, "price": None if slug in HIDE_PRICE else price})
+    cat = {"slug": slug, "label": label, "items": items}
+    if slug in NOTES:
+        cat["note"] = NOTES[slug]
+    MENU.append(cat)
 
 def esc(s): return html.escape(str(s), quote=True)
 def fmt_price(v):
