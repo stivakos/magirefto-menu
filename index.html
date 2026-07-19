@@ -37,7 +37,7 @@
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:1rem;line-height:1.55;}
 
   /* ---- faint large logo watermark ---- */
-  .wm{position:fixed;inset:0;z-index:0;pointer-events:none;background:url("assets/merci-logo.png") no-repeat center 43%;background-size:min(82vw,600px);opacity:.06;}
+  .wm{position:fixed;inset:0;z-index:0;pointer-events:none;background:url("assets/merci-logo.png") no-repeat center 43%;background-size:min(82vw,600px);opacity:.11;}
   .cove,main,footer{position:relative;z-index:1;}
 
   .cove{overflow:hidden;background:linear-gradient(160deg,#345699,var(--paper));text-align:center;padding:3.25rem 1.25rem 2.2rem;border-bottom:1px solid var(--hairline);}
@@ -55,7 +55,7 @@
   .brand{position:relative;font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,10vw,4.2rem);line-height:1.05;letter-spacing:.01em;margin:0;text-wrap:balance;}
   .brand .merci{display:block;font-size:.4em;letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:var(--sea);margin:0 0 .3rem;}
   .brand-sub{position:relative;margin:.9rem 0 0;font-size:.74rem;font-weight:600;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase;color:var(--sand);}
-  .menu-date{position:relative;margin:.55rem 0 0;font-family:var(--display);font-size:clamp(1.15rem,4.5vw,1.5rem);color:var(--ink);}
+  .menu-date{position:relative;display:inline-block;margin:.8rem 0 0;padding:.32rem 1.15rem;background:var(--sand);color:#22324F;font-weight:800;font-size:clamp(1.5rem,6vw,2.15rem);letter-spacing:.01em;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.28);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
   .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:46rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
@@ -254,7 +254,7 @@
       <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
       <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
     </div>
-    <label class="time-field">Ώρα<input type="time" id="orderTime" min="12:00" max="15:30" step="300"></label>
+    <label class="time-field">Ώρα<input type="time" id="orderTime" min="12:00" max="16:00" step="300"></label>
   </div>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
@@ -269,7 +269,7 @@
 <footer>
   <p class="foot-brand" lang="el">Merci Μαγειρευτό</p>
   <p class="foot-place">Λάρισα · Take away &amp; Delivery</p>
-  <p class="foot-hours" lang="el">Δευτέρα – Σάββατο, 12:00 – 15:30</p>
+  <p class="foot-hours" lang="el">Δευτέρα – Σάββατο, 12:00 – 16:00</p>
   <div class="legal">
     <p lang="el">Οι τιμές περιλαμβάνουν όλους τους νόμιμους φόρους. Ο καταναλωτής δεν έχει την υποχρέωση να πληρώσει εάν δε λάβει το νόμιμο παραστατικό στοιχείο (απόδειξη-τιμολόγιο).</p>
   </div>
@@ -404,9 +404,9 @@
   btn.addEventListener("click", function (e) {
     e.preventDefault();
     var t = timeEl.value;
-    if (!t) { showToast("Διάλεξε ώρα (12:00–15:30)."); timeEl.focus(); return; }
+    if (!t) { showToast("Διάλεξε ώρα (12:00–16:00)."); timeEl.focus(); return; }
     var mins = parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
-    if (mins < 720 || mins > 930) { showToast("Η ώρα πρέπει να είναι μεταξύ 12:00 και 15:30."); timeEl.focus(); return; }
+    if (mins < 720 || mins > 960) { showToast("Η ώρα πρέπει να είναι μεταξύ 12:00 και 16:00."); timeEl.focus(); return; }
     var txt = buildText();
     copyText(txt).then(function () {
       showToast("📋 Η παραγγελία αντιγράφηκε! Ανοίγουμε το Viber — κάνε επικόλληση (paste) στη συνομιλία και στείλ' την.");
