@@ -74,6 +74,15 @@ def esc(s): return html.escape(str(s), quote=True)
 def fmt_price(v):
     return None if v is None else f"{float(v):.2f}".replace(".", ",") + " €"
 
+# time slots 12:00–16:00 every 15' for the order dropdown
+_slots, _h, _m = [], 12, 0
+while _h < 16 or (_h == 16 and _m == 0):
+    _slots.append(f"{_h:02d}:{_m:02d}")
+    _m += 15
+    if _m == 60: _m, _h = 0, _h + 1
+TIME_OPTIONS = '<option value="">Διάλεξε ώρα…</option>' + "".join(
+    f'<option value="{s}">{s}</option>' for s in _slots)
+
 def item_html(it):
     portion = f' <span class="portion">{esc(it["portion"])}</span>' if it.get("portion") else ""
     p = fmt_price(it.get("price"))
@@ -185,7 +194,8 @@ CSS = """
   .seg-btn{border:none;background:transparent;color:var(--muted);font-weight:600;font-size:.88rem;padding:.5rem .8rem;cursor:pointer;transition:background-color .15s,color .15s;}
   .seg-btn.active{background:var(--sea);color:#10203A;}
   .time-field{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.88rem;font-weight:600;}
-  .time-field input{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.45rem .55rem;font-size:.95rem;font-family:inherit;}
+  .time-field select{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.5rem .6rem;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:menulist;appearance:menulist;}
+  .time-field select:required:invalid{color:var(--faint);font-weight:600;}
   .order-inner{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:.8rem;}
   .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
   .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -410,7 +420,7 @@ HTML = f'''<!doctype html>
       <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
       <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
     </div>
-    <label class="time-field">Ώρα<input type="time" id="orderTime" min="12:00" max="16:00" step="300"></label>
+    <label class="time-field">Ώρα<select id="orderTime">{TIME_OPTIONS}</select></label>
   </div>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>

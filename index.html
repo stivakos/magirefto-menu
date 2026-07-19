@@ -100,7 +100,8 @@
   .seg-btn{border:none;background:transparent;color:var(--muted);font-weight:600;font-size:.88rem;padding:.5rem .8rem;cursor:pointer;transition:background-color .15s,color .15s;}
   .seg-btn.active{background:var(--sea);color:#10203A;}
   .time-field{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.88rem;font-weight:600;}
-  .time-field input{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.45rem .55rem;font-size:.95rem;font-family:inherit;}
+  .time-field select{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.5rem .6rem;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:menulist;appearance:menulist;}
+  .time-field select:required:invalid{color:var(--faint);font-weight:600;}
   .order-inner{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:.8rem;}
   .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
   .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -257,7 +258,7 @@
       <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
       <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
     </div>
-    <label class="time-field">Ώρα<input type="time" id="orderTime" min="12:00" max="16:00" step="300"></label>
+    <label class="time-field">Ώρα<select id="orderTime"><option value="">Διάλεξε ώρα…</option><option value="12:00">12:00</option><option value="12:15">12:15</option><option value="12:30">12:30</option><option value="12:45">12:45</option><option value="13:00">13:00</option><option value="13:15">13:15</option><option value="13:30">13:30</option><option value="13:45">13:45</option><option value="14:00">14:00</option><option value="14:15">14:15</option><option value="14:30">14:30</option><option value="14:45">14:45</option><option value="15:00">15:00</option><option value="15:15">15:15</option><option value="15:30">15:30</option><option value="15:45">15:45</option><option value="16:00">16:00</option></select></label>
   </div>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
