@@ -9,12 +9,12 @@ or None (side dishes shown without price).
 import re, html, os, json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ONIRO = "/Users/stavros/oniropetra-menu/index.html"
 OUT = os.path.join(HERE, "..", "index.html")
-XLSX_OUT = "/Users/stavros/Documents/ΜΑΓΕΙΡΕΥΤΟ/DAILY_MENU.xlsx"
+# DAILY_MENU.xlsx (owner-maintained source of common dishes) lives in the repo root.
+DAILY_SOURCE = os.path.join(HERE, "..", "DAILY_MENU.xlsx")
 
-FONT_FACES = "\n".join(re.findall(r'@font-face\s*\{.*?\}',
-                                  open(ONIRO, encoding="utf-8").read(), re.S))
+# GFS Didot fonts are vendored in the repo so the build runs anywhere (cloud/CI, no Mac).
+FONT_FACES = open(os.path.join(HERE, "fonts.css"), encoding="utf-8").read()
 
 MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού
 VIBER_NUMBER = "+306987992887"  # Viber μαγαζιού (για tel: link)
