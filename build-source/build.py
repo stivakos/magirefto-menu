@@ -187,6 +187,10 @@ CSS = """
   .order-call{display:block;text-align:center;margin:.45rem auto 0;font-size:.8rem;color:var(--muted);text-decoration:none;}
   .order-call b{color:var(--sand);}
 
+  /* ---- toast ---- */
+  .toast{position:fixed;left:50%;bottom:6.5rem;transform:translate(-50%,1.2rem);z-index:30;max-width:calc(100% - 2rem);width:24rem;background:#17293F;color:var(--ink);border:1px solid var(--sea);border-radius:14px;padding:.8rem 1rem;font-size:.9rem;line-height:1.4;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;}
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
   .foot-place{font-size:.72rem;font-weight:700;letter-spacing:.26em;text-indent:.26em;text-transform:uppercase;color:var(--sea);margin:0 0 1.2rem;}
@@ -220,15 +224,38 @@ PAN_SVG = '''<svg class="pan" viewBox="0 0 140 120" aria-hidden="true">
 ORDER_JS = r'''
 (function () {
   var DATE = __DATE_JSON__;
+  var NUMBER = __NUMBER_JSON__;
   var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
   var bar = document.getElementById("orderBar");
   var elTotal = document.getElementById("orderTotal");
   var elCount = document.getElementById("orderCount");
   var btn = document.getElementById("orderBtn");
   var clearBtn = document.getElementById("orderClear");
+  var toast = document.getElementById("toast");
   if (!bar) return;
 
   function money(n) { return n.toFixed(2).replace(".", ",") + " €"; }
+
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { toast.classList.remove("show"); }, 6000);
+  }
+
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+    return new Promise(function (res, rej) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = t; ta.setAttribute("readonly", "");
+        ta.style.position = "absolute"; ta.style.left = "-9999px";
+        document.body.appendChild(ta); ta.select();
+        document.execCommand("copy"); document.body.removeChild(ta); res();
+      } catch (e) { rej(e); }
+    });
+  }
   function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
 
   function refresh() {
@@ -279,13 +306,20 @@ ORDER_JS = r'''
 
   btn.addEventListener("click", function (e) {
     e.preventDefault();
-    var txt = encodeURIComponent(buildText());
-    window.location.href = "viber://forward?text=" + txt;
+    var txt = buildText();
+    copyText(txt).then(function () {
+      showToast("📋 Η παραγγελία αντιγράφηκε! Ανοίγουμε το Viber — κάνε επικόλληση (paste) στη συνομιλία και στείλ' την.");
+    }).catch(function () {
+      showToast("Άνοιξε το Viber και γράψε μας την παραγγελία σου.");
+    }).finally(function () {
+      setTimeout(function () { window.location.href = "viber://chat?number=" + encodeURIComponent(NUMBER); }, 600);
+    });
   });
 
   refresh();
 })();
-'''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False))
+'''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False)) \
+   .replace("__NUMBER_JSON__", json.dumps(VIBER_NUMBER, ensure_ascii=False))
 
 HTML = f'''<!doctype html>
 <html lang="el">
@@ -327,6 +361,8 @@ HTML = f'''<!doctype html>
   </div>
   <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
 </div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <footer>
   <p class="foot-brand" lang="el">Merci Μαγειρευτό</p>
