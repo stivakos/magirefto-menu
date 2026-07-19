@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build the Merci Μαγειρευτό online menu (index.html) + DAILY_MENU.xlsx.
+"""Build the Merci Μαγειρευτό online menu (index.html).
 
 Single source of truth = MENU below. Categories are fixed; dishes edited on
 request. Prices come from Μαγειρευτό_Μενού.xlsx (owner's rule). Price = number
@@ -470,34 +470,6 @@ with open(OUT, "w", encoding="utf-8") as f:
     f.write(HTML)
 print(f"Wrote {OUT}  ({len(MENU)} categories, {sum(len(c['items']) for c in MENU)} dishes)")
 
-# ---------------------------------------------------------------------------
-# DAILY_MENU.xlsx  — one tab per category: Α/Α | Ονομασία πιάτου | Τιμή
-# ---------------------------------------------------------------------------
-try:
-    import openpyxl
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-    wb = openpyxl.Workbook(); wb.remove(wb.active)
-    hdr_fill = PatternFill("solid", fgColor="1F3A5F"); hdr_font = Font(bold=True, color="F1E7D5")
-    thin = Side(style="thin", color="D9D2C4"); border = Border(thin, thin, thin, thin)
-    center = Alignment(horizontal="center", vertical="center")
-    def safe(t): return re.sub(r'[\\/?*\[\]:]', "-", t)[:31]
-    for c in MENU:
-        ws = wb.create_sheet(safe(c["label"]))
-        ws.append(["Α/Α", "Ονομασία πιάτου", "Τιμή (€)"])
-        for i in range(1, 4):
-            cell = ws.cell(1, i); cell.fill = hdr_fill; cell.font = hdr_font; cell.alignment = center; cell.border = border
-        for idx, it in enumerate(c["items"], 1):
-            ws.append([idx, it["name"], it.get("price")])
-            ws.cell(ws.max_row, 1).alignment = center
-            pc = ws.cell(ws.max_row, 3)
-            if it.get("price") is not None: pc.number_format = '0.00" €"'
-            pc.alignment = center
-            for col in range(1, 4): ws.cell(ws.max_row, col).border = border
-        ws.column_dimensions["A"].width = 6
-        ws.column_dimensions["B"].width = 34
-        ws.column_dimensions["C"].width = 12
-        ws.freeze_panes = "A2"
-    wb.save(XLSX_OUT)
-    print(f"Wrote {XLSX_OUT}  ({len(MENU)} tabs)")
-except Exception as e:
-    print("xlsx skipped:", e)
+# NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
+# tabs: Α/Α | Ονομασία | Τιμή). The daily selection ("μαγειρευτά 1 2 4 …") is read FROM
+# it to populate MENU above. This build no longer writes/overwrites it (would wipe edits).
