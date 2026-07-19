@@ -6,7 +6,7 @@ Single source of truth = MENU below. Categories are fixed; dishes edited on
 request. Prices come from Μαγειρευτό_Μενού.xlsx (owner's rule). Price = number
 or None (side dishes shown without price).
 """
-import re, html, os
+import re, html, os, json
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ONIRO = "/Users/stavros/oniropetra-menu/index.html"
@@ -17,6 +17,8 @@ FONT_FACES = "\n".join(re.findall(r'@font-face\s*\{.*?\}',
                                   open(ONIRO, encoding="utf-8").read(), re.S))
 
 MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού
+VIBER_NUMBER = "+306987992887"  # Viber μαγαζιού (για tel: link)
+VIBER_DISPLAY = "+30 698 799 2887"
 
 # category = dict(slug, label, note, items[]) ; item = dict(name, price, desc, portion)
 MENU = [
@@ -75,14 +77,19 @@ def fmt_price(v):
 def item_html(it):
     portion = f' <span class="portion">{esc(it["portion"])}</span>' if it.get("portion") else ""
     p = fmt_price(it.get("price"))
-    if p:
-        line = (f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span>'
-                f'<span class="dots"></span><span class="price">{esc(p)}</span></div>')
-    else:
-        line = f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span></div>'
+    price_span = f'<span class="price">{esc(p)}</span>' if p else ""
+    dots = '<span class="dots"></span>' if p else '<span class="dots"></span>'
+    qty = ('<div class="qty" data-qty="0">'
+           '<button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button>'
+           '<span class="q-n">0</span>'
+           '<button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div>')
+    pnum = "" if it.get("price") is None else f'{float(it["price"]):.2f}'
+    line = (f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span>'
+            f'{dots}{price_span}{qty}</div>')
     if it.get("desc"):
         line += f'\n        <p class="desc" lang="el">{esc(it["desc"])}</p>'
-    return f'      <li class="item">{line}</li>'
+    return (f'      <li class="item" data-name="{esc(it["name"])}" data-price="{pnum}">'
+            f'{line}</li>')
 
 nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
 
@@ -155,6 +162,31 @@ CSS = """
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
 
+  /* ---- quantity stepper ---- */
+  .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
+  .qty button{width:30px;height:30px;border-radius:50%;border:1px solid var(--sea);background:transparent;color:var(--sea);font-size:1.15rem;line-height:1;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:background-color .15s,color .15s;}
+  .qty .q-plus{background:var(--sea);color:#10203A;border-color:var(--sea);}
+  .qty button:active{transform:scale(.92);}
+  .qty .q-minus,.qty .q-n{display:none;}
+  .qty .q-n{min-width:1.4ch;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .qty[data-qty]:not([data-qty="0"]) .q-minus,
+  .qty[data-qty]:not([data-qty="0"]) .q-n{display:inline-flex;align-items:center;justify-content:center;}
+  .item.in-cart{background:color-mix(in srgb,var(--sea) 8%,transparent);}
+
+  /* ---- order bar ---- */
+  .order-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;transform:translateY(120%);transition:transform .28s ease;background:color-mix(in srgb,var(--mist-2) 96%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--hairline);padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));}
+  .order-bar.show{transform:translateY(0);}
+  .order-inner{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:.8rem;}
+  .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
+  .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .order-sum small{color:var(--muted);font-size:.8rem;}
+  .order-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:.5rem;background:#7360F2;color:#fff;border:none;border-radius:14px;padding:.75rem 1.15rem;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;}
+  .order-btn:active{transform:scale(.97);}
+  .order-clear{flex:0 0 auto;background:transparent;border:none;color:var(--faint);font-size:.8rem;cursor:pointer;text-decoration:underline;}
+  main{padding-bottom:6rem;}
+  .order-call{display:block;text-align:center;margin:.45rem auto 0;font-size:.8rem;color:var(--muted);text-decoration:none;}
+  .order-call b{color:var(--sand);}
+
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
   .foot-place{font-size:.72rem;font-weight:700;letter-spacing:.26em;text-indent:.26em;text-transform:uppercase;color:var(--sea);margin:0 0 1.2rem;}
@@ -184,6 +216,76 @@ PAN_SVG = '''<svg class="pan" viewBox="0 0 140 120" aria-hidden="true">
     <ellipse cx="52" cy="65" rx="9" ry="5" fill="#E0885A" opacity=".7"/>
     <rect x="100" y="66" width="40" height="11" rx="5.5" fill="#7A5326" transform="rotate(-16 100 66)"/>
   </svg>'''
+
+ORDER_JS = r'''
+(function () {
+  var DATE = __DATE_JSON__;
+  var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
+  var bar = document.getElementById("orderBar");
+  var elTotal = document.getElementById("orderTotal");
+  var elCount = document.getElementById("orderCount");
+  var btn = document.getElementById("orderBtn");
+  var clearBtn = document.getElementById("orderClear");
+  if (!bar) return;
+
+  function money(n) { return n.toFixed(2).replace(".", ",") + " €"; }
+  function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
+
+  function refresh() {
+    var count = 0, total = 0;
+    items.forEach(function (li) {
+      var q = qOf(li);
+      if (q > 0) {
+        count += q;
+        var pr = parseFloat(li.getAttribute("data-price"));
+        if (!isNaN(pr)) total += pr * q;
+        li.classList.add("in-cart");
+      } else { li.classList.remove("in-cart"); }
+    });
+    elTotal.textContent = money(total);
+    elCount.textContent = count + (count === 1 ? " είδος" : " είδη");
+    bar.classList.toggle("show", count > 0);
+  }
+
+  items.forEach(function (li) {
+    var qty = li.querySelector(".qty"), nEl = li.querySelector(".q-n");
+    function set(q) { q = Math.max(0, q); qty.setAttribute("data-qty", q); nEl.textContent = q; refresh(); }
+    li.querySelector(".q-plus").addEventListener("click", function () { set(qOf(li) + 1); });
+    li.querySelector(".q-minus").addEventListener("click", function () { set(qOf(li) - 1); });
+  });
+
+  clearBtn.addEventListener("click", function () {
+    items.forEach(function (li) { li.querySelector(".qty").setAttribute("data-qty", 0); li.querySelector(".q-n").textContent = "0"; });
+    refresh();
+  });
+
+  function buildText() {
+    var lines = ["🍽️ Νέα παραγγελία — Merci Μαγειρευτό", DATE, ""];
+    var total = 0;
+    items.forEach(function (li) {
+      var q = qOf(li);
+      if (q <= 0) return;
+      var name = li.getAttribute("data-name");
+      var praw = li.getAttribute("data-price");
+      if (praw !== "") { var pr = parseFloat(praw); total += pr * q; lines.push("• " + q + "× " + name + " — " + money(pr * q)); }
+      else { lines.push("• " + q + "× " + name); }
+    });
+    lines.push("");
+    lines.push("Σύνολο: " + money(total));
+    lines.push("");
+    lines.push("(Συμπλήρωσε όνομα, διεύθυνση & ώρα για take away ή delivery)");
+    return lines.join("\n");
+  }
+
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    var txt = encodeURIComponent(buildText());
+    window.location.href = "viber://forward?text=" + txt;
+  });
+
+  refresh();
+})();
+'''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False))
 
 HTML = f'''<!doctype html>
 <html lang="el">
@@ -217,6 +319,15 @@ HTML = f'''<!doctype html>
 {sections_html}
 </main>
 
+<div class="order-bar" id="orderBar" role="region" aria-label="Η παραγγελία σου">
+  <div class="order-inner">
+    <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
+    <div class="order-sum"><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
+    <a class="order-btn" id="orderBtn" href="#" role="button">📩 Παραγγελία στο Viber</a>
+  </div>
+  <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
+</div>
+
 <footer>
   <p class="foot-brand" lang="el">Merci Μαγειρευτό</p>
   <p class="foot-place">Λάρισα · Take away &amp; Delivery</p>
@@ -249,6 +360,10 @@ HTML = f'''<!doctype html>
       document.querySelectorAll("main section").forEach(function (sec) {{ observer.observe(sec); }});
     }}
   }})();
+</script>
+
+<script>
+{ORDER_JS}
 </script>
 </body>
 </html>
