@@ -190,7 +190,10 @@ CSS = """
   .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
   .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
   .order-sum small{color:var(--muted);font-size:.8rem;}
-  .order-btn{flex:0 0 auto;display:inline-flex;align-items:center;gap:.5rem;background:#7360F2;color:#fff;border:none;border-radius:14px;padding:.75rem 1.15rem;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;}
+  .order-actions{max-width:44rem;margin:.55rem auto 0;display:flex;gap:.6rem;}
+  .order-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:none;border-radius:14px;padding:.8rem 1rem;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;}
+  .order-btn.sms{flex:2 1 auto;background:#2FB457;color:#08351a;}
+  .order-btn.viber{flex:1 1 auto;background:#7360F2;color:#fff;}
   .order-btn:active{transform:scale(.97);}
   .order-clear{flex:0 0 auto;background:transparent;border:none;color:var(--faint);font-size:.8rem;cursor:pointer;text-decoration:underline;}
   main{padding-bottom:6rem;}
@@ -331,12 +334,27 @@ ORDER_JS = r'''
     return lines.join("\n");
   }
 
+  function validTime() {
+    var t = timeEl.value;
+    if (!t) { showToast("Διάλεξε ώρα (12:00–16:00)."); timeEl.focus(); return false; }
+    var mins = parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
+    if (mins < 720 || mins > 960) { showToast("Η ώρα πρέπει να είναι μεταξύ 12:00 και 16:00."); timeEl.focus(); return false; }
+    return true;
+  }
+
+  var smsBtn = document.getElementById("orderSms");
+  smsBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    if (!validTime()) return;
+    var txt = buildText();
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var sep = isIOS ? "&" : "?";
+    window.location.href = "sms:" + NUMBER + sep + "body=" + encodeURIComponent(txt);
+  });
+
   btn.addEventListener("click", function (e) {
     e.preventDefault();
-    var t = timeEl.value;
-    if (!t) { showToast("Διάλεξε ώρα (12:00–16:00)."); timeEl.focus(); return; }
-    var mins = parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
-    if (mins < 720 || mins > 960) { showToast("Η ώρα πρέπει να είναι μεταξύ 12:00 και 16:00."); timeEl.focus(); return; }
+    if (!validTime()) return;
     var txt = buildText();
     copyText(txt).then(function () {
       showToast("📋 Η παραγγελία αντιγράφηκε! Ανοίγουμε το Viber — κάνε επικόλληση (paste) στη συνομιλία και στείλ' την.");
@@ -397,7 +415,10 @@ HTML = f'''<!doctype html>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
     <div class="order-sum"><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
-    <a class="order-btn" id="orderBtn" href="#" role="button">📩 Παραγγελία στο Viber</a>
+  </div>
+  <div class="order-actions">
+    <a class="order-btn sms" id="orderSms" href="#" role="button">💬 Παραγγελία με SMS</a>
+    <a class="order-btn viber" id="orderBtn" href="#" role="button">Viber</a>
   </div>
   <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
 </div>
