@@ -1,70 +1,102 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Build the Merci Μαγειρευτό online menu (self-contained index.html).
+"""Build the Merci Μαγειρευτό online menu (index.html) + DAILY_MENU.xlsx.
 
-Content is edited by hand in the MENU structure below. Categories are fixed;
-dishes are added on request. Prices come from Μαγειρευτό_Μενού.xlsx (owner's rule).
+Single source of truth = MENU below. Categories are fixed; dishes edited on
+request. Prices come from Μαγειρευτό_Μενού.xlsx (owner's rule). Price = number
+or None (side dishes shown without price).
 """
 import re, html, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ONIRO = "/Users/stavros/oniropetra-menu/index.html"
 OUT = os.path.join(HERE, "..", "index.html")
+XLSX_OUT = "/Users/stavros/Documents/ΜΑΓΕΙΡΕΥΤΟ/DAILY_MENU.xlsx"
 
-# --- fonts: reuse embedded GFS Didot @font-face blocks from oniropetra ---
 FONT_FACES = "\n".join(re.findall(r'@font-face\s*\{.*?\}',
                                   open(ONIRO, encoding="utf-8").read(), re.S))
 
-# ---------------------------------------------------------------------------
-# MENU  — 5 fixed categories. Each item: dict(name, price, desc, portion).
-# price: "8,50 €" or None (renders "—").  Empty list = no dishes yet.
-# ---------------------------------------------------------------------------
-MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού (αλλάζει κάθε μέρα)
+MENU_DATE = "Δευτέρα 20/7/26"   # η ημερομηνία που αφορά το μενού
 
+# category = dict(slug, label, note, items[]) ; item = dict(name, price, desc, portion)
 MENU = [
-    ("mageirefta", "Μαγειρευτά", [
-        {"name": "Κοτόσουπα",                    "price": "7,50 €"},
-        {"name": "Γεμιστά",                      "price": "6,50 €"},
-        {"name": "Παστίτσιο",                    "price": "8,50 €"},
-        {"name": "Μουσακάς",                     "price": "8,50 €"},
-        {"name": "Γίγαντες Καστοριάς",           "price": "6,70 €"},
-        {"name": "Μοσχάρι γιουβέτσι",            "price": "9,50 €"},
-        {"name": "Μοσχάρι με αρακά",             "price": "9,50 €"},
-        {"name": "Χταπόδι κριθαρότο",            "price": "10,50 €"},
-        {"name": "Σουφλέ ζυμαρικών",             "price": "7,50 €"},
-        {"name": "Κεφτεδάκια τηγανητά & κοκκινιστά", "price": "7,50 €"},
-    ]),
-    ("tis-oras",   "Της ώρας",     []),
-    ("synodeytika","Συνοδευτικά",  []),
-    ("salates",    "Σαλάτες",      []),
-    ("glyka",      "Γλυκά",        []),
+    {"slug": "mageirefta", "label": "Μαγειρευτά", "items": [
+        {"name": "Κοτόσουπα",                        "price": 7.5},
+        {"name": "Γεμιστά",                          "price": 6.5},
+        {"name": "Παστίτσιο",                        "price": 8.5},
+        {"name": "Μουσακάς",                         "price": 8.5},
+        {"name": "Γίγαντες Καστοριάς",               "price": 6.7},
+        {"name": "Μοσχάρι γιουβέτσι",                "price": 9.5},
+        {"name": "Μοσχάρι με αρακά",                 "price": 9.5},
+        {"name": "Χταπόδι κριθαρότο",                "price": 10.5},
+        {"name": "Σουφλέ ζυμαρικών",                 "price": 7.5},
+        {"name": "Κεφτεδάκια τηγανητά & κοκκινιστά", "price": 7.5},
+    ]},
+    {"slug": "tis-oras", "label": "Της ώρας", "items": [
+        {"name": "Σνίτσελ κοτόπουλο",                "price": 8.5},
+        {"name": "Φιλέτο κοτόπουλο",                 "price": 8.0},
+        {"name": "Καλαμαράκια",                      "price": 9.0},
+        {"name": "Μπακαλιάρος τηγανητός",            "price": 10.0},
+        {"name": "Σολομός φούρνου",                  "price": 12.0},
+        {"name": "Φιλετίνια κοτόπουλο a la creme",   "price": 7.5},
+    ]},
+    {"slug": "synodeytika", "label": "Συνοδευτικά",
+     "note": "…και σε μερίδα για μεγαλύτερη απόλαυση!", "items": [
+        {"name": "Πατάτες τηγανητές",               "price": None},
+        {"name": "Πατάτες ψητές",                   "price": None},
+        {"name": "Πουρές πατάτας",                  "price": None},
+        {"name": "Ρύζι",                            "price": None},
+    ]},
+    {"slug": "salates", "label": "Σαλάτες", "items": [
+        {"name": "Αγγουροντομάτα",                  "price": 3.5},
+        {"name": "Χωριάτικη",                       "price": 5.0},
+        {"name": "Λάχανο - Καρότο",                 "price": 3.0},
+        {"name": "Μαρούλι",                         "price": 3.5},
+        {"name": "Παντζάρι",                        "price": 3.5},
+        {"name": "Κουνουπίδι",                      "price": 3.5},
+        {"name": "Φέτα (Π.Ο.Π.)",                   "price": 4.0},
+        {"name": "Φρουτοσαλάτα εποχής",             "price": 4.5},
+    ]},
+    {"slug": "glyka", "label": "Γλυκά", "items": [
+        {"name": "Πορτοκαλόπιτα",                   "price": 4.0},
+        {"name": "Σοκολατόπιτα",                    "price": 5.0},
+    ]},
+    {"slug": "anapsyktika", "label": "Αναψυκτικά / Ποτά", "items": [
+        {"name": "Νερό 330ml",                      "price": 0.5},
+        {"name": "Νερό 1,5lt",                      "price": 1.5},
+        {"name": "Coca-Cola / Zero / Light 330ml",  "price": 1.8},
+    ]},
 ]
 
 def esc(s): return html.escape(str(s), quote=True)
+def fmt_price(v):
+    return None if v is None else f"{float(v):.2f}".replace(".", ",") + " €"
 
 def item_html(it):
     portion = f' <span class="portion">{esc(it["portion"])}</span>' if it.get("portion") else ""
-    price = (f'<span class="price">{esc(it["price"])}</span>' if it.get("price")
-             else '<span class="price price-tba">—</span>')
-    line = (f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span>'
-            f'<span class="dots"></span>{price}</div>')
+    p = fmt_price(it.get("price"))
+    if p:
+        line = (f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span>'
+                f'<span class="dots"></span><span class="price">{esc(p)}</span></div>')
+    else:
+        line = f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span></div>'
     if it.get("desc"):
         line += f'\n        <p class="desc" lang="el">{esc(it["desc"])}</p>'
     return f'      <li class="item">{line}</li>'
 
-nav = "\n".join(
-    f'    <a class="chip" href="#{slug}">{esc(label)}</a>'
-    for slug, label, _ in MENU)
+nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
 
 secs = []
-for slug, label, items in MENU:
-    if items:
-        body = '<ul class="items">\n' + "\n".join(item_html(it) for it in items) + '\n    </ul>'
+for c in MENU:
+    if c["items"]:
+        body = '<ul class="items">\n' + "\n".join(item_html(it) for it in c["items"]) + '\n    </ul>'
     else:
         body = '<p class="empty-note">— σύντομα —</p>'
-    secs.append(f'''  <section id="{slug}" aria-labelledby="h-{slug}">
+    if c.get("note"):
+        body += f'\n    <p class="sec-note" lang="el">{esc(c["note"])}</p>'
+    secs.append(f'''  <section id="{c["slug"]}" aria-labelledby="h-{c["slug"]}">
     <div class="sec-head">
-      <h2 id="h-{slug}" lang="el">{esc(label)}</h2>
+      <h2 id="h-{c["slug"]}" lang="el">{esc(c["label"])}</h2>
     </div>
     {body}
   </section>''')
@@ -100,9 +132,9 @@ CSS = """
   .menu-date{position:relative;margin:.55rem 0 0;font-family:var(--display);font-size:clamp(1.15rem,4.5vw,1.5rem);color:var(--ink);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:44rem;margin:0 auto;scrollbar-width:none;justify-content:center;}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:46rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
   .rail-inner::-webkit-scrollbar{display:none;}
-  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.15rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.95rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
+  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.1rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}
   .chip.is-active{background:var(--sea);border-color:var(--sea);color:#10203A;}
   .chip:focus-visible,a:focus-visible{outline:2px solid var(--sand);outline-offset:2px;}
@@ -119,8 +151,8 @@ CSS = """
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
-  .price-tba{color:var(--faint);font-weight:400;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
+  .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
 
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
@@ -143,7 +175,6 @@ POT_SVG = '''<svg class="pot" viewBox="0 0 130 130" aria-hidden="true">
     <rect x="104" y="72" width="12" height="20" rx="6" fill="#B07C3F"/>
   </svg>'''
 
-POT_SVG_UNUSED = None
 PAN_SVG = '''<svg class="pan" viewBox="0 0 140 120" aria-hidden="true">
     <path class="steam s1" d="M52 40 C46 32 58 28 52 20 C46 12 58 8 54 2"/>
     <path class="steam s2" d="M70 40 C64 32 76 28 70 20 C64 12 76 8 72 2"/>
@@ -225,5 +256,36 @@ HTML = f'''<!doctype html>
 
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(HTML)
-print(f"Wrote {OUT}  ({len(MENU)} categories, "
-      f"{sum(len(i) for _,_,i in MENU)} dishes)")
+print(f"Wrote {OUT}  ({len(MENU)} categories, {sum(len(c['items']) for c in MENU)} dishes)")
+
+# ---------------------------------------------------------------------------
+# DAILY_MENU.xlsx  — one tab per category: Α/Α | Ονομασία πιάτου | Τιμή
+# ---------------------------------------------------------------------------
+try:
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    wb = openpyxl.Workbook(); wb.remove(wb.active)
+    hdr_fill = PatternFill("solid", fgColor="1F3A5F"); hdr_font = Font(bold=True, color="F1E7D5")
+    thin = Side(style="thin", color="D9D2C4"); border = Border(thin, thin, thin, thin)
+    center = Alignment(horizontal="center", vertical="center")
+    def safe(t): return re.sub(r'[\\/?*\[\]:]', "-", t)[:31]
+    for c in MENU:
+        ws = wb.create_sheet(safe(c["label"]))
+        ws.append(["Α/Α", "Ονομασία πιάτου", "Τιμή (€)"])
+        for i in range(1, 4):
+            cell = ws.cell(1, i); cell.fill = hdr_fill; cell.font = hdr_font; cell.alignment = center; cell.border = border
+        for idx, it in enumerate(c["items"], 1):
+            ws.append([idx, it["name"], it.get("price")])
+            ws.cell(ws.max_row, 1).alignment = center
+            pc = ws.cell(ws.max_row, 3)
+            if it.get("price") is not None: pc.number_format = '0.00" €"'
+            pc.alignment = center
+            for col in range(1, 4): ws.cell(ws.max_row, col).border = border
+        ws.column_dimensions["A"].width = 6
+        ws.column_dimensions["B"].width = 34
+        ws.column_dimensions["C"].width = 12
+        ws.freeze_panes = "A2"
+    wb.save(XLSX_OUT)
+    print(f"Wrote {XLSX_OUT}  ({len(MENU)} tabs)")
+except Exception as e:
+    print("xlsx skipped:", e)

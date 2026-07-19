@@ -54,9 +54,9 @@
   .menu-date{position:relative;margin:.55rem 0 0;font-family:var(--display);font-size:clamp(1.15rem,4.5vw,1.5rem);color:var(--ink);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:44rem;margin:0 auto;scrollbar-width:none;justify-content:center;}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:46rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
   .rail-inner::-webkit-scrollbar{display:none;}
-  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.15rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.95rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
+  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.1rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}
   .chip.is-active{background:var(--sea);border-color:var(--sea);color:#10203A;}
   .chip:focus-visible,a:focus-visible{outline:2px solid var(--sand);outline-offset:2px;}
@@ -73,8 +73,8 @@
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
-  .price-tba{color:var(--faint);font-weight:400;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
+  .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
 
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
@@ -119,6 +119,7 @@
     <a class="chip" href="#synodeytika">Συνοδευτικά</a>
     <a class="chip" href="#salates">Σαλάτες</a>
     <a class="chip" href="#glyka">Γλυκά</a>
+    <a class="chip" href="#anapsyktika">Αναψυκτικά / Ποτά</a>
   </div>
 </nav>
 
@@ -145,28 +146,64 @@
     <div class="sec-head">
       <h2 id="h-tis-oras" lang="el">Της ώρας</h2>
     </div>
-    <p class="empty-note">— σύντομα —</p>
+    <ul class="items">
+      <li class="item"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο</span><span class="dots"></span><span class="price">8,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο</span><span class="dots"></span><span class="price">8,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Καλαμαράκια</span><span class="dots"></span><span class="price">9,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Μπακαλιάρος τηγανητός</span><span class="dots"></span><span class="price">10,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Σολομός φούρνου</span><span class="dots"></span><span class="price">12,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Φιλετίνια κοτόπουλο a la creme</span><span class="dots"></span><span class="price">7,50 €</span></div></li>
+    </ul>
   </section>
 
   <section id="synodeytika" aria-labelledby="h-synodeytika">
     <div class="sec-head">
       <h2 id="h-synodeytika" lang="el">Συνοδευτικά</h2>
     </div>
-    <p class="empty-note">— σύντομα —</p>
+    <ul class="items">
+      <li class="item"><div class="item-line"><span class="gr">Πατάτες τηγανητές</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Πατάτες ψητές</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Πουρές πατάτας</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Ρύζι</span></div></li>
+    </ul>
+    <p class="sec-note" lang="el">…και σε μερίδα για μεγαλύτερη απόλαυση!</p>
   </section>
 
   <section id="salates" aria-labelledby="h-salates">
     <div class="sec-head">
       <h2 id="h-salates" lang="el">Σαλάτες</h2>
     </div>
-    <p class="empty-note">— σύντομα —</p>
+    <ul class="items">
+      <li class="item"><div class="item-line"><span class="gr">Αγγουροντομάτα</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Χωριάτικη</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Λάχανο - Καρότο</span><span class="dots"></span><span class="price">3,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Μαρούλι</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Παντζάρι</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Κουνουπίδι</span><span class="dots"></span><span class="price">3,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Φέτα (Π.Ο.Π.)</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Φρουτοσαλάτα εποχής</span><span class="dots"></span><span class="price">4,50 €</span></div></li>
+    </ul>
   </section>
 
   <section id="glyka" aria-labelledby="h-glyka">
     <div class="sec-head">
       <h2 id="h-glyka" lang="el">Γλυκά</h2>
     </div>
-    <p class="empty-note">— σύντομα —</p>
+    <ul class="items">
+      <li class="item"><div class="item-line"><span class="gr">Πορτοκαλόπιτα</span><span class="dots"></span><span class="price">4,00 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Σοκολατόπιτα</span><span class="dots"></span><span class="price">5,00 €</span></div></li>
+    </ul>
+  </section>
+
+  <section id="anapsyktika" aria-labelledby="h-anapsyktika">
+    <div class="sec-head">
+      <h2 id="h-anapsyktika" lang="el">Αναψυκτικά / Ποτά</h2>
+    </div>
+    <ul class="items">
+      <li class="item"><div class="item-line"><span class="gr">Νερό 330ml</span><span class="dots"></span><span class="price">0,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Νερό 1,5lt</span><span class="dots"></span><span class="price">1,50 €</span></div></li>
+      <li class="item"><div class="item-line"><span class="gr">Coca-Cola / Zero / Light 330ml</span><span class="dots"></span><span class="price">1,80 €</span></div></li>
+    </ul>
   </section>
 </main>
 
