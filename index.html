@@ -95,6 +95,12 @@
   /* ---- order bar ---- */
   .order-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;transform:translateY(120%);transition:transform .28s ease;background:color-mix(in srgb,var(--mist-2) 96%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--hairline);padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));}
   .order-bar.show{transform:translateY(0);}
+  .order-opts{max-width:44rem;margin:0 auto .55rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
+  .seg{display:inline-flex;border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:var(--chip-bg);}
+  .seg-btn{border:none;background:transparent;color:var(--muted);font-weight:600;font-size:.88rem;padding:.5rem .8rem;cursor:pointer;transition:background-color .15s,color .15s;}
+  .seg-btn.active{background:var(--sea);color:#10203A;}
+  .time-field{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.88rem;font-weight:600;}
+  .time-field input{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.45rem .55rem;font-size:.95rem;font-family:inherit;}
   .order-inner{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:.8rem;}
   .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
   .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -243,6 +249,13 @@
 </main>
 
 <div class="order-bar" id="orderBar" role="region" aria-label="Η παραγγελία σου">
+  <div class="order-opts">
+    <div class="seg" role="group" aria-label="Τρόπος παραλαβής">
+      <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
+      <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
+    </div>
+    <label class="time-field">Ώρα<input type="time" id="orderTime" min="12:00" max="15:30" step="300"></label>
+  </div>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
     <div class="order-sum"><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
@@ -323,6 +336,18 @@
       } catch (e) { rej(e); }
     });
   }
+
+  var segBtns = Array.prototype.slice.call(document.querySelectorAll(".seg-btn"));
+  var timeEl = document.getElementById("orderTime");
+  var orderType = "delivery";
+  segBtns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      segBtns.forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      orderType = b.getAttribute("data-type");
+    });
+  });
+
   function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
 
   function refresh() {
@@ -367,12 +392,21 @@
     lines.push("");
     lines.push("Σύνολο: " + money(total));
     lines.push("");
-    lines.push("(Συμπλήρωσε όνομα, διεύθυνση & ώρα για take away ή delivery)");
+    lines.push("Τρόπος: " + (orderType === "delivery" ? "🛵 Delivery" : "🏠 Παραλαβή"));
+    lines.push("Ώρα: " + timeEl.value);
+    lines.push("");
+    lines.push(orderType === "delivery"
+      ? "(Συμπλήρωσε όνομα & διεύθυνση παράδοσης)"
+      : "(Συμπλήρωσε το όνομά σου)");
     return lines.join("\n");
   }
 
   btn.addEventListener("click", function (e) {
     e.preventDefault();
+    var t = timeEl.value;
+    if (!t) { showToast("Διάλεξε ώρα (12:00–15:30)."); timeEl.focus(); return; }
+    var mins = parseInt(t.slice(0, 2), 10) * 60 + parseInt(t.slice(3, 5), 10);
+    if (mins < 720 || mins > 930) { showToast("Η ώρα πρέπει να είναι μεταξύ 12:00 και 15:30."); timeEl.focus(); return; }
     var txt = buildText();
     copyText(txt).then(function () {
       showToast("📋 Η παραγγελία αντιγράφηκε! Ανοίγουμε το Viber — κάνε επικόλληση (paste) στη συνομιλία και στείλ' την.");
