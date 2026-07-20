@@ -29,8 +29,7 @@ VIBER_DISPLAY = "+30 698 799 2887"
 import unicodedata, openpyxl
 
 CATEGORIES = [   # (site label, slug, xlsx tab name)
-    ("Μαγειρευτά",        "mageirefta",  "Μαγειρευτά"),
-    ("Της ώρας",          "tis-oras",    "Της ώρας"),
+    ("Μενού Ημέρας",      "menu-hmeras", "Μενού Ημέρας"),
     ("Συνοδευτικά",       "synodeytika", "Συνοδευτικά"),
     ("Σαλάτες",           "salates",     "Σαλάτες"),
     ("Γλυκά",             "glyka",       "Γλυκά"),
