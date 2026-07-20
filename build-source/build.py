@@ -48,7 +48,14 @@ MENU_DATE = ""
 selection = {}
 # menu-today.txt keeps one line per xlsx tab (numbering isn't shared between tabs,
 # even when several tabs are displayed together under one section on the site).
-_tab_by_norm = {_norm(tab): tab for _, _, tabs in CATEGORIES for tab in tabs}
+# Single-tab categories also accept the site label as a key (e.g. "Αναψυκτικά / Ποτά"
+# in menu-today.txt vs. the xlsx tab "Αναψυκτικά - Ποτά") for backward compatibility.
+_tab_by_norm = {}
+for _label, _slug, _tabs in CATEGORIES:
+    for _tab in _tabs:
+        _tab_by_norm[_norm(_tab)] = _tab
+    if len(_tabs) == 1:
+        _tab_by_norm[_norm(_label)] = _tabs[0]
 for raw in open(MENU_TXT, encoding="utf-8"):
     line = raw.strip()
     if not line or line.startswith("#") or ":" not in line:
