@@ -28,13 +28,12 @@ VIBER_DISPLAY = "+30 698 799 2887"
 # ---------------------------------------------------------------------------
 import unicodedata, openpyxl
 
-CATEGORIES = [   # (site label, slug, xlsx tab name)
-    ("Μαγειρευτά",        "mageirefta",  "Μαγειρευτά"),
-    ("Της ώρας",          "tis-oras",    "Της ώρας"),
-    ("Συνοδευτικά",       "synodeytika", "Συνοδευτικά"),
-    ("Σαλάτες",           "salates",     "Σαλάτες"),
-    ("Γλυκά",             "glyka",       "Γλυκά"),
-    ("Αναψυκτικά / Ποτά", "anapsyktika", "Αναψυκτικά - Ποτά"),
+CATEGORIES = [   # (site label, slug, [xlsx tab names] — a section may pull from >1 tab)
+    ("Μενού Ημέρας",      "menu-hmeras", ["Μαγειρευτά", "Της ώρας"]),
+    ("Συνοδευτικά",       "synodeytika", ["Συνοδευτικά"]),
+    ("Σαλάτες",           "salates",     ["Σαλάτες"]),
+    ("Γλυκά",             "glyka",       ["Γλυκά"]),
+    ("Αναψυκτικά / Ποτά", "anapsyktika", ["Αναψυκτικά - Ποτά"]),
 ]
 NOTES = {"synodeytika": "…και σε μερίδα για μεγαλύτερη απόλαυση!"}
 HIDE_PRICE = {"synodeytika"}          # συνοδευτικά: χωρίς τιμή στο site
@@ -47,7 +46,9 @@ def _norm(s):                          # lower, strip accents & spaces/slashes
 
 MENU_DATE = ""
 selection = {}
-_slug_by_norm = {_norm(lbl): slug for lbl, slug, _ in CATEGORIES}
+# menu-today.txt keeps one line per xlsx tab (numbering isn't shared between tabs,
+# even when several tabs are displayed together under one section on the site).
+_tab_by_norm = {_norm(tab): tab for _, _, tabs in CATEGORIES for tab in tabs}
 for raw in open(MENU_TXT, encoding="utf-8"):
     line = raw.strip()
     if not line or line.startswith("#") or ":" not in line:
@@ -56,8 +57,8 @@ for raw in open(MENU_TXT, encoding="utf-8"):
     kn = _norm(key)
     if kn in ("ημερομηνια", "date"):
         MENU_DATE = val.strip()
-    elif kn in _slug_by_norm:
-        selection[_slug_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
+    elif kn in _tab_by_norm:
+        selection[_tab_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
 
 _wb = openpyxl.load_workbook(DAILY_SOURCE, data_only=True)
 def _tab_rows(tab):
@@ -73,13 +74,14 @@ def _tab_rows(tab):
     return d
 
 MENU = []
-for label, slug, tab in CATEGORIES:
-    rows = _tab_rows(tab)
+for label, slug, tabs in CATEGORIES:
     items = []
-    for n in selection.get(slug, []):
-        if n in rows:
-            name, price = rows[n]
-            items.append({"name": name, "price": None if slug in HIDE_PRICE else price})
+    for tab in tabs:
+        rows = _tab_rows(tab)
+        for n in selection.get(tab, []):
+            if n in rows:
+                name, price = rows[n]
+                items.append({"name": name, "price": None if slug in HIDE_PRICE else price})
     cat = {"slug": slug, "label": label, "items": items}
     if slug in NOTES:
         cat["note"] = NOTES[slug]
