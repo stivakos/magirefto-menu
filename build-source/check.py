@@ -61,6 +61,78 @@ def norm(s):
     return re.sub(r"[\s/]+", "", s).lower()
 
 
+# --- εντοπισμός ορθογραφικών παραλλαγών του ίδιου πιάτου -------------------
+# «Ρεβίθια» vs «Ρεβύθια», «Γλώσσα» vs «Γλώσσες»: ίδιο πιάτο, δύο γραφές, δύο
+# Α/Α — και το site τα δείχνει σαν διαφορετικά. Ο έλεγχος ισοπεδώνει τους
+# ήχους που στα ελληνικά γράφονται με πολλούς τρόπους (ι/η/υ/ει/οι, ο/ω,
+# ε/αι), διπλά σύμφωνα και καταλήξεις, και μετά συγκρίνει.
+_SOUND = [("ει", "ι"), ("οι", "ι"), ("υι", "ι"), ("αι", "ε"),
+          ("ου", "u"), ("η", "ι"), ("υ", "ι"), ("ω", "ο"), ("ς", "σ")]
+
+
+def sound(s):
+    s = norm(s)
+    for a, b in _SOUND:
+        s = s.replace(a, b)
+    s = re.sub(r"(.)\1+", r"\1", s)          # διπλά σύμφωνα -> ένα
+    return s
+
+
+def stems(s):
+    """Σύνολο ριζών ανά λέξη: «Γλώσσες τηγανητές» -> {γλοσ, τιγανιτ}.
+    Πιάνει ενικό/πληθυντικό και γένος, που το Levenshtein τα χάνει."""
+    out = set()
+    for w in re.split(r"[\s/,&()-]+", str(s)):
+        w = sound(w)
+        if len(w) < 3:
+            continue
+        w = re.sub(r"σ$", "", w)              # πρώτα το τελικό ς/σ …
+        w = re.sub(r"[αειου]{1,2}$", "", w)   # … και μετά η κατάληξη
+        if len(w) >= 3:
+            out.add(w)
+    return out
+
+
+def dist(a, b, cap=3):
+    """Απόσταση Levenshtein, με πρόωρη έξοδο πάνω από το cap."""
+    if abs(len(a) - len(b)) > cap:
+        return cap + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1,
+                           prev[j - 1] + (ca != cb)))
+        if min(cur) > cap:
+            return cap + 1
+        prev = cur
+    return prev[-1]
+
+
+def similar_pairs(items):
+    """items: [(Α/Α, όνομα)] -> ζεύγη που μοιάζουν ύποπτα."""
+    out = []
+    keys = [(n, name, sound(name), stems(name)) for n, name in items]
+    for i in range(len(keys)):
+        n1, name1, s1, st1 = keys[i]
+        for j in range(i + 1, len(keys)):
+            n2, name2, s2, st2 = keys[j]
+            if st1 and st1 == st2 and s1 != s2:
+                out.append((n1, name1, n2, name2, "ίδιες ρίζες λέξεων"))
+                continue
+            if not s1 or not s2 or abs(len(s1) - len(s2)) > 3:
+                continue
+            # «Νερό 1lt» vs «Νερό 1,5lt»: παραλλαγή μεγέθους, όχι ορθογραφίας
+            if (re.findall(r"\d+", name1) != re.findall(r"\d+", name2)
+                    and re.sub(r"[\d,.]+", "", s1) == re.sub(r"[\d,.]+", "", s2)):
+                continue
+            if s1 == s2:
+                out.append((n1, name1, n2, name2, "ίδια προφορά"))
+            elif len(s1) >= 5 and dist(s1, s2) <= 2:
+                out.append((n1, name1, n2, name2, "σχεδόν ίδια"))
+    return out
+
+
 # --- 1. το ίδιο το αρχείο --------------------------------------------------
 if not os.path.exists(XLSX):
     sys.exit(f"!! Δεν βρέθηκε το {XLSX}")
@@ -162,6 +234,11 @@ for label, slug, tab in CATEGORIES:
         else:
             names_seen[key] = n
         valid += 1
+
+    for n1, name1, n2, name2, why in similar_pairs(
+            [(n, v[0]) for n, v in rows.items()]):
+        warn(f"[{tab}]: «{name1}» (Α/Α {n1}) και «{name2}» (Α/Α {n2}) — "
+             f"{why}. Ίδιο πιάτο γραμμένο αλλιώς; Τότε κράτα το ένα Α/Α.")
 
     catalog[slug] = rows
     nxt = (max(rows) + 1) if rows else 1
