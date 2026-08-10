@@ -45,6 +45,9 @@ def _norm(s):                          # lower, strip accents & spaces/slashes
     return re.sub(r"[\s/]+", "", s).lower()
 
 MENU_DATE = ""
+CLOSED = ""        # γραμμή «ΚΛΕΙΣΤΑ: <πότε ανοίγουμε>» -> κλειστό μαγαζί.
+                   # Όσο έχει τιμή, το site δείχνει ανακοίνωση αντί για μενού
+                   # και δεν δέχεται παραγγελίες. Σβήσε τη γραμμή για να ανοίξει.
 selection = {}
 _slug_by_norm = {_norm(lbl): slug for lbl, slug, _ in CATEGORIES}
 for raw in open(MENU_TXT, encoding="utf-8"):
@@ -55,6 +58,8 @@ for raw in open(MENU_TXT, encoding="utf-8"):
     kn = _norm(key)
     if kn in ("ημερομηνια", "date"):
         MENU_DATE = val.strip()
+    elif kn in ("κλειστα", "closed"):
+        CLOSED = val.strip()
     elif kn in _slug_by_norm:
         selection[_slug_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
 
@@ -132,6 +137,48 @@ for c in MENU:
   </section>''')
 sections_html = "\n\n".join(secs)
 
+# --- κλειστό μαγαζί: ανακοίνωση αντί για μενού, χωρίς παραγγελίες ----------
+if CLOSED:
+    nav = ""
+    sections_html = f'''  <section class="closed" aria-labelledby="h-closed">
+    <p class="closed-eyebrow" lang="el">Κλειστά για διακοπές</p>
+    <h2 id="h-closed" class="closed-title" lang="el">Ανοίγουμε {esc(CLOSED)}</h2>
+    <p class="closed-sub" lang="el">Ξεκουραζόμαστε για λίγο και επιστρέφουμε
+      με το ίδιο σπιτικό φαγητό. Σας ευχαριστούμε!</p>
+    <p class="closed-call">Για πληροφορίες:
+      <a href="tel:{VIBER_NUMBER}">{VIBER_DISPLAY}</a></p>
+  </section>'''
+
+# κομμάτια που μπαίνουν μόνο όταν το μαγαζί είναι ανοιχτό
+date_html = "" if CLOSED else f'<p class="menu-date" lang="el">{esc(MENU_DATE)}</p>'
+rail_html = "" if CLOSED else f'''<nav class="rail" aria-label="Κατηγορίες μενού">
+  <div class="rail-inner">
+{nav}
+  </div>
+</nav>'''
+orderbar_html = "" if CLOSED else f'''<div class="order-bar" id="orderBar" role="region" aria-label="Η παραγγελία σου">
+  <div class="order-opts">
+    <div class="seg" role="group" aria-label="Τρόπος παραλαβής">
+      <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
+      <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
+    </div>
+    <label class="time-field">Ώρα<select id="orderTime">{TIME_OPTIONS}</select></label>
+  </div>
+  <div class="order-inner">
+    <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
+    <div class="order-sum"><div class="order-list" id="orderItems"></div><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
+  </div>
+  <div class="order-actions">
+    <a class="order-btn sms" id="orderSms" href="#" role="button">💬 Παραγγελία με SMS</a>
+  </div>
+  <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
+</div>'''
+page_title = (f"Merci Μαγειρευτό · Κλειστά — ανοίγουμε {CLOSED}" if CLOSED
+              else "Merci Μαγειρευτό · Μενού — Λάρισα")
+page_desc = (f"Το Merci Μαγειρευτό είναι κλειστό για διακοπές. Ανοίγουμε {CLOSED}."
+             if CLOSED else
+             "Μενού — Merci Μαγειρευτό, σπιτικό φαγητό, Λάρισα. Take away & delivery.")
+
 CSS = """
   :root{
     --paper:#2B487A; --raised:#33528A; --ink:#F3ECDF; --muted:#C6CFDF; --faint:#93A2BE;
@@ -188,6 +235,14 @@ CSS = """
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
+  .closed{text-align:center;padding:2.6rem 1.1rem 3rem;}
+  .closed-eyebrow{margin:0;color:var(--sea);font-size:.92rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;}
+  .closed-title{font-family:var(--display);font-weight:400;font-size:clamp(2rem,8vw,3rem);line-height:1.15;margin:.7rem auto 0;max-width:16ch;color:var(--ink);}
+  .closed-title::after{content:"";display:block;width:72px;height:3px;margin:1.1rem auto 0;border-radius:2px;background:var(--sand);}
+  .closed-sub{max-width:34ch;margin:1.2rem auto 0;color:var(--muted);font-size:1.05rem;}
+  .closed-call{margin:1.8rem 0 0;font-size:1.05rem;color:var(--muted);}
+  .closed-call a{color:var(--sand);font-weight:700;text-decoration:none;white-space:nowrap;}
+  .closed-call a:hover{text-decoration:underline;}
 
   /* ---- quantity stepper ---- */
   .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
@@ -392,13 +447,15 @@ ORDER_JS = r'''
 '''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False)) \
    .replace("__NUMBER_JSON__", json.dumps(VIBER_NUMBER, ensure_ascii=False))
 
+order_script = "" if CLOSED else f"<script>\n{ORDER_JS}\n</script>"
+
 HTML = f'''<!doctype html>
 <html lang="el">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Merci Μαγειρευτό · Μενού — Λάρισα</title>
-<meta name="description" content="Μενού — Merci Μαγειρευτό, σπιτικό φαγητό, Λάρισα. Take away & delivery.">
+<title>{esc(page_title)}</title>
+<meta name="description" content="{esc(page_desc)}">
 </head>
 <body>
 <style>
@@ -413,36 +470,16 @@ HTML = f'''<!doctype html>
   {PAN_SVG}
   <h1 class="brand" lang="el"><span class="merci">Merci</span>Μαγειρευτό</h1>
   <p class="brand-sub">Σπιτικό φαγητό</p>
-  <p class="menu-date" lang="el">{esc(MENU_DATE)}</p>
+  {date_html}
 </header>
 
-<nav class="rail" aria-label="Κατηγορίες μενού">
-  <div class="rail-inner">
-{nav}
-  </div>
-</nav>
+{rail_html}
 
 <main>
 {sections_html}
 </main>
 
-<div class="order-bar" id="orderBar" role="region" aria-label="Η παραγγελία σου">
-  <div class="order-opts">
-    <div class="seg" role="group" aria-label="Τρόπος παραλαβής">
-      <button type="button" class="seg-btn active" data-type="delivery">🛵 Delivery</button>
-      <button type="button" class="seg-btn" data-type="pickup">🏠 Παραλαβή</button>
-    </div>
-    <label class="time-field">Ώρα<select id="orderTime">{TIME_OPTIONS}</select></label>
-  </div>
-  <div class="order-inner">
-    <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
-    <div class="order-sum"><div class="order-list" id="orderItems"></div><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
-  </div>
-  <div class="order-actions">
-    <a class="order-btn sms" id="orderSms" href="#" role="button">💬 Παραγγελία με SMS</a>
-  </div>
-  <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
-</div>
+{orderbar_html}
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -482,9 +519,7 @@ HTML = f'''<!doctype html>
   }})();
 </script>
 
-<script>
-{ORDER_JS}
-</script>
+{order_script}
 </body>
 </html>
 '''

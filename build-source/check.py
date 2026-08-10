@@ -173,6 +173,7 @@ for label, slug, tab in CATEGORIES:
 slug_by_norm = {norm(lbl): slug for lbl, slug, _ in CATEGORIES}
 label_by_slug = {slug: lbl for lbl, slug, _ in CATEGORIES}
 date_found = False
+closed = ""
 picked = {}
 
 if not os.path.exists(MENU_TXT):
@@ -186,8 +187,15 @@ else:
         kn = norm(key)
         if kn in ("ημερομηνια", "date"):
             date_found = bool(val.strip())
-            if not date_found:
+            if not date_found and not closed:
                 err(f"menu-today.txt γραμμή {ln}: κενή ΗΜΕΡΟΜΗΝΙΑ.")
+            continue
+        if kn in ("κλειστα", "closed"):
+            closed = val.strip()
+            if not closed:
+                err(f"menu-today.txt γραμμή {ln}: η γραμμή ΚΛΕΙΣΤΑ είναι κενή. "
+                    f"Γράψε πότε ανοίγεις (π.χ. «ΚΛΕΙΣΤΑ: Τρίτη 25/8») ή "
+                    f"σβήσε τη γραμμή για να ανοίξει το μαγαζί.")
             continue
         if kn not in slug_by_norm:
             err(f"menu-today.txt γραμμή {ln}: άγνωστη κατηγορία «{key.strip()}» "
@@ -210,13 +218,15 @@ else:
                 err(f"menu-today.txt γραμμή {ln} ({label_by_slug[slug]}): "
                     f"Α/Α {n} ΔΕΝ ΥΠΑΡΧΕΙ στο xlsx — αγνοείται σιωπηλά.")
 
-    if not date_found:
+    if not date_found and not closed:
         err("menu-today.txt: λείπει εντελώς η γραμμή ΗΜΕΡΟΜΗΝΙΑ.")
 
-    for _, slug, _ in CATEGORIES:
-        if not picked.get(slug):
-            warn(f"Η κατηγορία «{label_by_slug[slug]}» δεν έχει επιλογές — "
-                 f"δεν θα εμφανιστεί σήμερα.")
+    # όσο το μαγαζί είναι κλειστό, το μενού δεν εμφανίζεται — μην γκρινιάζεις
+    if not closed:
+        for _, slug, _ in CATEGORIES:
+            if not picked.get(slug):
+                warn(f"Η κατηγορία «{label_by_slug[slug]}» δεν έχει επιλογές — "
+                     f"δεν θα εμφανιστεί σήμερα.")
 
 
 # --- 4. αναφορά ------------------------------------------------------------
@@ -225,7 +235,12 @@ for label, valid, nxt, gaps in summary:
     g = f"  κενά Α/Α: {', '.join(map(str, gaps))}" if gaps else ""
     print(f"  {label:20s} {valid:3d} πιάτα   επόμενο Α/Α: {nxt}{g}")
 
-if picked:
+if closed:
+    print("\n── ΚΛΕΙΣΤΟ ΜΑΓΑΖΙ " + "─" * 42)
+    print(f"  Το site δείχνει «Ανοίγουμε {closed}» — χωρίς μενού και χωρίς")
+    print(f"  παραγγελίες. Σβήσε τη γραμμή ΚΛΕΙΣΤΑ για να επανέλθει το μενού.")
+
+if picked and not closed:
     print("\n── ΜΕΝΟΥ ΗΜΕΡΑΣ " + "─" * 44)
     for _, slug, _ in CATEGORIES:
         nums = picked.get(slug, [])
