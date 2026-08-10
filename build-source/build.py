@@ -76,6 +76,75 @@ def _tab_rows(tab):
             continue
     return d
 
+# --- ΠΙΑΤΑ.md: ευρετήριο «ποιος αριθμός είναι ποιο πιάτο» -------------------
+# Ταξινομημένο κατά ΣΥΧΝΟΤΗΤΑ, όχι κατά Α/Α: τα πιάτα που βάζεις σχεδόν κάθε
+# μέρα πρώτα, η ουρά αλφαβητικά στο τέλος. Η σήμανση είναι η στήλη D του
+# DAILY_MENU.xlsx:  Κ = κάθε μέρα, Σ = συχνά, κενό = σπάνια.
+INDEX_MD = os.path.join(HERE, "..", "ΠΙΑΤΑ.md")
+TIERS = [("Κ", "Κάθε μέρα"), ("Σ", "Συχνά"), ("", "Σπάνια — αλφαβητικά")]
+
+
+def _tab_index(tab):
+    """(Α/Α, όνομα, τιμή, σήμανση) για κάθε γραμμή ενός tab."""
+    ws = _wb[tab]
+    out = []
+    for r in range(2, ws.max_row + 1):
+        aa, name, price = ws.cell(r, 1).value, ws.cell(r, 2).value, ws.cell(r, 3).value
+        tier = ws.cell(r, 4).value
+        if aa is None or not name:
+            continue
+        try:
+            n = int(aa)
+        except (TypeError, ValueError):
+            continue
+        try:
+            p = float(price) if price not in (None, "") else None
+        except (TypeError, ValueError):
+            p = None
+        t = str(tier).strip().upper() if tier else ""
+        out.append((n, str(name).strip(), p, t if t in ("Κ", "Σ") else ""))
+    return out
+
+
+def _md_line(n, name, price):
+    p = f"{price:.2f}".replace(".", ",") + " €" if price is not None else "—"
+    return f"| **{n}** | {name} | {p} |"
+
+
+def write_index():
+    L = ["# Πιάτα & αριθμοί", "",
+         "Ο αριθμός κάθε πιάτου, για να τον γράφεις στο `menu-today.txt`.",
+         "**Παράγεται αυτόματα — μην το επεξεργάζεσαι.** Αλλαγές γίνονται στο",
+         "`DAILY_MENU.xlsx` (στήλη «Συχνό;»: `Κ` = κάθε μέρα, `Σ` = συχνά).", ""]
+    for label, slug, tab in CATEGORIES:
+        rows = _tab_index(tab)
+        if not rows:
+            continue
+        L += [f"## {label}", ""]
+        if slug in HIDE_PRICE:
+            L += ["_Εμφανίζονται στο site χωρίς τιμή._", ""]
+        has_tiers = any(r[3] for r in rows)
+        for code, title in TIERS:
+            part = [r for r in rows if r[3] == code]
+            if not part:
+                continue
+            # η μεγάλη ουρά αλφαβητικά (ψάχνεις με το όνομα)· παντού αλλού
+            # με τη σειρά των Α/Α (σύντομες λίστες, τις σκανάρεις με το μάτι)
+            part.sort(key=(lambda r: r[1].lower()) if has_tiers and not code
+                      else (lambda r: r[0]))
+            if has_tiers:
+                L += [f"### {title}", ""]
+            L += ["| # | Πιάτο | Τιμή |", "|--:|---|--:|"]
+            L += [_md_line(n, name, p) for n, name, p, _ in part]
+            L += [""]
+            first = False
+    L += ["---", "",
+          f"_{sum(len(_tab_index(t)) for _, _, t in CATEGORIES)} πιάτα συνολικά._"]
+    with open(INDEX_MD, "w", encoding="utf-8") as f:
+        f.write("\n".join(L) + "\n")
+    return INDEX_MD
+
+
 MENU = []
 for label, slug, tab in CATEGORIES:
     rows = _tab_rows(tab)
@@ -527,6 +596,9 @@ HTML = f'''<!doctype html>
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(HTML)
 print(f"Wrote {OUT}  ({len(MENU)} categories, {sum(len(c['items']) for c in MENU)} dishes)")
+
+write_index()
+print(f"Wrote {INDEX_MD}")
 
 # NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
 # tabs: Α/Α | Ονομασία | Τιμή). The daily selection ("μαγειρευτά 1 2 4 …") is read FROM

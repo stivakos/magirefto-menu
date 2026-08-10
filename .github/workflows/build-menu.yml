@@ -35,13 +35,13 @@ jobs:
       - name: Build index.html
         working-directory: build-source
         run: python build.py
-      - name: Commit rebuilt index.html
+      - name: Commit rebuilt index.html + ΠΙΑΤΑ.md
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add index.html ΠΙΑΤΑ.md
           if git diff --cached --quiet; then
-            echo "Δεν άλλαξε κάτι στο index.html."
+            echo "Δεν άλλαξε κάτι."
           else
             git commit -m "Auto-rebuild μενού ημέρας [skip ci]"
             git push
