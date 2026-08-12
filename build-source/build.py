@@ -644,12 +644,17 @@ HTML = f'''<!doctype html>
 </html>
 '''
 
-with open(OUT, "w", encoding="utf-8") as f:
-    f.write(HTML)
-print(f"Wrote {OUT}  ({len(MENU)} categories, {sum(len(c['items']) for c in MENU)} dishes)")
+# Τα γραψίματα μπαίνουν πίσω από main-guard ώστε το social.py να κάνει
+# «import build» και να πάρει MENU / MENU_DATE / CLOSED χωρίς να ξαναγράψει
+# αρχεία — μία πηγή αλήθειας για τα δεδομένα της ημέρας, χωρίς αντιγραφή.
+if __name__ == "__main__":
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write(HTML)
+    print(f"Wrote {OUT}  ({len(MENU)} categories, "
+          f"{sum(len(c['items']) for c in MENU)} dishes)")
 
-write_index()
-print(f"Wrote {INDEX_MD}")
+    write_index()
+    print(f"Wrote {INDEX_MD}")
 
 # NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
 # tabs: Α/Α | Ονομασία | Τιμή). The daily selection ("μαγειρευτά 1 2 4 …") is read FROM
