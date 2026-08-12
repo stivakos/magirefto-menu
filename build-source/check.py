@@ -24,25 +24,29 @@ MENU_TXT = os.path.join(HERE, "..", "menu-today.txt")
 
 
 # --- ρυθμίσεις: διαβάζονται από το build.py ώστε να μην ξεφύγουν ποτέ ------
+WANTED = ("CATEGORIES", "HIDE_PRICE", "GALLERY", "GALLERY_DIR")
+
+
 def config_from_build():
-    """Παίρνει CATEGORIES / HIDE_PRICE από το build.py χωρίς να το εκτελέσει."""
+    """Παίρνει τις σταθερές από το build.py χωρίς να το εκτελέσει."""
     tree = ast.parse(open(BUILD_PY, encoding="utf-8").read())
     found = {}
     for node in tree.body:
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
             t = node.targets[0]
-            if isinstance(t, ast.Name) and t.id in ("CATEGORIES", "HIDE_PRICE"):
+            if isinstance(t, ast.Name) and t.id in WANTED:
                 try:
                     found[t.id] = ast.literal_eval(node.value)
                 except ValueError:
                     pass
-    missing = {"CATEGORIES", "HIDE_PRICE"} - set(found)
+    missing = set(WANTED) - set(found)
     if missing:
         sys.exit(f"!! Δεν βρέθηκαν {missing} στο build.py — άλλαξε η δομή του;")
-    return found["CATEGORIES"], set(found["HIDE_PRICE"])
+    return (found["CATEGORIES"], set(found["HIDE_PRICE"]),
+            found["GALLERY"], found["GALLERY_DIR"])
 
 
-CATEGORIES, HIDE_PRICE = config_from_build()
+CATEGORIES, HIDE_PRICE, GALLERY, GALLERY_DIR = config_from_build()
 
 errors, warnings = [], []
 
@@ -306,7 +310,29 @@ else:
                      f"δεν θα εμφανιστεί σήμερα.")
 
 
-# --- 4. αναφορά ------------------------------------------------------------
+# --- 4. οι φωτογραφίες της γκαλερί -----------------------------------------
+# Λείπον αρχείο δεν χαλάει το build — βγάζει σπασμένη εικόνα στο live site, που
+# κανείς δεν βλέπει μέχρι να το πει πελάτης.
+GALLERY_PATH = os.path.join(HERE, "..", *GALLERY_DIR.split("/"))
+listed = [f for f, _, _ in GALLERY]
+gallery_kb = 0
+
+if not os.path.isdir(GALLERY_PATH):
+    err(f"Δεν βρέθηκε ο φάκελος {GALLERY_DIR}/ — τρέξε το prep-photos.sh.")
+else:
+    for f in listed:
+        p = os.path.join(GALLERY_PATH, f)
+        if not os.path.isfile(p):
+            err(f"Γκαλερί: λείπει η φωτογραφία {GALLERY_DIR}/{f} — "
+                f"τρέξε το prep-photos.sh ή διόρθωσε το GALLERY στο build.py.")
+        else:
+            gallery_kb += os.path.getsize(p) / 1024
+    for f in sorted(os.listdir(GALLERY_PATH)):
+        if not f.startswith(".") and f not in listed:
+            warn(f"Γκαλερί: το {GALLERY_DIR}/{f} δεν χρησιμοποιείται πουθενά.")
+
+
+# --- 5. αναφορά ------------------------------------------------------------
 print("\n── ΒΑΣΗ ΠΙΑΤΩΝ (DAILY_MENU.xlsx) " + "─" * 28)
 for label, valid, nxt, gaps in summary:
     g = f"  κενά Α/Α: {', '.join(map(str, gaps))}" if gaps else ""
@@ -327,6 +353,9 @@ if picked and not closed:
         shown = [rows[n][0] for n in nums if n in rows]
         print(f"  {label_by_slug[slug]:20s} {len(shown)}: "
               f"{', '.join(shown) if shown else '—'}")
+
+print("\n── ΤΟ ΜΑΓΑΖΙ ΜΑΣ " + "─" * 43)
+print(f"  {len(listed)} φωτογραφίες, {gallery_kb / 1024:.1f} MB συνολικά.")
 
 if warnings:
     print("\n── ΠΡΟΕΙΔΟΠΟΙΗΣΕΙΣ " + "─" * 41)

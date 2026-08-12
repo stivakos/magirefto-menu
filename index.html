@@ -130,6 +130,12 @@
   .toast{position:fixed;left:50%;bottom:6.5rem;transform:translate(-50%,1.2rem);z-index:30;max-width:calc(100% - 2rem);width:24rem;background:#17293F;color:var(--ink);border:1px solid var(--sea);border-radius:14px;padding:.8rem 1rem;font-size:.9rem;line-height:1.4;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
+  /* ---- «Το μαγαζί μας» ---- */
+  .about-text{max-width:44ch;margin:1.1rem 0 0;color:var(--muted);}
+  .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-top:1.5rem;}
+  @media (min-width:34rem){ .gallery{grid-template-columns:repeat(3,1fr);} }
+  .gallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--hairline);background:var(--raised);}
+
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
   .foot-place{font-size:.72rem;font-weight:700;letter-spacing:.26em;text-indent:.26em;text-transform:uppercase;color:var(--sea);margin:0 0 1.2rem;}
@@ -181,6 +187,21 @@
       με το ίδιο σπιτικό φαγητό. Σας ευχαριστούμε!</p>
     <p class="closed-call">Για πληροφορίες:
       <a href="tel:+306987992887">+30 698 799 2887</a></p>
+  </section>
+
+  <section id="magazi" aria-labelledby="h-magazi">
+    <div class="sec-head">
+      <h2 id="h-magazi" lang="el">Το μαγαζί μας</h2>
+    </div>
+    <p class="about-text" lang="el">Μαγειρεύουμε κάθε πρωί σπιτικό φαγητό στην Καρδίτσης 22 — λαδερά, γιαχνί, ψητά — και το σερβίρουμε ζεστό από τη βιτρίνα, όσο κρατήσει. Ό,τι βλέπεις στο μενού μαγειρεύτηκε σήμερα.</p>
+    <div class="gallery">
+      <img src="assets/gallery/01-vitrina.jpg" alt="Η βιτρίνα του Merci Μαγειρευτό με τα πιάτα της ημέρας" loading="lazy" decoding="async" style="object-position:center top">
+      <img src="assets/gallery/02-gemista.jpg" alt="Γεμιστά πιπεριές και ντομάτες σε μερίδες" loading="lazy" decoding="async" style="object-position:center">
+      <img src="assets/gallery/03-pastitsio.jpg" alt="Παστίτσιο και μουσακάς φρεσκογρατιναρισμένα" loading="lazy" decoding="async" style="object-position:center">
+      <img src="assets/gallery/04-giouvetsi.jpg" alt="Γιουβέτσι στο ταψί και σούπες, μέσα στη βιτρίνα" loading="lazy" decoding="async" style="object-position:center">
+      <img src="assets/gallery/05-keftedes.jpg" alt="Κεφτέδες σε κόκκινη σάλτσα" loading="lazy" decoding="async" style="object-position:center">
+      <img src="assets/gallery/06-vitrina-2.jpg" alt="Η ζεστή βιτρίνα του μαγαζιού από πλάγια" loading="lazy" decoding="async" style="object-position:center">
+    </div>
   </section>
 </main>
 

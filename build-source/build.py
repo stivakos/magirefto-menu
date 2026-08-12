@@ -39,6 +39,27 @@ NOTES = {"synodeytika": "…και σε μερίδα για μεγαλύτερη
 HIDE_PRICE = {"synodeytika"}          # συνοδευτικά: χωρίς τιμή στο site
 MENU_TXT = os.path.join(HERE, "..", "menu-today.txt")
 
+# ---------------------------------------------------------------------------
+# «Το μαγαζί μας»: γκαλερί στο τέλος της σελίδας. Οι εικόνες είναι ΑΡΧΕΙΑ στο
+# assets/gallery/ (η μόνη εξαίρεση στο «όλα inline») και φορτώνουν lazy — inline
+# base64 θα πρόσθετε ~1 MB στο index.html που ο πελάτης κατεβάζει με 4G.
+# Παράγονται από το prep-photos.sh. Το τρίτο πεδίο είναι το object-position:
+# αλλάζει ποιο κομμάτι κρατάει το τετράγωνο πλακίδιο.
+# ---------------------------------------------------------------------------
+GALLERY_DIR = "assets/gallery"
+GALLERY = [   # (αρχείο, alt, object-position)
+    ("01-vitrina.jpg",   "Η βιτρίνα του Merci Μαγειρευτό με τα πιάτα της ημέρας", "center top"),
+    ("02-gemista.jpg",   "Γεμιστά πιπεριές και ντομάτες σε μερίδες",              "center"),
+    ("03-pastitsio.jpg", "Παστίτσιο και μουσακάς φρεσκογρατιναρισμένα",           "center"),
+    ("04-giouvetsi.jpg", "Γιουβέτσι στο ταψί και σούπες, μέσα στη βιτρίνα",       "center"),
+    ("05-keftedes.jpg",  "Κεφτέδες σε κόκκινη σάλτσα",                            "center"),
+    ("06-vitrina-2.jpg", "Η ζεστή βιτρίνα του μαγαζιού από πλάγια",               "center"),
+]
+ABOUT_TITLE = "Το μαγαζί μας"
+ABOUT_TEXT = ("Μαγειρεύουμε κάθε πρωί σπιτικό φαγητό στην Καρδίτσης 22 — λαδερά, "
+              "γιαχνί, ψητά — και το σερβίρουμε ζεστό από τη βιτρίνα, όσο κρατήσει. "
+              "Ό,τι βλέπεις στο μενού μαγειρεύτηκε σήμερα.")
+
 def _norm(s):                          # lower, strip accents & spaces/slashes
     s = "".join(c for c in unicodedata.normalize("NFD", str(s))
                 if unicodedata.category(c) != "Mn")
@@ -189,6 +210,7 @@ def item_html(it):
             f'{line}</li>')
 
 nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
+nav += f'\n    <a class="chip" href="#magazi">{esc(ABOUT_TITLE)}</a>'
 
 secs = []
 for c in MENU:
@@ -242,6 +264,23 @@ orderbar_html = "" if CLOSED else f'''<div class="order-bar" id="orderBar" role=
   </div>
   <a class="order-call" href="tel:{VIBER_NUMBER}">ή κάλεσέ μας: <b>{VIBER_DISPLAY}</b></a>
 </div>'''
+
+# «Το μαγαζί μας» — μπαίνει και στις δύο καταστάσεις (ανοιχτά/κλειστά): όσο είμαστε
+# κλειστοί είναι το μόνο που έχει να δει ο πελάτης που σκανάρει το QR.
+gallery_html = "\n".join(
+    f'      <img src="{GALLERY_DIR}/{esc(f)}" alt="{esc(alt)}" loading="lazy" '
+    f'decoding="async" style="object-position:{esc(pos)}">'
+    for f, alt, pos in GALLERY)
+about_html = f'''  <section id="magazi" aria-labelledby="h-magazi">
+    <div class="sec-head">
+      <h2 id="h-magazi" lang="el">{esc(ABOUT_TITLE)}</h2>
+    </div>
+    <p class="about-text" lang="el">{esc(ABOUT_TEXT)}</p>
+    <div class="gallery">
+{gallery_html}
+    </div>
+  </section>'''
+
 page_title = (f"Merci Μαγειρευτό · Κλειστά — ανοίγουμε {CLOSED}" if CLOSED
               else "Merci Μαγειρευτό · Μενού — Λάρισα")
 page_desc = (f"Το Merci Μαγειρευτό είναι κλειστό για διακοπές. Ανοίγουμε {CLOSED}."
@@ -352,6 +391,12 @@ CSS = """
   /* ---- toast ---- */
   .toast{position:fixed;left:50%;bottom:6.5rem;transform:translate(-50%,1.2rem);z-index:30;max-width:calc(100% - 2rem);width:24rem;background:#17293F;color:var(--ink);border:1px solid var(--sea);border-radius:14px;padding:.8rem 1rem;font-size:.9rem;line-height:1.4;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  /* ---- «Το μαγαζί μας» ---- */
+  .about-text{max-width:44ch;margin:1.1rem 0 0;color:var(--muted);}
+  .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-top:1.5rem;}
+  @media (min-width:34rem){ .gallery{grid-template-columns:repeat(3,1fr);} }
+  .gallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--hairline);background:var(--raised);}
 
   footer{border-top:1px solid var(--hairline);background:var(--mist-2);text-align:center;padding:2.2rem 1.5rem 2.6rem;}
   .foot-brand{font-family:var(--display);font-size:1.4rem;margin:0 0 .2rem;}
@@ -546,6 +591,8 @@ HTML = f'''<!doctype html>
 
 <main>
 {sections_html}
+
+{about_html}
 </main>
 
 {orderbar_html}
