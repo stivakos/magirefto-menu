@@ -24,7 +24,9 @@ MENU_TXT = os.path.join(HERE, "..", "menu-today.txt")
 
 
 # --- ρυθμίσεις: διαβάζονται από το build.py ώστε να μην ξεφύγουν ποτέ ------
-WANTED = ("CATEGORIES", "HIDE_PRICE", "GALLERY", "GALLERY_DIR")
+WANTED = ("CATEGORIES", "HIDE_PRICE", "GALLERY", "GALLERY_DIR", "SIDE_YES")
+# «όχι» δεν το θεωρούμε λάθος — είναι ο φυσικός τρόπος να γράψεις «δεν παίρνει».
+SIDE_NO = {"όχι", "οχι", "ο", "-", "—", "n/a", "no", "0"}
 
 
 def config_from_build():
@@ -43,10 +45,11 @@ def config_from_build():
     if missing:
         sys.exit(f"!! Δεν βρέθηκαν {missing} στο build.py — άλλαξε η δομή του;")
     return (found["CATEGORIES"], set(found["HIDE_PRICE"]),
-            found["GALLERY"], found["GALLERY_DIR"])
+            found["GALLERY"], found["GALLERY_DIR"], set(found["SIDE_YES"]))
 
 
-CATEGORIES, HIDE_PRICE, GALLERY, GALLERY_DIR = config_from_build()
+CATEGORIES, HIDE_PRICE, GALLERY, GALLERY_DIR, SIDE_YES = config_from_build()
+with_side = []          # πιάτα σημαδεμένα «Με συνοδευτικό;»
 
 errors, warnings = [], []
 
@@ -225,6 +228,16 @@ for label, slug, tab in CATEGORIES:
             warn(f"[{tab}] γραμμή {r}: «{name}» χωρίς τιμή — θα εμφανιστεί "
                  f"στο site χωρίς τιμή.")
 
+        # στήλη E «Με συνοδευτικό;» — άγνωστη τιμή = σιωπηλά αγνοείται από
+        # το build, οπότε ο ιδιοκτήτης νομίζει ότι το σήμανε και δεν έγινε.
+        side_raw = ws.cell(r, 5).value if ws.max_column >= 5 else None
+        side_txt = str(side_raw or "").strip().lower()
+        if side_txt and side_txt not in SIDE_YES and side_txt not in SIDE_NO:
+            warn(f"[{tab}] γραμμή {r}: «{name}» — στήλη «Με συνοδευτικό;» έχει "
+                 f"«{side_raw}», που δεν αναγνωρίζεται. Γράψε «Ν» ή άφησέ το κενό.")
+        elif side_txt in SIDE_YES:
+            with_side.append(name)
+
         # διπλά
         if n in rows:
             err(f"[{tab}] γραμμή {r}: ΔΙΠΛΟ Α/Α {n} («{name}» και "
@@ -310,6 +323,12 @@ else:
                      f"δεν θα εμφανιστεί σήμερα.")
 
 
+    # Σημαδεμένα πιάτα χωρίς συνοδευτικά της ημέρας = η επιλογή δεν εμφανίζεται
+    if with_side and not picked.get("synodeytika") and not closed:
+        warn(f"{len(with_side)} πιάτα δέχονται συνοδευτικό, αλλά σήμερα δεν "
+             f"έχεις επιλέξει κανένα Συνοδευτικό — η επιλογή δεν θα φανεί.")
+
+
 # --- 4. οι φωτογραφίες της γκαλερί -----------------------------------------
 # Λείπον αρχείο δεν χαλάει το build — βγάζει σπασμένη εικόνα στο live site, που
 # κανείς δεν βλέπει μέχρι να το πει πελάτης.
@@ -353,6 +372,10 @@ if picked and not closed:
         shown = [rows[n][0] for n in nums if n in rows]
         print(f"  {label_by_slug[slug]:20s} {len(shown)}: "
               f"{', '.join(shown) if shown else '—'}")
+
+if with_side:
+    print("\n── ΜΕ ΣΥΝΟΔΕΥΤΙΚΟ " + "─" * 42)
+    print(f"  {len(with_side)}: {', '.join(sorted(with_side))}")
 
 print("\n── ΤΟ ΜΑΓΑΖΙ ΜΑΣ " + "─" * 43)
 print(f"  {len(listed)} φωτογραφίες, {gallery_kb / 1024:.1f} MB συνολικά.")

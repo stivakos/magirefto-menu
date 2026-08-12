@@ -130,6 +130,13 @@
   .toast{position:fixed;left:50%;bottom:6.5rem;transform:translate(-50%,1.2rem);z-index:30;max-width:calc(100% - 2rem);width:24rem;background:#17293F;color:var(--ink);border:1px solid var(--sea);border-radius:14px;padding:.8rem 1rem;font-size:.9rem;line-height:1.4;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
+  /* ---- συνοδευτικό χωρίς χρέωση ---- */
+  .sides{display:flex;flex-direction:column;gap:.4rem;margin:.55rem 0 .2rem 0;padding-left:.1rem;}
+  .side-row{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--muted);}
+  .side-row span{flex:0 0 auto;min-width:5.5rem;}
+  .side-row select{flex:1 1 auto;min-width:0;background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.4rem .5rem;font-size:.88rem;font-family:inherit;cursor:pointer;-webkit-appearance:menulist;appearance:menulist;}
+  .side-row select:invalid,.side-row select:not([value]){color:var(--faint);}
+
   /* ---- «Το μαγαζί μας» ---- */
   /* Κεντραρισμένα, σε αντίθεση με τις κατηγορίες φαγητού: είναι κείμενο, όχι
      λίστα με τιμές — και στα κλειστά κάθεται κάτω από την κεντραρισμένη ανακοίνωση. */
@@ -339,6 +346,7 @@
 (function () {
   var DATE = "Τετάρτη 12/8/26";
   var NUMBER = "+306987992887";
+  var SIDES = ["Πατάτες τηγανητές", "Πατάτες φούρνου", "Ρύζι", "Πουρές πατάτας"];
   var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
   var bar = document.getElementById("orderBar");
   var elTotal = document.getElementById("orderTotal");
@@ -384,11 +392,48 @@
 
   function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
 
+  // --- συνοδευτικά χωρίς χρέωση -------------------------------------------
+  // Ένα select ανά μερίδα: 2× μπιφτέκι μπορεί να πάρει πατάτες και ρύζι.
+  function syncSides(li) {
+    var box = li.querySelector(".sides");
+    if (!box) return;
+    var q = qOf(li), have = box.children.length;
+    for (var i = have; i < q; i++) {
+      var row = document.createElement("label");
+      row.className = "side-row";
+      var txt = document.createElement("span");
+      txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
+      var sel = document.createElement("select");
+      sel.innerHTML = '<option value="">Διάλεξε συνοδευτικό…</option>' +
+        SIDES.map(function (s) {
+          return '<option value="' + s + '">' + s + "</option>";
+        }).join("") + '<option value="—">Χωρίς συνοδευτικό</option>';
+      sel.addEventListener("change", refresh);
+      row.appendChild(txt); row.appendChild(sel);
+      box.appendChild(row);
+    }
+    while (box.children.length > q) box.removeChild(box.lastChild);
+    // οι ετικέτες αλλάζουν όταν αλλάζει η ποσότητα (1 μερίδα -> «Συνοδευτικό»)
+    Array.prototype.forEach.call(box.children, function (row, i) {
+      row.firstChild.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
+    });
+    box.hidden = q === 0;
+  }
+
+  function sidesOf(li) {
+    var box = li.querySelector(".sides");
+    if (!box) return [];
+    return Array.prototype.map.call(box.querySelectorAll("select"), function (s) {
+      return s.value;
+    });
+  }
+
   function refresh() {
     var count = 0, total = 0;
     if (elList) elList.innerHTML = "";
     items.forEach(function (li) {
       var q = qOf(li);
+      syncSides(li);
       if (q > 0) {
         count += q;
         var pr = parseFloat(li.getAttribute("data-price"));
@@ -428,6 +473,9 @@
       var praw = li.getAttribute("data-price");
       if (praw !== "") { var pr = parseFloat(praw); total += pr * q; lines.push("• " + q + "× " + name + " — " + money(pr * q)); }
       else { lines.push("• " + q + "× " + name); }
+      sidesOf(li).forEach(function (s) {
+        if (s && s !== "—") lines.push("    ↳ με " + s);
+      });
     });
     lines.push("");
     lines.push("Σύνολο: " + money(total));
@@ -449,10 +497,25 @@
     return true;
   }
 
+  function validSides() {
+    for (var i = 0; i < items.length; i++) {
+      var li = items[i];
+      if (qOf(li) <= 0) continue;
+      var sel = Array.prototype.filter.call(
+        li.querySelectorAll(".sides select"), function (s) { return !s.value; });
+      if (sel.length) {
+        showToast("Διάλεξε συνοδευτικό για: " + li.getAttribute("data-name"));
+        sel[0].focus();
+        return false;
+      }
+    }
+    return true;
+  }
+
   var smsBtn = document.getElementById("orderSms");
   smsBtn.addEventListener("click", function (e) {
     e.preventDefault();
-    if (!validTime()) return;
+    if (!validTime() || !validSides()) return;
     var txt = buildText();
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     var sep = isIOS ? "&" : "?";

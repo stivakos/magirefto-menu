@@ -86,14 +86,29 @@ for raw in open(MENU_TXT, encoding="utf-8"):
         selection[_slug_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
 
 _wb = openpyxl.load_workbook(DAILY_SOURCE, data_only=True)
+SIDE_YES = {"ν", "ναι", "n", "y", "yes", "x", "χ", "✓", "1"}
+
+
+def _wants_side(v):
+    """Στήλη E «Με συνοδευτικό;» — δέχεται Ν / ναι / Χ / ✓ και ό,τι μοιάζει.
+
+    Αν η στήλη δεν υπάρχει καθόλου (παλιό xlsx), όλα βγαίνουν False και η
+    λειτουργία μένει αδρανής — το site δουλεύει ακριβώς όπως πριν.
+    """
+    return str(v or "").strip().lower() in SIDE_YES
+
+
 def _tab_rows(tab):
     ws = _wb[tab]; d = {}
     for r in range(2, ws.max_row + 1):
         aa, name, price = ws.cell(r, 1).value, ws.cell(r, 2).value, ws.cell(r, 3).value
+        side = ws.cell(r, 5).value if ws.max_column >= 5 else None
         if aa is None or not name:
             continue
         try:
-            d[int(aa)] = (str(name).strip(), float(price) if price not in (None, "") else None)
+            d[int(aa)] = (str(name).strip(),
+                          float(price) if price not in (None, "") else None,
+                          _wants_side(side))
         except (TypeError, ValueError):
             continue
     return d
@@ -173,12 +188,18 @@ for label, slug, tab in CATEGORIES:
     items = []
     for n in selection.get(slug, []):
         if n in rows:
-            name, price = rows[n]
-            items.append({"name": name, "price": None if slug in HIDE_PRICE else price})
+            name, price, side = rows[n]
+            items.append({"name": name,
+                          "price": None if slug in HIDE_PRICE else price,
+                          "side": side})
     cat = {"slug": slug, "label": label, "items": items}
     if slug in NOTES:
         cat["note"] = NOTES[slug]
     MENU.append(cat)
+
+# Τα συνοδευτικά της ημέρας — αυτά προσφέρονται στα πιάτα που τα δέχονται.
+# Αν σήμερα δεν έχει επιλεγεί κανένα, η επιλογή δεν εμφανίζεται πουθενά.
+SIDES = [it["name"] for c in MENU if c["slug"] == "synodeytika" for it in c["items"]]
 
 def esc(s): return html.escape(str(s), quote=True)
 def fmt_price(v):
@@ -207,8 +228,13 @@ def item_html(it):
             f'{dots}{price_span}{qty}</div>')
     if it.get("desc"):
         line += f'\n        <p class="desc" lang="el">{esc(it["desc"])}</p>'
-    return (f'      <li class="item" data-name="{esc(it["name"])}" data-price="{pnum}">'
-            f'{line}</li>')
+    # Πιάτο που συνοδεύεται χωρίς χρέωση: το JS γεμίζει εδώ ΕΝΑ select ανά μερίδα,
+    # ώστε δύο μπιφτέκια να μπορούν να πάρουν διαφορετικό συνοδευτικό.
+    side_attr = ' data-side="1"' if (it.get("side") and SIDES) else ""
+    if side_attr:
+        line += '\n        <div class="sides" hidden></div>'
+    return (f'      <li class="item" data-name="{esc(it["name"])}" '
+            f'data-price="{pnum}"{side_attr}>{line}</li>')
 
 nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
 nav += f'\n    <a class="chip" href="#magazi">{esc(ABOUT_CHIP)}</a>'
@@ -393,6 +419,13 @@ CSS = """
   .toast{position:fixed;left:50%;bottom:6.5rem;transform:translate(-50%,1.2rem);z-index:30;max-width:calc(100% - 2rem);width:24rem;background:#17293F;color:var(--ink);border:1px solid var(--sea);border-radius:14px;padding:.8rem 1rem;font-size:.9rem;line-height:1.4;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;}
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
+  /* ---- συνοδευτικό χωρίς χρέωση ---- */
+  .sides{display:flex;flex-direction:column;gap:.4rem;margin:.55rem 0 .2rem 0;padding-left:.1rem;}
+  .side-row{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:var(--muted);}
+  .side-row span{flex:0 0 auto;min-width:5.5rem;}
+  .side-row select{flex:1 1 auto;min-width:0;background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.4rem .5rem;font-size:.88rem;font-family:inherit;cursor:pointer;-webkit-appearance:menulist;appearance:menulist;}
+  .side-row select:invalid,.side-row select:not([value]){color:var(--faint);}
+
   /* ---- «Το μαγαζί μας» ---- */
   /* Κεντραρισμένα, σε αντίθεση με τις κατηγορίες φαγητού: είναι κείμενο, όχι
      λίστα με τιμές — και στα κλειστά κάθεται κάτω από την κεντραρισμένη ανακοίνωση. */
@@ -440,6 +473,7 @@ ORDER_JS = r'''
 (function () {
   var DATE = __DATE_JSON__;
   var NUMBER = __NUMBER_JSON__;
+  var SIDES = __SIDES_JSON__;
   var items = Array.prototype.slice.call(document.querySelectorAll(".item"));
   var bar = document.getElementById("orderBar");
   var elTotal = document.getElementById("orderTotal");
@@ -485,11 +519,48 @@ ORDER_JS = r'''
 
   function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
 
+  // --- συνοδευτικά χωρίς χρέωση -------------------------------------------
+  // Ένα select ανά μερίδα: 2× μπιφτέκι μπορεί να πάρει πατάτες και ρύζι.
+  function syncSides(li) {
+    var box = li.querySelector(".sides");
+    if (!box) return;
+    var q = qOf(li), have = box.children.length;
+    for (var i = have; i < q; i++) {
+      var row = document.createElement("label");
+      row.className = "side-row";
+      var txt = document.createElement("span");
+      txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
+      var sel = document.createElement("select");
+      sel.innerHTML = '<option value="">Διάλεξε συνοδευτικό…</option>' +
+        SIDES.map(function (s) {
+          return '<option value="' + s + '">' + s + "</option>";
+        }).join("") + '<option value="—">Χωρίς συνοδευτικό</option>';
+      sel.addEventListener("change", refresh);
+      row.appendChild(txt); row.appendChild(sel);
+      box.appendChild(row);
+    }
+    while (box.children.length > q) box.removeChild(box.lastChild);
+    // οι ετικέτες αλλάζουν όταν αλλάζει η ποσότητα (1 μερίδα -> «Συνοδευτικό»)
+    Array.prototype.forEach.call(box.children, function (row, i) {
+      row.firstChild.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
+    });
+    box.hidden = q === 0;
+  }
+
+  function sidesOf(li) {
+    var box = li.querySelector(".sides");
+    if (!box) return [];
+    return Array.prototype.map.call(box.querySelectorAll("select"), function (s) {
+      return s.value;
+    });
+  }
+
   function refresh() {
     var count = 0, total = 0;
     if (elList) elList.innerHTML = "";
     items.forEach(function (li) {
       var q = qOf(li);
+      syncSides(li);
       if (q > 0) {
         count += q;
         var pr = parseFloat(li.getAttribute("data-price"));
@@ -529,6 +600,9 @@ ORDER_JS = r'''
       var praw = li.getAttribute("data-price");
       if (praw !== "") { var pr = parseFloat(praw); total += pr * q; lines.push("• " + q + "× " + name + " — " + money(pr * q)); }
       else { lines.push("• " + q + "× " + name); }
+      sidesOf(li).forEach(function (s) {
+        if (s && s !== "—") lines.push("    ↳ με " + s);
+      });
     });
     lines.push("");
     lines.push("Σύνολο: " + money(total));
@@ -550,10 +624,25 @@ ORDER_JS = r'''
     return true;
   }
 
+  function validSides() {
+    for (var i = 0; i < items.length; i++) {
+      var li = items[i];
+      if (qOf(li) <= 0) continue;
+      var sel = Array.prototype.filter.call(
+        li.querySelectorAll(".sides select"), function (s) { return !s.value; });
+      if (sel.length) {
+        showToast("Διάλεξε συνοδευτικό για: " + li.getAttribute("data-name"));
+        sel[0].focus();
+        return false;
+      }
+    }
+    return true;
+  }
+
   var smsBtn = document.getElementById("orderSms");
   smsBtn.addEventListener("click", function (e) {
     e.preventDefault();
-    if (!validTime()) return;
+    if (!validTime() || !validSides()) return;
     var txt = buildText();
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     var sep = isIOS ? "&" : "?";
@@ -563,7 +652,8 @@ ORDER_JS = r'''
   refresh();
 })();
 '''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False)) \
-   .replace("__NUMBER_JSON__", json.dumps(VIBER_NUMBER, ensure_ascii=False))
+   .replace("__NUMBER_JSON__", json.dumps(VIBER_NUMBER, ensure_ascii=False)) \
+   .replace("__SIDES_JSON__", json.dumps(SIDES, ensure_ascii=False))
 
 order_script = "" if CLOSED else f"<script>\n{ORDER_JS}\n</script>"
 
