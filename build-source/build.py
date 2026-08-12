@@ -56,6 +56,7 @@ GALLERY = [   # (αρχείο, alt, object-position)
     ("06-vitrina-2.jpg", "Η ζεστή βιτρίνα του μαγαζιού από πλάγια",               "center"),
 ]
 ABOUT_TITLE = "Το μαγαζί μας"
+ABOUT_CHIP = "Το μαγαζί"      # κοντύτερο: με 6 chips το rail δεν χωράει το πλήρες
 ABOUT_TEXT = ("Μαγειρεύουμε κάθε πρωί σπιτικό φαγητό στην Καρδίτσης 22 — λαδερά, "
               "γιαχνί, ψητά — και το σερβίρουμε ζεστό από τη βιτρίνα, όσο κρατήσει. "
               "Ό,τι βλέπεις στο μενού μαγειρεύτηκε σήμερα.")
@@ -210,7 +211,7 @@ def item_html(it):
             f'{line}</li>')
 
 nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
-nav += f'\n    <a class="chip" href="#magazi">{esc(ABOUT_TITLE)}</a>'
+nav += f'\n    <a class="chip" href="#magazi">{esc(ABOUT_CHIP)}</a>'
 
 secs = []
 for c in MENU:
@@ -321,9 +322,9 @@ CSS = """
   .menu-date{position:relative;display:inline-block;margin:.8rem 0 0;padding:.32rem 1.15rem;background:var(--sand);color:#22324F;font-weight:800;font-size:clamp(1.5rem,6vw,2.15rem);letter-spacing:.01em;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.28);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:46rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:48rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
   .rail-inner::-webkit-scrollbar{display:none;}
-  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem 1.1rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
+  .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem .9rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}
   .chip.is-active{background:var(--sea);border-color:var(--sea);color:#10203A;}
   .chip:focus-visible,a:focus-visible{outline:2px solid var(--sand);outline-offset:2px;}
@@ -393,7 +394,10 @@ CSS = """
   .toast.show{opacity:1;transform:translate(-50%,0);}
 
   /* ---- «Το μαγαζί μας» ---- */
-  .about-text{max-width:44ch;margin:1.1rem 0 0;color:var(--muted);}
+  /* Κεντραρισμένα, σε αντίθεση με τις κατηγορίες φαγητού: είναι κείμενο, όχι
+     λίστα με τιμές — και στα κλειστά κάθεται κάτω από την κεντραρισμένη ανακοίνωση. */
+  #magazi .sec-head{justify-content:center;}
+  .about-text{max-width:44ch;margin:1.1rem auto 0;color:var(--muted);text-align:center;}
   .gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-top:1.5rem;}
   @media (min-width:34rem){ .gallery{grid-template-columns:repeat(3,1fr);} }
   .gallery img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:1px solid var(--hairline);background:var(--raised);}
