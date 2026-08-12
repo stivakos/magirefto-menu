@@ -1,0 +1,46 @@
+name: Δημοσίευση στα social
+
+# Τρέχει ΜΟΝΟ όταν αλλάξει το post.txt, δηλαδή όταν εγκρίνεις εσύ.
+# Το build-menu.yml κάνει commit με [skip ci], οπότε ο αυτόματος μηδενισμός
+# της έγκρισης δεν πυροδοτεί ποτέ δημοσίευση.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "post.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-social      # ποτέ δύο δημοσιεύσεις παράλληλα
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Δημοσίευση (ελέγχει έγκριση, ημερομηνία, διπλό post)
+        env:
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        working-directory: build-source
+        run: python publish.py
+      - name: Σφράγισμα «έγινε» στο post.txt
+        run: |
+          git config user.name "merci-menu-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add post.txt
+          if git diff --cached --quiet; then
+            echo "Δεν δημοσιεύτηκε τίποτα — τίποτα να σφραγίσω."
+          else
+            git commit -m "Δημοσιεύτηκε στα social [skip ci]"
+            git push
+          fi

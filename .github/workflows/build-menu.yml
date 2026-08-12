@@ -28,21 +28,47 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install --quiet openpyxl
+      - run: pip install --quiet openpyxl pillow
       - name: Έλεγχος μενού (σταματά πριν δημοσιευτεί λάθος)
         working-directory: build-source
         run: python check.py
       - name: Build index.html
         working-directory: build-source
         run: python build.py
-      - name: Commit rebuilt index.html + ΠΙΑΤΑ.md
+
+      # --- εικόνα για τα social -------------------------------------------
+      # Χωριστό βήμα ΜΕΤΑ το build: αν σκάσει ο Chrome, το site έχει ήδη χτιστεί.
+      - name: Εικόνα μαυροπίνακα
+        working-directory: build-source
+        run: python social.py
+      - name: Προεπισκόπηση σε orphan branch
+        # Δεν μπαίνει στο main: το git κρατά κάθε έκδοση και θα φούσκωνε ~75 MB
+        # τον χρόνο. Με force-push το branch έχει πάντα ΕΝΑ commit.
+        run: |
+          tmp=$(mktemp -d)
+          cp social/menu.jpg "$tmp/menu.jpg"
+          cd "$tmp"
+          git init -q -b social-preview
+          git config user.name "merci-menu-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add menu.jpg
+          git commit -q -m "Προεπισκόπηση $(date -u +%F\ %H:%M) UTC"
+          git push -q --force \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" \
+            social-preview
+      - name: Μηδενισμός έγκρισης δημοσίευσης
+        working-directory: build-source
+        run: python publish.py --reset
+
+      - name: Commit index.html + ΠΙΑΤΑ.md + post.txt
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html ΠΙΑΤΑ.md
+          git add index.html ΠΙΑΤΑ.md post.txt
           if git diff --cached --quiet; then
             echo "Δεν άλλαξε κάτι."
           else
+            # [skip ci] ώστε να μην πυροδοτηθεί το publish-social από το reset
             git commit -m "Auto-rebuild μενού ημέρας [skip ci]"
             git push
           fi
