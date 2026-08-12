@@ -56,6 +56,16 @@ def stems(s):
     return out
 
 
+def category_key(label):
+    """Κλειδί αντιστοίχισης κατηγορίας, αγνοώντας παρενθέσεις.
+
+    Έτσι η ετικέτα «Συνοδευτικά (Μερίδα)» ταιριάζει με τη γραμμή
+    «Συνοδευτικά:» του menu-today.txt — ο ιδιοκτήτης δεν χρειάζεται να γράφει
+    την παρένθεση από το κινητό.
+    """
+    return norm(re.sub(r"\(.*?\)", "", str(label)))
+
+
 def words(s):
     return [w for w in (sound(x) for x in re.split(_SPLIT, str(s)))
             if len(w) >= MIN_WORD]

@@ -59,7 +59,7 @@
   .menu-date{position:relative;display:inline-block;margin:.8rem 0 0;padding:.32rem 1.15rem;background:var(--sand);color:#22324F;font-weight:800;font-size:clamp(1.5rem,6vw,2.15rem);letter-spacing:.01em;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.28);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:48rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:53rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
   .rail-inner::-webkit-scrollbar{display:none;}
   .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem .9rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}
@@ -192,7 +192,7 @@
 <nav class="rail" aria-label="Κατηγορίες μενού">
   <div class="rail-inner">
     <a class="chip" href="#menu-hmeras">Μενού Ημέρας</a>
-    <a class="chip" href="#synodeytika">Συνοδευτικά</a>
+    <a class="chip" href="#synodeytika">Συνοδευτικά (Μερίδα)</a>
     <a class="chip" href="#salates">Σαλάτες</a>
     <a class="chip" href="#glyka">Γλυκά</a>
     <a class="chip" href="#anapsyktika">Αναψυκτικά / Ποτά</a>
@@ -227,7 +227,7 @@
 
   <section id="synodeytika" aria-labelledby="h-synodeytika">
     <div class="sec-head">
-      <h2 id="h-synodeytika" lang="el">Συνοδευτικά</h2>
+      <h2 id="h-synodeytika" lang="el">Συνοδευτικά (Μερίδα)</h2>
     </div>
     <ul class="items">
       <li class="item" data-name="Πατάτες τηγανητές" data-price=""><div class="item-line"><span class="gr">Πατάτες τηγανητές</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
@@ -235,7 +235,6 @@
       <li class="item" data-name="Ρύζι" data-price=""><div class="item-line"><span class="gr">Ρύζι</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
       <li class="item" data-name="Πουρές πατάτας" data-price=""><div class="item-line"><span class="gr">Πουρές πατάτας</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
     </ul>
-    <p class="sec-note" lang="el">…και σε μερίδα για μεγαλύτερη απόλαυση!</p>
   </section>
 
   <section id="salates" aria-labelledby="h-salates">

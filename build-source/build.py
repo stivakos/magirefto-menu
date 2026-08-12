@@ -30,12 +30,15 @@ import unicodedata, openpyxl
 
 CATEGORIES = [   # (site label, slug, xlsx tab name)
     ("Μενού Ημέρας",      "menu-hmeras", "Μενού Ημέρας"),
-    ("Συνοδευτικά",       "synodeytika", "Συνοδευτικά"),
+    ("Συνοδευτικά (Μερίδα)", "synodeytika", "Συνοδευτικά"),
     ("Σαλάτες",           "salates",     "Σαλάτες"),
     ("Γλυκά",             "glyka",       "Γλυκά"),
     ("Αναψυκτικά / Ποτά", "anapsyktika", "Αναψυκτικά - Ποτά"),
 ]
-NOTES = {"synodeytika": "…και σε μερίδα για μεγαλύτερη απόλαυση!"}
+# Σημείωση κάτω από μια κατηγορία, αν χρειαστεί ποτέ. Το «…και σε μερίδα για
+# μεγαλύτερη απόλαυση!» έφυγε: το συνοδευτικό επιλέγεται πλέον πάνω στο πιάτο
+# και η ίδια η ετικέτα λέει «(Μερίδα)».
+NOTES = {}
 HIDE_PRICE = {"synodeytika"}          # συνοδευτικά: χωρίς τιμή στο site
 MENU_TXT = os.path.join(HERE, "..", "menu-today.txt")
 
@@ -71,13 +74,14 @@ CLOSED = ""        # γραμμή «ΚΛΕΙΣΤΑ: <πότε ανοίγουμε
 # Οι γραμμές κρατιούνται ΑΚΑΤΕΡΓΑΣΤΕΣ: μπορεί να είναι αριθμοί ή ονόματα, και
 # τα ονόματα λύνονται πιο κάτω, όταν έχει φορτωθεί το xlsx.
 selection_raw = {}
-_slug_by_norm = {_norm(lbl): slug for lbl, slug, _ in CATEGORIES}
+_slug_by_norm = {dish_names.category_key(lbl): slug
+                 for lbl, slug, _ in CATEGORIES}
 for raw in open(MENU_TXT, encoding="utf-8"):
     line = raw.strip()
     if not line or line.startswith("#") or ":" not in line:
         continue
     key, val = line.split(":", 1)
-    kn = _norm(key)
+    kn = dish_names.category_key(key)
     if kn in ("ημερομηνια", "date"):
         MENU_DATE = val.strip()
     elif kn in ("κλειστα", "closed"):
@@ -358,7 +362,7 @@ CSS = """
   .menu-date{position:relative;display:inline-block;margin:.8rem 0 0;padding:.32rem 1.15rem;background:var(--sand);color:#22324F;font-weight:800;font-size:clamp(1.5rem,6vw,2.15rem);letter-spacing:.01em;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.28);}
 
   .rail{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline);}
-  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:48rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
+  .rail-inner{display:flex;gap:.5rem;overflow-x:auto;padding:.7rem 1.1rem;max-width:53rem;margin:0 auto;scrollbar-width:none;justify-content:flex-start;}
   .rail-inner::-webkit-scrollbar{display:none;}
   .chip{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.4rem .9rem;border-radius:18px;border:1px solid var(--hairline);background:var(--chip-bg);color:var(--muted);font-size:.94rem;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s;}
   .chip:hover{border-color:var(--sea);color:var(--ink);}

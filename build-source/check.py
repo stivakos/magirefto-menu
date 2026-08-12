@@ -234,7 +234,8 @@ for label, slug, tab in CATEGORIES:
 
 
 # --- 3. η επιλογή της ημέρας ----------------------------------------------
-slug_by_norm = {norm(lbl): slug for lbl, slug, _ in CATEGORIES}
+slug_by_norm = {dish_names.category_key(lbl): slug
+                for lbl, slug, _ in CATEGORIES}
 label_by_slug = {slug: lbl for lbl, slug, _ in CATEGORIES}
 date_found = False
 closed = ""
@@ -248,7 +249,7 @@ else:
         if not line or line.startswith("#") or ":" not in line:
             continue
         key, val = line.split(":", 1)
-        kn = norm(key)
+        kn = dish_names.category_key(key)
         if kn in ("ημερομηνια", "date"):
             date_found = bool(val.strip())
             if not date_found and not closed:
