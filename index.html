@@ -121,6 +121,7 @@
   .order-actions{max-width:44rem;margin:.55rem auto 0;display:flex;gap:.6rem;}
   .order-btn{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:none;border-radius:14px;padding:.8rem 1rem;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;}
   .order-btn.sms{flex:1 1 auto;background:#2FB457;color:#08351a;}
+  .order-btn.viber{flex:1 1 auto;background:#7360F2;color:#fff;}
   .order-btn:active{transform:scale(.97);}
   .order-clear{flex:0 0 auto;background:transparent;border:none;color:var(--faint);font-size:.8rem;cursor:pointer;text-decoration:underline;}
   main{padding-bottom:6rem;}
@@ -303,7 +304,8 @@
     <div class="order-sum"><div class="order-list" id="orderItems"></div><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
   </div>
   <div class="order-actions">
-    <a class="order-btn sms" id="orderSms" href="#" role="button">💬 Παραγγελία με SMS</a>
+    <a class="order-btn sms" id="orderSms" href="#" role="button">💬 SMS</a>
+    <a class="order-btn viber" id="orderViber" href="#" role="button">📲 Viber</a>
   </div>
   <a class="order-call" href="tel:+306987992887">ή κάλεσέ μας: <b>+30 698 799 2887</b></a>
 </div>
@@ -534,6 +536,29 @@
     var sep = isIOS ? "&" : "?";
     window.location.href = "sms:" + NUMBER + sep + "body=" + encodeURIComponent(txt);
   });
+
+  // Viber: το «viber://chat?number=» ΔΕΝ δέχεται έτοιμο κείμενο — μόνο το
+  // «forward» δέχεται, αλλά εκεί ο πελάτης πρέπει να βρει μόνος του τον
+  // παραλήπτη. Οπότε: αντιγράφουμε την παραγγελία και ανοίγουμε τη σωστή
+  // συνομιλία· ο πελάτης κάνει μία επικόλληση.
+  var viberBtn = document.getElementById("orderViber");
+  if (viberBtn) {
+    viberBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (!validTime() || !validSides()) return;
+      var txt = buildText();
+      function go() {
+        showToast("Η παραγγελία αντιγράφηκε. Άνοιξε το Viber και κάνε "
+                  + "επικόλληση (κράτα πατημένο στο πεδίο μηνύματος).");
+        window.location.href = "viber://chat?number=" + encodeURIComponent(NUMBER);
+      }
+      copyText(txt).then(go, function () {
+        // χωρίς πρόχειρο (παλιό browser): τουλάχιστον άνοιξε τη συνομιλία
+        showToast("Άνοιξε το Viber και γράψε την παραγγελία σου.");
+        window.location.href = "viber://chat?number=" + encodeURIComponent(NUMBER);
+      });
+    });
+  }
 
   refresh();
 })();
