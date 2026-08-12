@@ -61,16 +61,16 @@ ABOUT_TEXT = ("Μαγειρεύουμε κάθε πρωί σπιτικό φαγ�
               "γιαχνί, ψητά — και το σερβίρουμε ζεστό από τη βιτρίνα, όσο κρατήσει. "
               "Ό,τι βλέπεις στο μενού μαγειρεύτηκε σήμερα.")
 
-def _norm(s):                          # lower, strip accents & spaces/slashes
-    s = "".join(c for c in unicodedata.normalize("NFD", str(s))
-                if unicodedata.category(c) != "Mn")
-    return re.sub(r"[\s/]+", "", s).lower()
+import dish_names                      # αναγνώριση πιάτου από το όνομά του
+_norm = dish_names.norm                # ίδια συνάρτηση — μία πηγή, χωρίς απόκλιση
 
 MENU_DATE = ""
 CLOSED = ""        # γραμμή «ΚΛΕΙΣΤΑ: <πότε ανοίγουμε>» -> κλειστό μαγαζί.
                    # Όσο έχει τιμή, το site δείχνει ανακοίνωση αντί για μενού
                    # και δεν δέχεται παραγγελίες. Σβήσε τη γραμμή για να ανοίξει.
-selection = {}
+# Οι γραμμές κρατιούνται ΑΚΑΤΕΡΓΑΣΤΕΣ: μπορεί να είναι αριθμοί ή ονόματα, και
+# τα ονόματα λύνονται πιο κάτω, όταν έχει φορτωθεί το xlsx.
+selection_raw = {}
 _slug_by_norm = {_norm(lbl): slug for lbl, slug, _ in CATEGORIES}
 for raw in open(MENU_TXT, encoding="utf-8"):
     line = raw.strip()
@@ -83,7 +83,7 @@ for raw in open(MENU_TXT, encoding="utf-8"):
     elif kn in ("κλειστα", "closed"):
         CLOSED = val.strip()
     elif kn in _slug_by_norm:
-        selection[_slug_by_norm[kn]] = [int(n) for n in re.findall(r"\d+", val)]
+        selection_raw[_slug_by_norm[kn]] = val
 
 _wb = openpyxl.load_workbook(DAILY_SOURCE, data_only=True)
 SIDE_YES = {"ν", "ναι", "n", "y", "yes", "x", "χ", "✓", "1"}
@@ -183,10 +183,13 @@ def write_index():
 
 
 MENU = []
+_name_errors = []
 for label, slug, tab in CATEGORIES:
     rows = _tab_rows(tab)
+    nums, errs = dish_names.parse_selection(selection_raw.get(slug, ""), rows)
+    _name_errors += [f"[{label}] {e}" for e in errs]
     items = []
-    for n in selection.get(slug, []):
+    for n in nums:
         if n in rows:
             name, price, side = rows[n]
             items.append({"name": name,
@@ -196,6 +199,12 @@ for label, slug, tab in CATEGORIES:
     if slug in NOTES:
         cat["note"] = NOTES[slug]
     MENU.append(cat)
+
+# Άγνωστο ή διφορούμενο όνομα σταματά το build. Το να παραλειφθεί σιωπηλά ένα
+# πιάτο είναι χειρότερο από το να μη δημοσιευτεί το μενού: το site θα έδειχνε
+# λάθος κατάλογο και κανείς δεν θα το έπαιρνε είδηση.
+if _name_errors:
+    raise SystemExit("!! " + "\n!! ".join(_name_errors))
 
 # Τα συνοδευτικά της ημέρας — αυτά προσφέρονται στα πιάτα που τα δέχονται.
 # Αν σήμερα δεν έχει επιλεγεί κανένα, η επιλογή δεν εμφανίζεται πουθενά.

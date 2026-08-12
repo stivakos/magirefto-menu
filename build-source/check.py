@@ -17,6 +17,9 @@ import unicodedata
 
 import openpyxl
 
+import dish_names          # ίδια αναγνώριση ονομάτων με το build.py
+from dish_names import norm, sound, stems
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD_PY = os.path.join(HERE, "build.py")
 XLSX = os.path.join(HERE, "..", "DAILY_MENU.xlsx")
@@ -62,44 +65,11 @@ def warn(msg):
     warnings.append(msg)
 
 
-def norm(s):
-    s = "".join(c for c in unicodedata.normalize("NFD", str(s))
-                if unicodedata.category(c) != "Mn")
-    return re.sub(r"[\s/]+", "", s).lower()
-
-
 # --- εντοπισμός ορθογραφικών παραλλαγών του ίδιου πιάτου -------------------
 # «Ρεβίθια» vs «Ρεβύθια», «Γλώσσα» vs «Γλώσσες»: ίδιο πιάτο, δύο γραφές, δύο
 # Α/Α — και το site τα δείχνει σαν διαφορετικά. Ο έλεγχος ισοπεδώνει τους
 # ήχους που στα ελληνικά γράφονται με πολλούς τρόπους (ι/η/υ/ει/οι, ο/ω,
 # ε/αι), διπλά σύμφωνα και καταλήξεις, και μετά συγκρίνει.
-_SOUND = [("ει", "ι"), ("οι", "ι"), ("υι", "ι"), ("αι", "ε"),
-          ("ου", "u"), ("η", "ι"), ("υ", "ι"), ("ω", "ο"), ("ς", "σ")]
-
-
-def sound(s):
-    s = norm(s)
-    for a, b in _SOUND:
-        s = s.replace(a, b)
-    s = re.sub(r"(.)\1+", r"\1", s)          # διπλά σύμφωνα -> ένα
-    return s
-
-
-def stems(s):
-    """Σύνολο ριζών ανά λέξη: «Γλώσσες τηγανητές» -> {γλοσ, τιγανιτ}.
-    Πιάνει ενικό/πληθυντικό και γένος, που το Levenshtein τα χάνει."""
-    out = set()
-    for w in re.split(r"[\s/,&()-]+", str(s)):
-        w = sound(w)
-        if len(w) < 3:
-            continue
-        w = re.sub(r"σ$", "", w)              # πρώτα το τελικό ς/σ …
-        w = re.sub(r"[αειου]{1,2}$", "", w)   # … και μετά η κατάληξη
-        if len(w) >= 3:
-            out.add(w)
-    return out
-
-
 def dist(a, b, cap=3):
     """Απόσταση Levenshtein, με πρόωρη έξοδο πάνω από το cap."""
     if abs(len(a) - len(b)) > cap:
@@ -298,9 +268,12 @@ else:
             continue
 
         slug = slug_by_norm[kn]
-        nums = [int(x) for x in re.findall(r"\d+", val)]
-        picked[slug] = nums
         rows = catalog.get(slug, {})
+        # δέχεται αριθμούς, ονόματα («μπιφτέκι, μουσακάς») ή μείγμα
+        nums, name_errs = dish_names.parse_selection(val, rows)
+        for m in name_errs:
+            err(f"menu-today.txt γραμμή {ln} ({label_by_slug[slug]}): {m}")
+        picked[slug] = nums
 
         seen = set()
         for n in nums:
