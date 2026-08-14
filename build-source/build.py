@@ -211,9 +211,33 @@ for label, slug, tab in CATEGORIES:
 if _name_errors:
     raise SystemExit("!! " + "\n!! ".join(_name_errors))
 
+# --- πιάτα που τελείωσαν μέσα στη μέρα ------------------------------------
+# Το soldout.py αγνοεί τη λίστα αν ανήκει σε άλλη ημερομηνία, οπότε εδώ δεν
+# χρειάζεται δεύτερος έλεγχος. Όνομα που δεν αντιστοιχεί σε πιάτο της ημέρας
+# ΔΕΝ ρίχνει το build: το «τελείωσε» γράφεται βιαστικά μέσα στη βάρδια και δεν
+# αξίζει να μείνει το site χωρίς μενού επειδή κάποιο όνομα δεν βρέθηκε.
+import soldout                          # noqa: E402  (διαβάζει μόνο αρχείο)
+
+_soldout_rows = {i: (it["name"],)
+                 for i, it in enumerate(it for c in MENU for it in c["items"])}
+_soldout_keys, SOLDOUT_MISSED = set(), []
+for _tok in soldout.active():
+    _n, _msg = dish_names.resolve(_tok, _soldout_rows)
+    if _msg:
+        SOLDOUT_MISSED.append(_tok)
+    else:
+        _soldout_keys.add(_norm(_soldout_rows[_n][0]))
+
+for _c in MENU:
+    for _it in _c["items"]:
+        _it["soldout"] = _norm(_it["name"]) in _soldout_keys
+
 # Τα συνοδευτικά της ημέρας — αυτά προσφέρονται στα πιάτα που τα δέχονται.
 # Αν σήμερα δεν έχει επιλεγεί κανένα, η επιλογή δεν εμφανίζεται πουθενά.
-SIDES = [it["name"] for c in MENU if c["slug"] == "synodeytika" for it in c["items"]]
+# Ό,τι τελείωσε φεύγει και από εδώ: αλλιώς ο πελάτης θα διάλεγε συνοδευτικό
+# που δεν υπάρχει, μέσα από πιάτο που υπάρχει.
+SIDES = [it["name"] for c in MENU if c["slug"] == "synodeytika"
+         for it in c["items"] if not it["soldout"]]
 
 def esc(s): return html.escape(str(s), quote=True)
 def fmt_price(v):
@@ -233,6 +257,15 @@ def item_html(it):
     p = fmt_price(it.get("price"))
     price_span = f'<span class="price">{esc(p)}</span>' if p else ""
     dots = '<span class="dots"></span>' if p else '<span class="dots"></span>'
+    # Τελειωμένο πιάτο: ΜΕΝΕΙ στη λίστα, διαγραμμένο. Αν εξαφανιζόταν, ο πελάτης
+    # απλώς δεν θα καταλάβαινε γιατί λείπει· έτσι βλέπει και τι μαγειρεύουμε.
+    # Χωρίς κουμπιά ποσότητας και χωρίς data-price -> δεν μπαίνει σε παραγγελία.
+    if it.get("soldout"):
+        tail = '<span class="soldout-tag" lang="el">τελείωσε</span>'
+        line = (f'<div class="item-line"><span class="gr">{esc(it["name"])}{portion}</span>'
+                f'{dots}{price_span}{tail}</div>')
+        return (f'      <li class="item is-soldout" data-name="{esc(it["name"])}" '
+                f'data-price="">{line}</li>')
     qty = ('<div class="qty" data-qty="0">'
            '<button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button>'
            '<span class="q-n">0</span>'
@@ -396,6 +429,13 @@ CSS = """
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
+  /* Τελείωσε: μένει ορατό αλλά προφανώς μη διαθέσιμο. Η διαγραφή μπαίνει μόνο
+     στο όνομα και στην τιμή — η ετικέτα πρέπει να διαβάζεται καθαρά. */
+  .is-soldout{opacity:.62;}
+  .is-soldout .gr,.is-soldout .price{text-decoration:line-through;text-decoration-thickness:1px;}
+  .soldout-tag{flex:0 0 auto;font-size:.68rem;font-weight:800;letter-spacing:.1em;
+               text-transform:uppercase;color:var(--paper);background:var(--faint);
+               border-radius:999px;padding:.2rem .6rem;white-space:nowrap;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}

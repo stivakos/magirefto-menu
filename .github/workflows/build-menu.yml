@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - "menu-today.txt"
+      - "soldout.txt"
       - "DAILY_MENU.xlsx"
       - "build-source/**"
   workflow_dispatch:
@@ -29,6 +30,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install --quiet openpyxl pillow
+      # ΠΡΙΝ τον έλεγχο: αν άλλαξε η μέρα, τα χθεσινά «τελείωσε» πρέπει να
+      # έχουν φύγει ήδη, αλλιώς ο έλεγχος θα γκρίνιαζε για δική μας εκκρεμότητα.
+      - name: Καθάρισμα «τελείωσαν» αν άλλαξε η μέρα
+        working-directory: build-source
+        run: python soldout.py --reset
       - name: Έλεγχος μενού (σταματά πριν δημοσιευτεί λάθος)
         working-directory: build-source
         run: python check.py
@@ -67,7 +73,7 @@ jobs:
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html ΠΙΑΤΑ.md post.txt
+          git add index.html ΠΙΑΤΑ.md post.txt soldout.txt
           if git diff --cached --quiet; then
             echo "Δεν άλλαξε κάτι."
           else

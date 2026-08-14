@@ -76,8 +76,11 @@ def _covers(query_word, name_words):
                for nw in name_words)
 
 
-def resolve(token, rows):
+def resolve(token, rows, where="στο DAILY_MENU.xlsx"):
     """token: ό,τι έγραψε ο χρήστης. rows: {Α/Α: (όνομα, …)}.
+
+    Το `where` μπαίνει στο μήνυμα λάθους: όταν ψάχνουμε μέσα στο σημερινό
+    μενού (π.χ. «τελείωσε»), το «δεν βρέθηκε στο xlsx» θα ήταν παραπλανητικό.
 
     Επιστρέφει (Α/Α, None) σε επιτυχία, ή (None, μήνυμα λάθους) αλλιώς.
     """
@@ -120,7 +123,7 @@ def resolve(token, rows):
         extra = ("  Μήπως: "
                  + ", ".join(f"«{name_of(n)}» ({n})" for n in sorted(near)[:4])
                  + ";")
-    return None, (f"«{token}» δεν βρέθηκε στο DAILY_MENU.xlsx.{extra}")
+    return None, (f"«{token}» δεν βρέθηκε {where}.{extra}")
 
 
 def parse_selection(value, rows):

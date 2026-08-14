@@ -1,0 +1,51 @@
+name: Τελείωσε πιάτο
+
+# Καλείται από το Shortcut του κινητού με ΕΝΑ αίτημα:
+#
+#   POST /repos/<owner>/<repo>/actions/workflows/soldout.yml/dispatches
+#   {"ref":"main","inputs":{"dish":"μουσακάς"}}
+#
+# Όλη η λογική (αναγνώριση ονόματος, ημερομηνία, αρχείο) ζει στο soldout.py,
+# όπου δοκιμάζεται. Το Shortcut μένει ένα σκέτο POST — ό,τι πιο απλό μπορεί
+# να στηθεί σε κινητό και ό,τι πιο δύσκολο να χαλάσει.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dish:
+        description: 'Πιάτο (ή «ξανά <πιάτο>» / «καθάρισε»)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: soldout          # δύο σημάνσεις μαζί θα πατούσαν η μία την άλλη
+  cancel-in-progress: false
+
+jobs:
+  mark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet openpyxl
+      - name: Σήμανση
+        working-directory: build-source
+        run: python soldout.py "${{ inputs.dish }}"
+      - name: Commit
+        run: |
+          git config user.name "merci-menu-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soldout.txt
+          if git diff --cached --quiet; then
+            echo "Δεν άλλαξε κάτι."
+          else
+            # ΧΩΡΙΣ [skip ci]: θέλουμε να τρέξει το build-menu.yml και να
+            # ξαναχτιστεί η σελίδα με το πιάτο διαγραμμένο.
+            git commit -m "Τελείωσε: ${{ inputs.dish }}"
+            git push
+          fi
