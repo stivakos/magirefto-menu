@@ -49,3 +49,9 @@ jobs:
             git commit -m "Τελείωσε: ${{ inputs.dish }}"
             git push
           fi
+
+  # Το push από πάνω δεν πυροδοτεί από μόνο του το build (κανόνας του GitHub),
+  # οπότε το καλούμε ρητά. Μία μόνο ορισμένη διαδικασία build, όχι αντίγραφο.
+  rebuild:
+    needs: mark
+    uses: ./.github/workflows/build-menu.yml

@@ -13,6 +13,10 @@ on:
       - "DAILY_MENU.xlsx"
       - "build-source/**"
   workflow_dispatch:
+  # Καλείται και από το soldout.yml: το GitHub ΔΕΝ πυροδοτεί workflows από
+  # pushes που κάνει το ίδιο (προστασία από ατέρμονο βρόχο), οπότε το commit
+  # του «τελείωσε» δεν θα ξαναέχτιζε ποτέ τη σελίδα μόνο του.
+  workflow_call:
 
 permissions:
   contents: write
@@ -25,7 +29,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # ref: main γιατί όταν μας καλεί το soldout.yml, το SHA του συμβάντος
+      # είναι ΠΡΙΝ από το commit της σήμανσης.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
