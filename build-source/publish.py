@@ -33,6 +33,8 @@ MENU_TXT = os.path.join(ROOT, "menu-today.txt")
 # φούσκωνε ~75 MB/χρόνο. Με force-push το branch έχει πάντα ΕΝΑ commit.
 IMAGE_URL = ("https://raw.githubusercontent.com/stivakos/magirefto-menu/"
              "social-preview/menu.jpg")
+# Δίπλα στην εικόνα ανεβαίνει και η ταυτότητά της (ποιας μέρας είναι).
+SIDECAR_URL = IMAGE_URL.rsplit("/", 1)[0] + "/menu.json"
 
 # Η έκδοση του Graph API λήγει (~2 χρόνια). Όταν σπάσει, εδώ αλλάζει.
 GRAPH = "https://graph.facebook.com/v21.0"
@@ -66,6 +68,25 @@ def read_caption(path):
         if grab:
             out.append(line.rstrip())
     return "\n".join(out).strip()
+
+
+def image_date():
+    """Ποιας μέρας είναι η εικόνα που κάθεται ΤΩΡΑ στο social-preview.
+
+    Οι ημερομηνίες σε post.txt και menu-today.txt μπορεί να ταιριάζουν και η
+    εικόνα να είναι ακόμη η χθεσινή: αν ένα push αλλάξει και τα δύο αρχεία,
+    το build-menu και το publish-social τρέχουν ΠΑΡΑΛΛΗΛΑ και το branch δεν
+    έχει προλάβει να ενημερωθεί. Η εικόνα κουβαλά τη δική της ημερομηνία.
+
+    Επιστρέφει (ημερομηνία, σφάλμα). Αν δεν διαβάζεται, ο καλών αποφασίζει.
+    """
+    try:
+        req = urllib.request.Request(SIDECAR_URL,
+                                     headers={"Cache-Control": "no-cache"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r).get("date", ""), None
+    except Exception as e:                       # δίκτυο, 404, χαλασμένο JSON
+        return None, str(e)
 
 
 def post(url, data):
@@ -130,6 +151,21 @@ def main():
             f"!! Η ημερομηνία του post.txt ({post_date or '—'}) δεν ταιριάζει με "
             f"του menu-today.txt ({menu_date or '—'}).\n"
             f"   Η εικόνα είναι άλλης μέρας — άλλαξε πρώτα το μενού.")
+
+    # Η εικόνα στο branch πρέπει να είναι ΤΗΣ ΙΔΙΑΣ μέρας — αλλιώς φεύγει post
+    # με χθεσινό μενού ενώ όλες οι ημερομηνίες «ταιριάζουν».
+    img_date, why = image_date()
+    if why is not None:
+        raise SystemExit(
+            f"!! Δεν διάβασα την ταυτότητα της εικόνας ({SIDECAR_URL}): {why}\n"
+            f"   Δεν στέλνω κάτι που δεν μπορώ να επαληθεύσω. Αν μόλις άλλαξες "
+            f"το μενού, περίμενε να τελειώσει το build και ξαναπάτα έγκριση.")
+    if img_date != post_date:
+        raise SystemExit(
+            f"!! Η εικόνα στο social-preview είναι της «{img_date or '—'}», "
+            f"όχι της «{post_date}».\n"
+            f"   Το build δεν έχει προλάβει να την ξαναφτιάξει. Περίμενε να "
+            f"γίνει πράσινο το «Build menu» και ξαναπάτα έγκριση.")
 
     if read_field(MENU_TXT, "ΚΛΕΙΣΤΑ"):
         print("Το μαγαζί είναι κλειστό — η ανακοίνωση δημοσιεύεται κανονικά.")

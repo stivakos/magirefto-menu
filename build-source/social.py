@@ -15,7 +15,9 @@ CLOSED χωρίς να ξαναγραφτεί το index.html και χωρίς 
 Δεν κρατάμε αρχείο ανά ημέρα — ένα αρχείο που ξαναγράφεται. Μια εικόνα 200 KB
 κάθε μέρα θα φούσκωνε το repo κατά ~70 MB τον χρόνο.
 """
+import datetime
 import html
+import json
 import os
 import shutil
 import subprocess
@@ -28,6 +30,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 SLATE = os.path.join(ROOT, "assets", "social", "slate.jpg")
 OUT = os.path.join(ROOT, "social", "menu.jpg")
+# Ταυτότητα της εικόνας — ανεβαίνει δίπλα της στο social-preview branch.
+SIDECAR = os.path.join(ROOT, "social", "menu.json")
 FONTS = open(os.path.join(HERE, "fonts.css"), encoding="utf-8").read()
 
 W, H = 1080, 1350          # Instagram feed 4:5 — δουλεύει και σε Facebook
@@ -91,8 +95,12 @@ def page_html():
     </div>'''
         foot = f'☎ {esc(build.VIBER_DISPLAY)}'
     else:
-        shown = [c for c in build.MENU
-                 if c["items"] and (c["slug"] == MAIN_SLUG or c["slug"] in TWO_COL)]
+        # Ό,τι τελείωσε δεν μπαίνει στην εικόνα: αν κάποιος την ανοίξει το
+        # μεσημέρι, πρέπει να δείχνει τι ΥΠΑΡΧΕΙ ακόμη.
+        avail = {c["slug"]: [it for it in c["items"] if not it.get("soldout")]
+                 for c in build.MENU}
+        shown = [dict(c, items=avail[c["slug"]]) for c in build.MENU
+                 if avail[c["slug"]] and (c["slug"] == MAIN_SLUG or c["slug"] in TWO_COL)]
 
         lines = 0.0
         for c in shown:
@@ -122,8 +130,9 @@ def page_html():
                 f'{head}      <ul class="items{" two" if two else ""}">\n'
                 f'{rows}\n      </ul>')
 
+        shown_slugs = {c["slug"] for c in shown}
         extra = [c["label"] for c in build.MENU
-                 if c["items"] and c not in shown]
+                 if avail[c["slug"]] and c["slug"] not in shown_slugs]
         extra_line = (f'<div class="extra">και ακόμη: {esc(" · ".join(extra))}</div>'
                       if extra else "")
         body = f'''
@@ -239,6 +248,18 @@ def main():
         # JPEG αντί για PNG: το Instagram το θέλει έτσι, και είναι 5× μικρότερο
         from PIL import Image
         Image.open(png).convert("RGB").save(OUT, quality=88, optimize=True)
+
+    # Ταυτότητα δίπλα στην εικόνα: ανεβαίνει μαζί της στο social-preview και
+    # λέει ΠΟΙΑΣ ΜΕΡΑΣ είναι. Χωρίς αυτό, μια έγκριση δημοσίευσης που τρέχει
+    # παράλληλα με το build θα έστελνε τη ΧΘΕΣΙΝΗ εικόνα: οι ημερομηνίες σε
+    # post.txt/menu-today.txt θα ταίριαζαν, αλλά το branch δεν θα είχε
+    # προλάβει να ενημερωθεί. Το publish.py το ελέγχει πριν στείλει.
+    with open(SIDECAR, "w", encoding="utf-8") as f:
+        json.dump({"date": build.MENU_DATE,
+                   "closed": build.CLOSED,
+                   "built": datetime.datetime.now(
+                       datetime.timezone.utc).isoformat(timespec="seconds")},
+                  f, ensure_ascii=False)
 
     state = "ΚΛΕΙΣΤΑ" if build.CLOSED else build.MENU_DATE
     print(f"{os.path.relpath(OUT, ROOT)}  {W}×{H}  "

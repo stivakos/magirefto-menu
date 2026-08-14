@@ -47,11 +47,14 @@ jobs:
         run: |
           tmp=$(mktemp -d)
           cp social/menu.jpg "$tmp/menu.jpg"
+          # η ταυτότητα ταξιδεύει ΜΑΖΙ με την εικόνα: το publish.py τη διαβάζει
+          # για να μη στείλει ποτέ εικόνα άλλης μέρας
+          cp social/menu.json "$tmp/menu.json"
           cd "$tmp"
           git init -q -b social-preview
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add menu.jpg
+          git add menu.jpg menu.json
           git commit -q -m "Προεπισκόπηση $(date -u +%F\ %H:%M) UTC"
           git push -q --force \
             "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" \
