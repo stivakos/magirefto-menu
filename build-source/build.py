@@ -66,6 +66,7 @@ ABOUT_TEXT = ("Μαγειρεύουμε κάθε πρωί σπιτικό φαγ�
 
 import dish_names                      # αναγνώριση πιάτου από το όνομά του
 _norm = dish_names.norm                # ίδια συνάρτηση — μία πηγή, χωρίς απόκλιση
+from menu_date import date_iso         # ίδιος parser με το check.py
 
 MENU_DATE = ""
 CLOSED = ""        # γραμμή «ΚΛΕΙΣΤΑ: <πότε ανοίγουμε>» -> κλειστό μαγαζί.
@@ -280,6 +281,20 @@ if CLOSED:
       <a href="tel:{VIBER_NUMBER}">{VIBER_DISPLAY}</a></p>
   </section>'''
 
+# --- «είναι το μενού σημερινό;» -------------------------------------------
+# Ο έλεγχος ΔΕΝ γίνεται εδώ: το build τρέχει τη στιγμή που ο ιδιοκτήτης
+# αλλάζει το μενού, οπότε η ημερομηνία είναι πάντα φρέσκια. Η σελίδα όμως
+# σερβίρεται στατικά για μέρες. Άρα η σύγκριση πρέπει να γίνει στον browser
+# του πελάτη — γι' αυτό βγάζουμε την ημερομηνία σε μορφή ISO για τη JS.
+MENU_ISO = date_iso(MENU_DATE)
+
+stale_html = "" if (CLOSED or not MENU_ISO) else f'''  <div class="stale-note" hidden>
+    <p class="stale-title" lang="el">Αυτό είναι το μενού της {esc(MENU_DATE)}</p>
+    <p class="stale-sub" lang="el">Δεν έχει ενημερωθεί για σήμερα, οπότε δεν
+      δεχόμαστε παραγγελίες από τη σελίδα. Πάρε μας τηλέφωνο για το σημερινό.</p>
+    <p class="stale-call"><a href="tel:{VIBER_NUMBER}">📞 {VIBER_DISPLAY}</a></p>
+  </div>'''
+
 # κομμάτια που μπαίνουν μόνο όταν το μαγαζί είναι ανοιχτό
 date_html = "" if CLOSED else f'<p class="menu-date" lang="el">{esc(MENU_DATE)}</p>'
 rail_html = "" if CLOSED else f'''<nav class="rail" aria-label="Κατηγορίες μενού">
@@ -392,6 +407,20 @@ CSS = """
   .closed-call{margin:1.8rem 0 0;font-size:1.05rem;color:var(--muted);}
   .closed-call a{color:var(--sand);font-weight:700;text-decoration:none;white-space:nowrap;}
   .closed-call a:hover{text-decoration:underline;}
+  /* Μενού που δεν ενημερώθηκε σήμερα: η JS βάζει .stale στο <html>. Το
+     markup υπάρχει πάντα (hidden) ώστε να μην «αναβοσβήνει» στο φόρτωμα. */
+  .stale-note{display:none;margin:0 0 1.4rem;padding:1.1rem 1.2rem;border-radius:14px;
+    background:color-mix(in srgb,var(--sea) 16%,var(--paper));border:1px solid var(--sea);text-align:center;}
+  .stale .stale-note{display:block;}
+  .stale .stale-note[hidden]{display:block;}
+  .stale-title{margin:0;font-weight:800;font-size:1.05rem;color:var(--ink);}
+  .stale-sub{margin:.5rem auto 0;max-width:40ch;font-size:.95rem;color:var(--muted);}
+  .stale-call{margin:.9rem 0 0;}
+  .stale-call a{display:inline-block;padding:.5rem 1.1rem;border-radius:999px;background:var(--sea);
+    color:#10203A;font-weight:800;text-decoration:none;}
+  /* χωρίς παραγγελία: τα κουμπιά ποσότητας και η μπάρα φεύγουν εντελώς */
+  .stale .qty,.stale .order-bar{display:none !important;}
+  .stale .items{opacity:.72;}
 
   /* ---- quantity stepper ---- */
   .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
@@ -547,10 +576,17 @@ ORDER_JS = r'''
       var txt = document.createElement("span");
       txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
       var sel = document.createElement("select");
-      sel.innerHTML = '<option value="">Διάλεξε συνοδευτικό…</option>' +
-        SIDES.map(function (s) {
-          return '<option value="' + s + '">' + s + "</option>";
-        }).join("") + '<option value="—">Χωρίς συνοδευτικό</option>';
+      // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
+      // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
+      [["", "Διάλεξε συνοδευτικό…"]]
+        .concat(SIDES.map(function (s) { return [s, s]; }))
+        .concat([["—", "Χωρίς συνοδευτικό"]])
+        .forEach(function (pair) {
+          var o = document.createElement("option");
+          o.value = pair[0];
+          o.textContent = pair[1];
+          sel.appendChild(o);
+        });
       sel.addEventListener("change", refresh);
       row.appendChild(txt); row.appendChild(sel);
       box.appendChild(row);
@@ -704,6 +740,33 @@ ORDER_JS = r'''
 
 order_script = "" if CLOSED else f"<script>\n{ORDER_JS}\n</script>"
 
+# Τρέχει ΠΡΙΝ ζωγραφιστεί η σελίδα (parser-blocking, μέσα στο <body> πριν το
+# περιεχόμενο): αν το μενού δεν είναι σημερινό, μπαίνει .stale στο <html> και
+# το CSS κρύβει παραγγελία και ποσότητες χωρίς να προλάβει να φανεί τίποτα.
+# Ξαναελέγχει όταν ο χρήστης επιστρέφει στην καρτέλα — κινητό που έμεινε
+# ανοιχτό όλη νύχτα δεν πρέπει να ξυπνά με χθεσινό μενού ενεργό.
+stale_script = "" if (CLOSED or not MENU_ISO) else f'''<script>
+(function () {{
+  var MENU_ISO = {json.dumps(MENU_ISO)};
+  function todayISO() {{
+    var d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }}
+  function check() {{
+    // Μόνο ΠΑΛΙΟ μενού κλειδώνει. Μελλοντική ημερομηνία = ετοίμασες το
+    // αυριανό από το βράδυ· δεν είναι λάθος.
+    var stale = MENU_ISO < todayISO();
+    document.documentElement.classList.toggle("stale", stale);
+  }}
+  check();
+  document.addEventListener("visibilitychange", function () {{
+    if (!document.hidden) check();
+  }});
+}})();
+</script>'''
+
 HTML = f'''<!doctype html>
 <html lang="el">
 <head>
@@ -717,6 +780,7 @@ HTML = f'''<!doctype html>
 {FONT_FACES}
 {CSS}
 </style>
+{stale_script}
 
 <div class="wm" aria-hidden="true"></div>
 
@@ -731,6 +795,7 @@ HTML = f'''<!doctype html>
 {rail_html}
 
 <main>
+{stale_html}
 {sections_html}
 
 {about_html}

@@ -89,6 +89,20 @@
   .closed-call{margin:1.8rem 0 0;font-size:1.05rem;color:var(--muted);}
   .closed-call a{color:var(--sand);font-weight:700;text-decoration:none;white-space:nowrap;}
   .closed-call a:hover{text-decoration:underline;}
+  /* Μενού που δεν ενημερώθηκε σήμερα: η JS βάζει .stale στο <html>. Το
+     markup υπάρχει πάντα (hidden) ώστε να μην «αναβοσβήνει» στο φόρτωμα. */
+  .stale-note{display:none;margin:0 0 1.4rem;padding:1.1rem 1.2rem;border-radius:14px;
+    background:color-mix(in srgb,var(--sea) 16%,var(--paper));border:1px solid var(--sea);text-align:center;}
+  .stale .stale-note{display:block;}
+  .stale .stale-note[hidden]{display:block;}
+  .stale-title{margin:0;font-weight:800;font-size:1.05rem;color:var(--ink);}
+  .stale-sub{margin:.5rem auto 0;max-width:40ch;font-size:.95rem;color:var(--muted);}
+  .stale-call{margin:.9rem 0 0;}
+  .stale-call a{display:inline-block;padding:.5rem 1.1rem;border-radius:999px;background:var(--sea);
+    color:#10203A;font-weight:800;text-decoration:none;}
+  /* χωρίς παραγγελία: τα κουμπιά ποσότητας και η μπάρα φεύγουν εντελώς */
+  .stale .qty,.stale .order-bar{display:none !important;}
+  .stale .items{opacity:.72;}
 
   /* ---- quantity stepper ---- */
   .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
@@ -160,6 +174,27 @@
   .legal p{margin:.35rem 0;}
 
 </style>
+<script>
+(function () {
+  var MENU_ISO = "2026-08-12";
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+  function check() {
+    // Μόνο ΠΑΛΙΟ μενού κλειδώνει. Μελλοντική ημερομηνία = ετοίμασες το
+    // αυριανό από το βράδυ· δεν είναι λάθος.
+    var stale = MENU_ISO < todayISO();
+    document.documentElement.classList.toggle("stale", stale);
+  }
+  check();
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) check();
+  });
+})();
+</script>
 
 <div class="wm" aria-hidden="true"></div>
 
@@ -201,6 +236,12 @@
 </nav>
 
 <main>
+  <div class="stale-note" hidden>
+    <p class="stale-title" lang="el">Αυτό είναι το μενού της Τετάρτη 12/8/26</p>
+    <p class="stale-sub" lang="el">Δεν έχει ενημερωθεί για σήμερα, οπότε δεν
+      δεχόμαστε παραγγελίες από τη σελίδα. Πάρε μας τηλέφωνο για το σημερινό.</p>
+    <p class="stale-call"><a href="tel:+306987992887">📞 +30 698 799 2887</a></p>
+  </div>
   <section id="menu-hmeras" aria-labelledby="h-menu-hmeras">
     <div class="sec-head">
       <h2 id="h-menu-hmeras" lang="el">Μενού Ημέρας</h2>
@@ -410,10 +451,17 @@
       var txt = document.createElement("span");
       txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
       var sel = document.createElement("select");
-      sel.innerHTML = '<option value="">Διάλεξε συνοδευτικό…</option>' +
-        SIDES.map(function (s) {
-          return '<option value="' + s + '">' + s + "</option>";
-        }).join("") + '<option value="—">Χωρίς συνοδευτικό</option>';
+      // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
+      // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
+      [["", "Διάλεξε συνοδευτικό…"]]
+        .concat(SIDES.map(function (s) { return [s, s]; }))
+        .concat([["—", "Χωρίς συνοδευτικό"]])
+        .forEach(function (pair) {
+          var o = document.createElement("option");
+          o.value = pair[0];
+          o.textContent = pair[1];
+          sel.appendChild(o);
+        });
       sel.addEventListener("change", refresh);
       row.appendChild(txt); row.appendChild(sel);
       box.appendChild(row);

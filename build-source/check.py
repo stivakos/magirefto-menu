@@ -10,6 +10,7 @@
 """
 
 import ast
+import datetime
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ import openpyxl
 
 import dish_names          # ίδια αναγνώριση ονομάτων με το build.py
 from dish_names import norm, sound, stems
+import menu_date           # ίδιος parser ημερομηνίας με το build.py
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD_PY = os.path.join(HERE, "build.py")
@@ -254,6 +256,27 @@ else:
             date_found = bool(val.strip())
             if not date_found and not closed:
                 err(f"menu-today.txt γραμμή {ln}: κενή ΗΜΕΡΟΜΗΝΙΑ.")
+            menu_day = menu_date.parse(val)
+            if date_found and not menu_day:
+                warn(f"menu-today.txt γραμμή {ln}: η ημερομηνία «{val.strip()}» "
+                     f"δεν διαβάζεται ως ημέρα/μήνας. Η σελίδα δεν θα μπορεί να "
+                     f"καταλάβει αν το μενού είναι σημερινό.")
+            elif menu_day:
+                today = datetime.date.today()
+                if menu_day < today:
+                    days = (today - menu_day).days
+                    warn(f"Η ΗΜΕΡΟΜΗΝΙΑ είναι {days} μέρα(ες) πίσω "
+                         f"({menu_day.strftime('%d/%m/%Y')}). Η σελίδα θα βγάλει "
+                         f"«δεν ενημερώθηκε για σήμερα» και ΔΕΝ θα δέχεται "
+                         f"παραγγελίες.")
+                elif menu_day > today:
+                    warn(f"Η ΗΜΕΡΟΜΗΝΙΑ είναι μελλοντική "
+                         f"({menu_day.strftime('%d/%m/%Y')}) — εντάξει αν "
+                         f"ετοιμάζεις το αυριανό μενού.")
+                bad = menu_date.weekday_mismatch(val)
+                if bad:
+                    warn(f"Έγραψες «{bad[0]}» αλλά η "
+                         f"{menu_day.strftime('%d/%m/%Y')} είναι {bad[1]}.")
             continue
         if kn in ("κλειστα", "closed"):
             closed = val.strip()
