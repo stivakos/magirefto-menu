@@ -9,14 +9,9 @@ on:
     branches: [main]
     paths:
       - "menu-today.txt"
-      - "soldout.txt"
       - "DAILY_MENU.xlsx"
       - "build-source/**"
   workflow_dispatch:
-  # Καλείται και από το soldout.yml: το GitHub ΔΕΝ πυροδοτεί workflows από
-  # pushes που κάνει το ίδιο (προστασία από ατέρμονο βρόχο), οπότε το commit
-  # του «τελείωσε» δεν θα ξαναέχτιζε ποτέ τη σελίδα μόνο του.
-  workflow_call:
 
 permissions:
   contents: write
@@ -29,20 +24,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # ref: main γιατί όταν μας καλεί το soldout.yml, το SHA του συμβάντος
-      # είναι ΠΡΙΝ από το commit της σήμανσης.
       - uses: actions/checkout@v4
-        with:
-          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install --quiet openpyxl pillow
-      # ΠΡΙΝ τον έλεγχο: αν άλλαξε η μέρα, τα χθεσινά «τελείωσε» πρέπει να
-      # έχουν φύγει ήδη, αλλιώς ο έλεγχος θα γκρίνιαζε για δική μας εκκρεμότητα.
-      - name: Καθάρισμα «τελείωσαν» αν άλλαξε η μέρα
-        working-directory: build-source
-        run: python soldout.py --reset
       - name: Έλεγχος μενού (σταματά πριν δημοσιευτεί λάθος)
         working-directory: build-source
         run: python check.py
@@ -81,7 +67,7 @@ jobs:
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html ΠΙΑΤΑ.md post.txt soldout.txt menu-state.json
+          git add index.html ΠΙΑΤΑ.md post.txt menu-state.json
           if git diff --cached --quiet; then
             echo "Δεν άλλαξε κάτι."
           else

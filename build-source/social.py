@@ -97,8 +97,7 @@ def page_html():
     else:
         # Ό,τι τελείωσε δεν μπαίνει στην εικόνα: αν κάποιος την ανοίξει το
         # μεσημέρι, πρέπει να δείχνει τι ΥΠΑΡΧΕΙ ακόμη.
-        avail = {c["slug"]: [it for it in c["items"] if not it.get("soldout")]
-                 for c in build.MENU}
+        avail = {c["slug"]: list(c["items"]) for c in build.MENU}
         shown = [dict(c, items=avail[c["slug"]]) for c in build.MENU
                  if avail[c["slug"]] and (c["slug"] == MAIN_SLUG or c["slug"] in TWO_COL)]
 

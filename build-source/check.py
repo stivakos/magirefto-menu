@@ -326,36 +326,6 @@ else:
              f"έχεις επιλέξει κανένα Συνοδευτικό — η επιλογή δεν θα φανεί.")
 
 
-# --- 4. πιάτα που τελείωσαν ------------------------------------------------
-# Προειδοποιήσεις, όχι σφάλματα: το «τελείωσε» γράφεται βιαστικά μέσα στη
-# βάρδια και δεν αξίζει να μείνει το site χωρίς μενού για μια κακογραμμένη λέξη.
-import soldout                                     # noqa: E402
-
-so_date, so_names = soldout.read()
-so_active = soldout.active()
-
-if so_names and not so_active:
-    warn(f"soldout.txt: η λίστα («{', '.join(so_names)}») ανήκει στην "
-         f"{so_date or '—'}, όχι στη σημερινή {soldout.menu_date() or '—'} — "
-         f"αγνοείται και θα καθαριστεί στο επόμενο build.")
-
-so_ok, so_bad = [], []
-if so_active:
-    day_rows = {}
-    for _slug, _nums in picked.items():
-        for _n in _nums:
-            _row = catalog.get(_slug, {}).get(_n)
-            if _row:
-                day_rows[len(day_rows)] = (_row[0],)
-    for _tok in so_active:
-        _n, _msg = dish_names.resolve(_tok, day_rows, where="στο σημερινό μενού")
-        if _msg:
-            so_bad.append(_tok)
-            warn(f"soldout.txt: {_msg}")
-        else:
-            so_ok.append(day_rows[_n][0])
-
-
 # --- 5. οι φωτογραφίες της γκαλερί -----------------------------------------
 # Λείπον αρχείο δεν χαλάει το build — βγάζει σπασμένη εικόνα στο live site, που
 # κανείς δεν βλέπει μέχρι να το πει πελάτης.
@@ -403,13 +373,6 @@ if picked and not closed:
 if with_side:
     print("\n── ΜΕ ΣΥΝΟΔΕΥΤΙΚΟ " + "─" * 42)
     print(f"  {len(with_side)}: {', '.join(sorted(with_side))}")
-
-if so_ok or so_bad:
-    print("\n── ΤΕΛΕΙΩΣΑΝ ΣΗΜΕΡΑ " + "─" * 39)
-    if so_ok:
-        print("  " + ", ".join(so_ok))
-    if so_bad:
-        print("  δεν αναγνωρίστηκαν: " + ", ".join(so_bad))
 
 print("\n── ΤΟ ΜΑΓΑΖΙ ΜΑΣ " + "─" * 43)
 print(f"  {len(listed)} φωτογραφίες, {gallery_kb / 1024:.1f} MB συνολικά.")

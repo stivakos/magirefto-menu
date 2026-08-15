@@ -80,9 +80,6 @@
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
   /* Τελείωσε: μένει ορατό αλλά προφανώς μη διαθέσιμο. Η διαγραφή μπαίνει μόνο
      στο όνομα και στην τιμή — η ετικέτα πρέπει να διαβάζεται καθαρά. */
-  .is-soldout{opacity:.62;}
-  .is-soldout .gr,.is-soldout .price{text-decoration:line-through;text-decoration-thickness:1px;}
-  .soldout-tag{flex:0 0 auto;font-size:.68rem;font-weight:800;letter-spacing:.1em;
                text-transform:uppercase;color:var(--paper);background:var(--faint);
                border-radius:999px;padding:.2rem .6rem;white-space:nowrap;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
@@ -632,7 +629,7 @@
 </script>
 <script>
 (function () {
-  var STAMP = "debee551044f473b";
+  var STAMP = "ef4e69bd3388294c";
   var changed = false;
 
   function apply(v) {
