@@ -321,6 +321,27 @@ if CLOSED:
 # του πελάτη — γι' αυτό βγάζουμε την ημερομηνία σε μορφή ISO για τη JS.
 MENU_ISO = date_iso(MENU_DATE)
 
+# --- «άλλαξε το μενού όσο είχες τη σελίδα ανοιχτή;» ------------------------
+# Ο πελάτης κρατά την καρτέλα ανοιχτή, εμείς σημαίνουμε «τελείωσε», και εκείνος
+# στέλνει παραγγελία για πιάτο που δεν υπάρχει. Η σελίδα δεν έχει τρόπο να το
+# μάθει μόνη της, οπότε βγάζουμε δίπλα της ένα μικρό menu-state.json με μια
+# ΥΠΟΓΡΑΦΗ του τι βλέπει ο πελάτης· η σελίδα το ξαναδιαβάζει όταν επιστρέφει
+# στην καρτέλα και πριν σταλεί η παραγγελία.
+# Υπογραφή περιεχομένου, όχι ώρα build: αλλαγή στο CSS δεν πρέπει να διώχνει
+# κανέναν από το καλάθι του.
+STATE_JSON = os.path.join(HERE, "..", "menu-state.json")
+
+
+def menu_stamp():
+    import hashlib
+    parts = [MENU_DATE, CLOSED]
+    for c in MENU:
+        parts.append(c["slug"])
+        for it in c["items"]:
+            parts.append(f'{it["name"]}|{it.get("price")}|'
+                         f'{int(bool(it.get("soldout")))}|{int(bool(it.get("side")))}')
+    return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:16]
+
 stale_html = "" if (CLOSED or not MENU_ISO) else f'''  <div class="stale-note" hidden>
     <p class="stale-title" lang="el">Αυτό είναι το μενού της {esc(MENU_DATE)}</p>
     <p class="stale-sub" lang="el">Δεν έχει ενημερωθεί για σήμερα, οπότε δεν
@@ -461,6 +482,14 @@ CSS = """
   /* χωρίς παραγγελία: τα κουμπιά ποσότητας και η μπάρα φεύγουν εντελώς */
   .stale .qty,.stale .order-bar{display:none !important;}
   .stale .items{opacity:.72;}
+  /* «το μενού άλλαξε όσο ήσουν εδώ» — μπαίνει .changed στο <html> */
+  .fresh-note{display:none;position:fixed;top:0;left:0;right:0;z-index:40;
+    align-items:center;justify-content:center;gap:.7rem;flex-wrap:wrap;
+    padding:.7rem 1rem;background:var(--sea);color:#10203A;font-weight:700;
+    font-size:.92rem;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.35);}
+  .changed .fresh-note{display:flex;}
+  .fresh-note button{border:0;border-radius:999px;padding:.42rem 1.1rem;
+    background:#10203A;color:var(--ink);font:inherit;font-weight:800;cursor:pointer;}
 
   /* ---- quantity stepper ---- */
   .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
@@ -780,6 +809,56 @@ ORDER_JS = r'''
 
 order_script = "" if CLOSED else f"<script>\n{ORDER_JS}\n</script>"
 
+MENU_STAMP = "" if CLOSED else menu_stamp()
+fresh_note_html = "" if CLOSED else '''  <div class="fresh-note" role="status">
+    <span>Το μενού άλλαξε — κάτι τελείωσε ή ενημερώθηκε.</span>
+    <button type="button" id="freshReload">Ανανέωση</button>
+  </div>'''
+
+# Μπαίνει στο ΤΕΛΟΣ του body: χρειάζεται τα κουμπιά παραγγελίας να υπάρχουν.
+fresh_script = "" if CLOSED else f'''<script>
+(function () {{
+  var STAMP = {json.dumps(MENU_STAMP)};
+  var changed = false;
+
+  function apply(v) {{
+    changed = v;
+    document.documentElement.classList.toggle("changed", v);
+  }}
+
+  function check() {{
+    // cache:no-store — αλλιώς ο browser σερβίρει το ίδιο αρχείο που έχει ήδη
+    return fetch("menu-state.json?ts=" + Date.now(), {{cache: "no-store"}})
+      .then(function (r) {{ return r.ok ? r.json() : null; }})
+      .then(function (j) {{ if (j && j.stamp) apply(j.stamp !== STAMP); }})
+      .catch(function () {{ /* χωρίς δίκτυο: μη χαλάς τη σελίδα */ }});
+  }}
+
+  document.addEventListener("visibilitychange", function () {{
+    if (!document.hidden) check();
+  }});
+
+  var btn = document.getElementById("freshReload");
+  if (btn) btn.addEventListener("click", function () {{ location.reload(); }});
+
+  // Τελευταία γραμμή άμυνας: δεν φεύγει παραγγελία πάνω σε ξεπερασμένο μενού.
+  // Capture phase, ώστε να προλάβει τον handler που στέλνει το SMS/Viber.
+  ["orderSms", "orderViber"].forEach(function (id) {{
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("click", function (e) {{
+      if (!changed) return;
+      e.preventDefault();
+      e.stopPropagation();
+      apply(true);
+      window.scrollTo({{top: 0, behavior: "smooth"}});
+    }}, true);
+  }});
+
+  check();
+}})();
+</script>'''
+
 # Τρέχει ΠΡΙΝ ζωγραφιστεί η σελίδα (parser-blocking, μέσα στο <body> πριν το
 # περιεχόμενο): αν το μενού δεν είναι σημερινό, μπαίνει .stale στο <html> και
 # το CSS κρύβει παραγγελία και ποσότητες χωρίς να προλάβει να φανεί τίποτα.
@@ -835,6 +914,7 @@ HTML = f'''<!doctype html>
 {rail_html}
 
 <main>
+{fresh_note_html}
 {stale_html}
 {sections_html}
 
@@ -882,6 +962,7 @@ HTML = f'''<!doctype html>
 </script>
 
 {order_script}
+{fresh_script}
 </body>
 </html>
 '''
@@ -897,6 +978,12 @@ if __name__ == "__main__":
 
     write_index()
     print(f"Wrote {INDEX_MD}")
+
+    # Η υπογραφή που ρωτά η ανοιχτή σελίδα για να δει αν άλλαξε κάτι.
+    with open(STATE_JSON, "w", encoding="utf-8") as f:
+        json.dump({"stamp": MENU_STAMP, "date": MENU_DATE,
+                   "closed": bool(CLOSED)}, f, ensure_ascii=False)
+    print(f"Wrote {STATE_JSON}  ({MENU_STAMP or 'κλειστά'})")
 
 # NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
 # tabs: Α/Α | Ονομασία | Τιμή). The daily selection ("μαγειρευτά 1 2 4 …") is read FROM

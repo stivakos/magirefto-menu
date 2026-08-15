@@ -110,6 +110,14 @@
   /* χωρίς παραγγελία: τα κουμπιά ποσότητας και η μπάρα φεύγουν εντελώς */
   .stale .qty,.stale .order-bar{display:none !important;}
   .stale .items{opacity:.72;}
+  /* «το μενού άλλαξε όσο ήσουν εδώ» — μπαίνει .changed στο <html> */
+  .fresh-note{display:none;position:fixed;top:0;left:0;right:0;z-index:40;
+    align-items:center;justify-content:center;gap:.7rem;flex-wrap:wrap;
+    padding:.7rem 1rem;background:var(--sea);color:#10203A;font-weight:700;
+    font-size:.92rem;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.35);}
+  .changed .fresh-note{display:flex;}
+  .fresh-note button{border:0;border-radius:999px;padding:.42rem 1.1rem;
+    background:#10203A;color:var(--ink);font:inherit;font-weight:800;cursor:pointer;}
 
   /* ---- quantity stepper ---- */
   .qty{flex:0 0 auto;display:inline-flex;align-items:center;gap:.1rem;margin-left:.6rem;}
@@ -243,6 +251,10 @@
 </nav>
 
 <main>
+  <div class="fresh-note" role="status">
+    <span>Το μενού άλλαξε — κάτι τελείωσε ή ενημερώθηκε.</span>
+    <button type="button" id="freshReload">Ανανέωση</button>
+  </div>
   <div class="stale-note" hidden>
     <p class="stale-title" lang="el">Αυτό είναι το μενού της Τετάρτη 12/8/26</p>
     <p class="stale-sub" lang="el">Δεν έχει ενημερωθεί για σήμερα, οπότε δεν
@@ -617,6 +629,48 @@
   refresh();
 })();
 
+</script>
+<script>
+(function () {
+  var STAMP = "858214ff8d0ba72d";
+  var changed = false;
+
+  function apply(v) {
+    changed = v;
+    document.documentElement.classList.toggle("changed", v);
+  }
+
+  function check() {
+    // cache:no-store — αλλιώς ο browser σερβίρει το ίδιο αρχείο που έχει ήδη
+    return fetch("menu-state.json?ts=" + Date.now(), {cache: "no-store"})
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.stamp) apply(j.stamp !== STAMP); })
+      .catch(function () { /* χωρίς δίκτυο: μη χαλάς τη σελίδα */ });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) check();
+  });
+
+  var btn = document.getElementById("freshReload");
+  if (btn) btn.addEventListener("click", function () { location.reload(); });
+
+  // Τελευταία γραμμή άμυνας: δεν φεύγει παραγγελία πάνω σε ξεπερασμένο μενού.
+  // Capture phase, ώστε να προλάβει τον handler που στέλνει το SMS/Viber.
+  ["orderSms", "orderViber"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("click", function (e) {
+      if (!changed) return;
+      e.preventDefault();
+      e.stopPropagation();
+      apply(true);
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }, true);
+  });
+
+  check();
+})();
 </script>
 </body>
 </html>

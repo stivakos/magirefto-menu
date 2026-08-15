@@ -25,6 +25,16 @@ _SOUND = [("ει", "ι"), ("οι", "ι"), ("υι", "ι"), ("αι", "ε"),
 _SPLIT = r"[\s/,&()\-–—]+"
 MIN_WORD = 3          # λέξεις κάτω από 3 γράμματα («με», «a», «la») δεν μετράνε
 
+# Λέξεις που λέει κανείς γύρω από το πιάτο, ιδίως με υπαγόρευση: «τελείωσε ο
+# μουσακάς», «δεν έχουμε ρύζι». Αφαιρούνται ΜΟΝΟ από αυτό που γράφει ο χρήστης,
+# ποτέ από τα ονόματα του xlsx — και μόνο αν μείνει κάτι πίσω τους.
+# Γράφονται κανονικά· περνούν από το ίδιο sound() ώστε να μη χρειάζεται να
+# μαντεύει κανείς τη φωνητική τους μορφή.
+_FILLER_WORDS = (
+    "τελείωσε τελείωσαν τέλος σώθηκε σώθηκαν ξέμεινε ξεμείναμε έλειψε λείπει "
+    "δεν έχει έχουμε είχαμε υπάρχει υπάρχουν πια όλα όλο μας μου"
+)
+
 
 def norm(s):
     """Πεζά, χωρίς τόνους, χωρίς κενά/καθέτους."""
@@ -71,9 +81,38 @@ def words(s):
             if len(w) >= MIN_WORD]
 
 
+def _stem_word(w):
+    """Ρίζα μίας ήδη φωνητικά ισοπεδωμένης λέξης."""
+    w = re.sub(r"σ$", "", w)
+    return re.sub(r"[αειου]{1,2}$", "", w) or w
+
+
+# Σύγκριση σε ΡΙΖΑ, όχι σε λέξη: αλλιώς θα έπρεπε να απαριθμηθεί κάθε κλίση
+# («τελείωσε», «τελείωσαν», «τελειώσει», «τελειώσανε»…).
+_FILLER = {_stem_word(sound(w)) for w in _FILLER_WORDS.split()}
+
+
+def query_words(s):
+    """Οι λέξεις του χρήστη, χωρίς τα «τελείωσε / δεν έχουμε / πια».
+
+    Αν αφαιρεθούν όλες (π.χ. έγραψε μόνο «τελείωσε»), κρατάμε τις αρχικές —
+    καλύτερα να πει «δεν βρέθηκε» παρά να ψάξει το κενό.
+    """
+    w = words(s)
+    kept = [x for x in w if _stem_word(x) not in _FILLER]
+    return kept or w
+
+
 def _covers(query_word, name_words):
     return any(nw.startswith(query_word) or query_word.startswith(nw)
                for nw in name_words)
+
+
+def _stem_covers(query_word, name_stems):
+    """Ίδιο με το _covers αλλά σε ρίζες: πιάνει «μουσακάδες» -> «Μουσακάς»,
+    που το πρόθεμα δεν το πιάνει (μuσακαδεσ vs μuσακασ)."""
+    q = _stem_word(query_word)
+    return any(ns.startswith(q) or q.startswith(ns) for ns in name_stems)
 
 
 def resolve(token, rows, where="στο DAILY_MENU.xlsx"):
@@ -97,17 +136,28 @@ def resolve(token, rows, where="στο DAILY_MENU.xlsx"):
     if len(hit) == 1:
         return hit[0], None
 
-    # 2. ίδιο αν αγνοήσουμε ορθογραφία/τόνους («ρεβιθια» -> «Ρεβύθια»)
-    key = " ".join(words(token))
-    hit = [n for n in rows if " ".join(words(name_of(n))) == key]
-    if len(hit) == 1:
-        return hit[0], None
+    # 2. ίδιο αν αγνοήσουμε ορθογραφία/τόνους («ρεβιθια» -> «Ρεβύθια»).
+    #    Δοκιμάζεται και χωρίς τις λέξεις-γεμίσματα, ώστε το «σώθηκαν τα
+    #    γεμιστά» να κριθεί όπως το σκέτο «γεμιστά» — δηλαδή να κερδίσει το
+    #    ακριβές «Γεμιστά» αντί να μπερδευτεί με το «Γεμιστά με κιμά».
+    for key in dict.fromkeys((" ".join(words(token)),
+                              " ".join(query_words(token)))):
+        hit = [n for n in rows if " ".join(words(name_of(n))) == key]
+        if len(hit) == 1:
+            return hit[0], None
 
-    # 3. όλες οι λέξεις του token υπάρχουν στο όνομα («μπιφτέκι» -> #38)
-    qw = words(token)
+    # 3. όλες οι λέξεις του token υπάρχουν στο όνομα («μπιφτέκι» -> #38).
+    #    Οι λέξεις-γεμίσματα φεύγουν πρώτα: με υπαγόρευση ο ιδιοκτήτης λέει
+    #    ολόκληρη πρόταση («τελείωσε ο μουσακάς»), όχι σκέτο όνομα.
+    qw = query_words(token)
     if qw:
         hit = [n for n in rows
                if all(_covers(q, words(name_of(n))) for q in qw)]
+        # 3β. αν δεν βρέθηκε τίποτα, ξαναδοκίμασε σε ρίζες: πιάνει τον
+        #     πληθυντικό («μουσακάδες» -> «Μουσακάς»), που το πρόθεμα χάνει.
+        if not hit:
+            hit = [n for n in rows
+                   if all(_stem_covers(q, stems(name_of(n))) for q in qw)]
         if len(hit) == 1:
             return hit[0], None
         if len(hit) > 1:

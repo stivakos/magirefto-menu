@@ -81,7 +81,7 @@ jobs:
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html ΠΙΑΤΑ.md post.txt soldout.txt
+          git add index.html ΠΙΑΤΑ.md post.txt soldout.txt menu-state.json
           if git diff --cached --quiet; then
             echo "Δεν άλλαξε κάτι."
           else
