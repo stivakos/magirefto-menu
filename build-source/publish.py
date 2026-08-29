@@ -3,6 +3,7 @@
 
     python3 publish.py            # στεγνή δοκιμή αν λείπουν τα secrets
     python3 publish.py --force    # αγνοεί το «ΔΗΜΟΣΙΕΥΣΗ: όχι» (για δοκιμές)
+    python3 publish.py --check    # μιλά στο Facebook χωρίς να δημοσιεύσει
 
 Καλείται από το .github/workflows/publish-social.yml όταν αλλάξει το post.txt.
 Ελέγχει ΤΡΙΑ πράγματα πριν στείλει — καθένα τους αντιστοιχεί σε λάθος που θα
@@ -116,6 +117,48 @@ def to_instagram(caption, token, ig_id):
     return f"Instagram: post {r.get('id')}"
 
 
+def get(url, token):
+    """GET με το token σε header, όχι στο URL — δεν θέλουμε να καταλήξει σε log."""
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:400]
+        raise SystemExit(f"!! Το API απάντησε {e.code}: {detail}")
+
+
+def check(token, page_id):
+    """Επαληθεύει token και σελίδα ΧΩΡΙΣ να δημοσιεύσει.
+
+    Η πρώτη αληθινή δημοσίευση δεν είναι η ώρα να ανακαλύψεις ότι το token
+    έληξε ή ότι το FB_PAGE_ID δείχνει αλλού: εκείνη τη μέρα το μενού έχει ήδη
+    βγει και ο κόσμος περιμένει.
+    """
+    if not token:
+        print("Λείπει το FB_PAGE_TOKEN — δεν υπάρχει τι να ελέγξω.")
+        return 1
+    if not page_id:
+        print("Λείπει το FB_PAGE_ID.")
+        return 1
+
+    me = get(f"{GRAPH}/me?fields=id,name", token)
+    print(f"✓ Το token ανήκει σε: {me.get('name')} ({me.get('id')})")
+    if me.get("id") != str(page_id):
+        print(f"!! Το FB_PAGE_ID είναι {page_id} — δεν είναι η ίδια σελίδα.\n"
+              f"   Μάλλον είναι token χρήστη, όχι σελίδας.")
+        return 1
+
+    perms = get(f"{GRAPH}/me/permissions", token).get("data", [])
+    have = {p["permission"] for p in perms if p.get("status") == "granted"}
+    need = {"pages_manage_posts", "pages_read_engagement"}
+    if perms and not need <= have:
+        print(f"!! Λείπουν δικαιώματα: {', '.join(sorted(need - have))}")
+        return 1
+    print("✓ Έτοιμο — η δημοσίευση θα δουλέψει.")
+    return 0
+
+
 def reset():
     """Μηδενίζει την έγκριση και σταμπάρει τη νέα ημερομηνία.
 
@@ -134,6 +177,9 @@ def reset():
 def main():
     if "--reset" in sys.argv:
         return reset()
+    if "--check" in sys.argv:
+        return check(os.environ.get("FB_PAGE_TOKEN", ""),
+                     os.environ.get("FB_PAGE_ID", ""))
     force = "--force" in sys.argv
 
     approved = read_field(POST_TXT, "ΔΗΜΟΣΙΕΥΣΗ").lower()

@@ -10,6 +10,11 @@ on:
     paths:
       - "post.txt"
   workflow_dispatch:
+    inputs:
+      check:
+        description: "Μόνο έλεγχος σύνδεσης με το Facebook — δεν δημοσιεύει"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,8 +37,9 @@ jobs:
           FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
         working-directory: build-source
-        run: python publish.py
+        run: python publish.py ${{ inputs.check && '--check' || '' }}
       - name: Σφράγισμα «έγινε» στο post.txt
+        if: ${{ !inputs.check }}
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
