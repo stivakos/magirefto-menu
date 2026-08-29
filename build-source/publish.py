@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Δημοσίευση της εικόνας του μενού σε Facebook Page & Instagram.
+"""Δημοσίευση της εικόνας του μενού σε Facebook Page (και Instagram).
 
     python3 publish.py            # στεγνή δοκιμή αν λείπουν τα secrets
     python3 publish.py --force    # αγνοεί το «ΔΗΜΟΣΙΕΥΣΗ: όχι» (για δοκιμές)
@@ -184,6 +184,15 @@ def main():
         print(f"  ημερομηνία: {post_date}")
         print(f"  λεζάντα:\n{caption}")
         return 0
+
+    # Το Instagram μένει σκόπιμα εκτός όσο λείπει το IG_USER_ID — ο ιδιοκτήτης
+    # θέλει προς το παρόν μόνο Facebook. Ο κώδικας μένει: μπαίνει το secret και
+    # ξυπνά μόνος του, χωρίς αλλαγή εδώ.
+    if not fb_page and not ig_id:
+        raise SystemExit(
+            "!! Υπάρχει FB_PAGE_TOKEN αλλά κανένας προορισμός — λείπει το "
+            "FB_PAGE_ID.\n"
+            "   Δεν σφραγίζω «έγινε» για post που δεν έφυγε ποτέ.")
 
     done = [to_facebook(caption, fb_token, fb_page)] if fb_page else []
     if ig_id:
