@@ -117,13 +117,19 @@ def to_instagram(caption, token, ig_id):
     return f"Instagram: post {r.get('id')}"
 
 
-def get(url, token):
-    """GET με το token σε header, όχι στο URL — δεν θέλουμε να καταλήξει σε log."""
+def get(url, token, soft=False):
+    """GET με το token σε header, όχι στο URL — δεν θέλουμε να καταλήξει σε log.
+
+    Με `soft=True` η αποτυχία επιστρέφει None αντί να σταματήσει το πρόγραμμα:
+    για ερωτήματα που ΕΠΙΤΡΕΠΕΤΑΙ να μην απαντηθούν.
+    """
     req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
+        if soft:
+            return None
         detail = e.read().decode("utf-8", "replace")[:400]
         raise SystemExit(f"!! Το API απάντησε {e.code}: {detail}")
 
@@ -149,12 +155,18 @@ def check(token, page_id):
               f"   Μάλλον είναι token χρήστη, όχι σελίδας.")
         return 1
 
-    perms = get(f"{GRAPH}/me/permissions", token).get("data", [])
+    # Το /me/permissions απαντά ΜΟΝΟ σε token χρήστη. Με token σελίδας — που
+    # είναι ακριβώς αυτό που θέλουμε εδώ — το Graph γυρίζει σφάλμα. Άρα η
+    # αποτυχία δεν λέει τίποτα για την εγκυρότητα του token: soft.
+    body = get(f"{GRAPH}/me/permissions", token, soft=True)
+    perms = (body or {}).get("data", [])
     have = {p["permission"] for p in perms if p.get("status") == "granted"}
     need = {"pages_manage_posts", "pages_read_engagement"}
     if perms and not need <= have:
         print(f"!! Λείπουν δικαιώματα: {', '.join(sorted(need - have))}")
         return 1
+    if not perms:
+        print("  (τα δικαιώματα δεν ελέγχονται με token σελίδας — φυσιολογικό)")
     print("✓ Έτοιμο — η δημοσίευση θα δουλέψει.")
     return 0
 
