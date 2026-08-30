@@ -58,6 +58,7 @@ python3 build.py     # τοπικό preview -> ../index.html
 | `assets/qr-menu.svg` `.png` | Το τυπωμένο QR του μαγαζιού. Δείχνει στη **ρίζα** του site. |
 | `ΠΙΑΤΑ.md` | Ευρετήριο «ποιος αριθμός = ποιο πιάτο», κατά συχνότητα. Παραγόμενο. |
 | `index.html` | Το site. Παραγόμενο. |
+| `edit.html` | Συντόμευση κινητού → editor του `menu-today.txt`. Γραμμένο στο χέρι· υπάρχει επειδή το manifest του github.com δεν αφήνει τον Chrome να φτιάξει σκέτη συντόμευση. |
 
 ## `menu-today.txt`
 
