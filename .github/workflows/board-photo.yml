@@ -1,0 +1,109 @@
+name: Μενού από φωτογραφία
+
+# Ανοίγεις issue με τη φωτογραφία του μαυροπίνακα -> το μενού ενημερώνεται.
+#
+# Γιατί issue και όχι αρχείο στο repo: το git κρατά ΚΑΘΕ έκδοση. Μια φωτό
+# κινητού είναι 2-4 MB· 250 μέρες τον χρόνο = μισό γίγα σε repo που σήμερα
+# είναι 3 MB. Τα συνημμένα των issues ζουν στο CDN του GitHub, εκτός git.
+#
+# Μπόνους: το ίδιο το issue γίνεται το αποδεικτικό — γράφεται από κάτω τι
+# διαβάστηκε, και το βλέπεις από το κινητό.
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write        # commit του menu-today.txt
+  issues: write          # απάντηση και κλείσιμο
+  actions: write         # πυροδότηση του «Build menu»
+
+concurrency:
+  group: board-photo
+  cancel-in-progress: false
+
+jobs:
+  read:
+    # ΜΟΝΟ ο ιδιοκτήτης του repo. Χωρίς αυτό, οποιοσδήποτε περαστικός θα
+    # άλλαζε το μενού του μαγαζιού ανοίγοντας ένα issue με μια φωτογραφία.
+    if: github.event.issue.author_association == 'OWNER'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet openpyxl anthropic
+
+      - name: Κατέβασμα της φωτογραφίας
+        id: photo
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          # ![alt](url)  ή  <img src="url">
+          url=$(printf '%s' "$BODY" \
+                | grep -oE 'https://[^)" ]+(user-attachments|githubusercontent)[^)" ]*' \
+                | head -1)
+          if [ -z "$url" ]; then
+            echo "no-photo=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          curl -sSL --max-time 120 -o menu-photo.jpg "$url"
+          file menu-photo.jpg
+          echo "no-photo=0" >> "$GITHUB_OUTPUT"
+
+      - name: Δεν βρέθηκε φωτογραφία
+        if: steps.photo.outputs.no-photo == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body \
+            "Δεν βρήκα φωτογραφία σε αυτό το issue. Άνοιξε καινούργιο και επισύναψε τη φωτό του πίνακα."
+          exit 1
+
+      - name: Ανάγνωση του πίνακα
+        id: read
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        working-directory: build-source
+        run: |
+          set +e
+          python read_board.py ../menu-photo.jpg > ../result.txt 2>&1
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          cat ../result.txt
+
+      - name: Απάντηση στο issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n="${{ github.event.issue.number }}"
+          { echo '```'; cat result.txt; echo '```'; } > comment.md
+          gh issue comment "$n" --body-file comment.md
+          [ "${{ steps.read.outputs.code }}" = "0" ] || exit 1
+
+      - name: Commit του μενού
+        run: |
+          git config user.name "merci-menu-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -f menu-photo.jpg result.txt comment.md
+          git add menu-today.txt
+          if git diff --cached --quiet; then
+            echo "Το μενού ήταν ήδη έτσι."
+          else
+            git commit -m "Μενού ημέρας από φωτογραφία μαυροπίνακα (#${{ github.event.issue.number }})"
+            git push
+          fi
+
+      # Το build ΔΕΝ ξεκινά μόνο του: τα push του GITHUB_TOKEN δεν πυροδοτούν
+      # workflows (προστασία από ατέρμονο βρόχο). Το καλούμε ρητά.
+      - name: Ξεκίνα το build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run "Build menu"
+
+      - name: Κλείσιμο του issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue close "${{ github.event.issue.number }}" \
+            --comment "Το μενού ανέβηκε. Σε ένα λεπτό είναι στο site."
