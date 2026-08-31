@@ -207,10 +207,11 @@ def page_html():
   // Το scale_for() της Python είναι εκτίμηση. Εδώ η σελίδα μετράει τον εαυτό
   // της και μικραίνει μέχρι να χωρέσει όντως — αλλιώς το overflow:hidden θα
   // έκοβε σιωπηλά τα τελευταία πιάτα, όπως έγινε με 18+13+11.
-  (function () {{
+  function fit() {{
     var b = document.querySelector(".board");
     var inner = document.querySelector(".board-inner");
     if (!b || !inner) return;
+    b.style.justifyContent = "";                 // ξανά από την αρχή
     var size = parseFloat(getComputedStyle(b).fontSize);
     while (inner.offsetHeight > b.clientHeight && size > {FLOOR_PT}) {{
       size -= 1;
@@ -220,7 +221,17 @@ def page_html():
     // Αν ούτε στο κατώτατο μέγεθος χωράει, τουλάχιστον να μη χάνονται τα
     // ΠΡΩΤΑ πιάτα: το κεντράρισμα κόβει και από πάνω, το flex-start μόνο κάτω.
     if (inner.offsetHeight > b.clientHeight) b.style.justifyContent = "flex-start";
-  }})();
+  }}
+
+  // ΜΕΤΑ τη γραμματοσειρά, όχι πριν. Η GFS Didot φορτώνει ασύγχρονα· τρέχοντας
+  // αμέσως, η μέτρηση γινόταν με τα μέτρα της Georgia (στενότερη, χαμηλότερη),
+  // έβρισκε ότι χωράει, και μετά η πραγματική γραμματοσειρά μεγάλωνε τη λίστα
+  // — και το overflow:hidden έκοβε σιωπηλά πιάτα από πάνω ΚΑΙ από κάτω. Με 12
+  // πιάτα υπήρχε περιθώριο και δεν φαινόταν· με 24 γραμμές κόπηκε.
+  fit();                                    // πρόχειρη προσαρμογή αμέσως
+  if (document.fonts && document.fonts.ready) {{
+    document.fonts.ready.then(fit);         // και η σωστή, με τα αληθινά μέτρα
+  }}
 </script>
 </body></html>'''
 
