@@ -177,17 +177,28 @@ def aliases():
     return out
 
 
+def resolve_one(name, rows, alias):
+    """Ένα όνομα -> (Α/Α, σφάλμα). Το ένα από τα δύο είναι πάντα None.
+
+    Χωριστή συνάρτηση επειδή τη χρειάζεται και το menu_draft.py, που δουλεύει
+    πιάτο-πιάτο για να ξέρει ΠΟΙΟ εκκρεμεί. Αν την αντέγραφε, οι δύο ροές θα
+    μπορούσαν να αποκλίνουν και το προσχέδιο θα ενέκρινε άλλο μενού από αυτό
+    που θα δημοσιευόταν.
+    """
+    aa = alias.get(dish_names.sound(dish_names.norm(name)))
+    if aa is None:
+        return dish_names.resolve(name, rows, where="στο DAILY_MENU.xlsx")
+    if aa not in rows:
+        return None, f"το board-aliases.txt δείχνει στο #{aa}, που δεν υπάρχει."
+    return aa, None
+
+
 def resolve(read, rows):
     """Ονόματα -> Α/Α, με το dish_names. Γυρίζει (νούμερα, σφάλματα, τιμές)."""
     alias = aliases()
     nums, errors, prices = [], [], []
     for name, price in read:
-        aa = alias.get(dish_names.sound(dish_names.norm(name)))
-        err = None
-        if aa is None:
-            aa, err = dish_names.resolve(name, rows, where="στο DAILY_MENU.xlsx")
-        elif aa not in rows:
-            err = f"το board-aliases.txt δείχνει στο #{aa}, που δεν υπάρχει."
+        aa, err = resolve_one(name, rows, alias)
         if err:
             errors.append(f"«{name}»: {err}")
             continue

@@ -1,26 +1,23 @@
-name: Μενού από φωτογραφία ή κείμενο
+name: Μενού — προσχέδιο σε issue
 
-# Ανοίγεις issue -> το μενού ενημερώνεται. Δύο τρόποι, ίδιος προορισμός:
+# Ανοίγεις issue, κουβεντιάζεις σε σχόλια, γράφεις «στείλε». Τίποτα δεν
+# δημοσιεύεται πριν από αυτό — ούτε φωτογραφία, ούτε τέλεια λίστα με την πρώτη.
 #
-#   φωτογραφία μαυροπίνακα  -> το μοντέλο τη διαβάζει  -> μενού για ΣΗΜΕΡΑ
-#   σκέτο κείμενο με κόμματα -> κανένα μοντέλο         -> μενού για ΑΥΡΙΟ
+#   φωτογραφία μαυροπίνακα   -> το μοντέλο τη διαβάζει  -> προσχέδιο για ΣΗΜΕΡΑ
+#   κείμενο με κόμματα       -> κανένα μοντέλο          -> προσχέδιο για ΑΥΡΙΟ
+#   «στείλε»                 -> γράφει το menu-today.txt, build, κλείσιμο
+#   «βγάλε <πιάτο>» / «ακύρωση»
 #
-# Το κείμενο είναι για το βράδυ, όταν ετοιμάζεις την επόμενη μέρα και ο πίνακας
-# δεν έχει γραφτεί ακόμα. Μελλοντική ημερομηνία δεν κλειδώνει τη σελίδα — το
-# `.stale` μπαίνει μόνο για ημερομηνία παλιότερη από σήμερα.
+# Η ΚΑΤΑΣΤΑΣΗ ΖΕΙ ΣΕ ΕΝΑ ΣΧΟΛΙΟ, όχι σε αρχείο του repo: το job βρίσκει το δικό
+# του σχόλιο-προσχέδιο (κρυφός δείκτης MENU-STATE), διαβάζει από εκεί πού είχε
+# μείνει, και το ΕΠΕΞΕΡΓΑΖΕΤΑΙ. Έτσι το git δεν γεμίζει commit ανά διόρθωση, και
+# — το σοβαρό — η φωτογραφία διαβάζεται ΜΙΑ φορά αντί για μία ανά σχόλιο.
 #
-# Γιατί issue και όχι αρχείο στο repo: το git κρατά ΚΑΘΕ έκδοση. Μια φωτό
-# κινητού είναι 2-4 MB· 250 μέρες τον χρόνο = μισό γίγα σε repo που σήμερα
-# είναι 3 MB. Τα συνημμένα των issues ζουν στο CDN του GitHub, εκτός git.
+# Η φωτό δεν μπαίνει ποτέ σε git: 2-4 MB × 250 μέρες = μισό γίγα τον χρόνο. Τα
+# συνημμένα των issues ζουν στο CDN του GitHub.
 #
-# Μπόνους: το ίδιο το issue γίνεται το αποδεικτικό — γράφεται από κάτω τι
-# διαβάστηκε, και το βλέπεις από το κινητό.
-#
-# ΔΙΟΡΘΩΣΗ: σχολιάζεις στο ΙΔΙΟ issue τη σωστή λίστα (ή νέα φωτό) και ξανατρέχει,
-# διαβάζοντας το σχόλιο αντί για το σώμα. Δουλεύει και σε κλειστό issue — εκεί
-# είναι που το χρειάζεσαι επειγόντως: ανέβηκε, βγήκε λάθος πιάτο, θες διόρθωση.
-# Προσοχή: ΚΑΘΕ σχόλιο του ιδιοκτήτη διαβάζεται ως μενού. Ένα «ευχαριστώ» θα
-# απαντηθεί με «δεν βρέθηκε πιάτο» — άκακο, αλλά θορυβώδες.
+# Προσοχή: ΚΑΘΕ σχόλιο του ιδιοκτήτη διαβάζεται ως γύρος. Ένα «ευχαριστώ» θα
+# εμφανιστεί ως εκκρεμότητα — άκακο, το προσχέδιο δεν πειράζεται.
 
 on:
   issues:
@@ -30,25 +27,18 @@ on:
 
 permissions:
   contents: write        # commit του menu-today.txt
-  issues: write          # απάντηση και κλείσιμο
+  issues: write          # σχόλια, επεξεργασία, κλείσιμο
   actions: write         # πυροδότηση του «Build menu»
 
 concurrency:
-  group: board-photo
+  group: board-photo     # σειριακά: δύο γύροι μαζί θα πατούσαν ο ένας τον άλλο
   cancel-in-progress: false
 
 jobs:
-  read:
-    # ΜΟΝΟ ο ιδιοκτήτης του repo. Χωρίς αυτό, οποιοσδήποτε περαστικός θα άλλαζε
-    # το μενού του μαγαζιού ανοίγοντας ένα issue με μια φωτογραφία.
-    #
-    # Στο σχόλιο ελέγχεται ο συγγραφέας ΤΟΥ ΣΧΟΛΙΟΥ, όχι του issue: αλλιώς αρκεί
-    # ένα δικό μου issue για να γράφει μενού οποιοσδήποτε από κάτω.
-    #
-    # Ο έλεγχος για Bot κρατά έξω τα ίδια τα σχόλια της ροής («διάβασα αυτά…»).
-    # Τα events του GITHUB_TOKEN ούτως ή άλλως δεν πυροδοτούν workflows — η ίδια
-    # προστασία που αναγκάζει το ρητό «gh workflow run» πιο κάτω — αλλά ένας
-    # ατέρμονος βρόχος που γράφει στο repo δεν αξίζει να στηρίζεται σε παρενέργεια.
+  round:
+    # ΜΟΝΟ ο ιδιοκτήτης. Στο σχόλιο ελέγχεται ο συγγραφέας ΤΟΥ ΣΧΟΛΙΟΥ, όχι του
+    # issue: αλλιώς αρκεί ένα δικό μου issue για να γράφει μενού οποιοσδήποτε.
+    # Ο έλεγχος για Bot κρατά έξω τα ίδια τα σχόλια της ροής.
     if: >-
       (github.event_name == 'issues'
       && github.event.issue.author_association == 'OWNER')
@@ -63,93 +53,118 @@ jobs:
           python-version: "3.12"
       - run: pip install --quiet openpyxl anthropic
 
-      - name: Φωτογραφία ή κείμενο;
+      - name: Το κείμενο του γύρου
         id: input
         env:
-          # Και τα δύο ως μεταβλητές, και η επιλογή γίνεται στο bash: το
-          # «A && B || C» των expressions πέφτει στο C όταν το B είναι κενό, που
-          # εδώ σημαίνει «άδειο σχόλιο ⇒ ξαναδιάβασε το σώμα του issue» — δηλαδή
-          # να ξαναγραφτεί σιωπηλά το παλιό μενού αντί να βγει σφάλμα.
+          # Και τα δύο ως μεταβλητές, και η επιλογή στο bash: το «A && B || C»
+          # των expressions πέφτει στο C όταν το B είναι κενό, δηλαδή άδειο
+          # σχόλιο θα ξαναδιάβαζε το σώμα του issue σαν να ήταν νέος γύρος.
           ISSUE_BODY: ${{ github.event.issue.body }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           EVENT: ${{ github.event_name }}
         run: |
           if [ "$EVENT" = "issue_comment" ]; then
-            BODY="$COMMENT_BODY"
+            printf '%s' "$COMMENT_BODY" > body.txt
           else
-            BODY="$ISSUE_BODY"
+            printf '%s' "$ISSUE_BODY" > body.txt
           fi
           # ![alt](url)  ή  <img src="url">
-          url=$(printf '%s' "$BODY" \
-                | grep -oE 'https://[^)" ]+(user-attachments|githubusercontent)[^)" ]*' \
-                | head -1)
+          url=$(grep -oE 'https://[^)" ]+(user-attachments|githubusercontent)[^)" ]*' \
+                body.txt | head -1 || true)
           if [ -n "$url" ]; then
             curl -sSL --max-time 120 -o menu-photo.jpg "$url"
             file menu-photo.jpg
-            echo "mode=photo" >> "$GITHUB_OUTPUT"
+            echo "photo=1" >> "$GITHUB_OUTPUT"
           else
-            # Ό,τι έγραψες, όπως το έγραψες. Το read_board.py το χωρίζει σε
-            # γραμμές και κόμματα — δεν μπαίνει μοντέλο στη μέση.
-            printf '%s' "$BODY" > menu-text.txt
-            echo "mode=text" >> "$GITHUB_OUTPUT"
+            echo "photo=0" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Ανάγνωση
-        id: read
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        working-directory: build-source
-        run: |
-          set +e
-          if [ "${{ steps.input.outputs.mode }}" = "text" ]; then
-            python read_board.py --text ../menu-text.txt > ../result.txt 2>&1
-          else
-            python read_board.py ../menu-photo.jpg > ../result.txt 2>&1
-          fi
-          echo "code=$?" >> "$GITHUB_OUTPUT"
-          cat ../result.txt
-
-      - name: Απάντηση στο issue
+      - name: Πού είχαμε μείνει
+        id: prev
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           n="${{ github.event.issue.number }}"
-          { echo '```'; cat result.txt; echo '```'; } > comment.md
-          gh issue comment "$n" --body-file comment.md
-          [ "${{ steps.read.outputs.code }}" = "0" ] || exit 1
+          # Το τελευταίο σχόλιο της ροής που κουβαλά τον δείκτη κατάστασης.
+          gh api "repos/${{ github.repository }}/issues/$n/comments" --paginate \
+            --jq '[.[] | select(.user.type == "Bot")
+                       | select(.body | contains("MENU-STATE"))] | last // empty' \
+            > prev.json
+          if [ -s prev.json ]; then
+            jq -r '.id' prev.json > draft_id.txt
+            jq -r '.body' prev.json \
+              | sed -n 's/.*<!-- MENU-STATE \(.*\) -->.*/\1/p' > state.json
+            echo "id=$(cat draft_id.txt)" >> "$GITHUB_OUTPUT"
+            echo "Συνεχίζω από το σχόλιο $(cat draft_id.txt)"
+          else
+            echo "Νέο προσχέδιο."
+          fi
+          [ -s state.json ] || echo '{}' > state.json
+
+      - name: Ο γύρος
+        id: round
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set +e
+          args="--state ../state.json --body ../body.txt
+                --draft-out ../draft.md --reply-out ../reply.md
+                --state-out ../state.json"
+          [ "${{ steps.input.outputs.photo }}" = "1" ] && args="$args --photo ../menu-photo.jpg"
+          out=$(cd build-source && python menu_draft.py $args 2>&1)
+          code=$?
+          echo "$out"
+          # ΜΟΝΟ η τελευταία γραμμή: σε σφάλμα το $out είναι πολυγραμμικό και θα
+          # χάλαγε το GITHUB_OUTPUT, που είναι key=value ανά γραμμή.
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "mode=$(printf '%s' "$out" | tail -1)" >> "$GITHUB_OUTPUT"
+          # Σφάλμα => το λέμε στο issue αντί να πεθάνει σιωπηλά το job.
+          [ $code -eq 0 ] || printf 'Κάτι πήγε στραβά:\n\n```\n%s\n```\n' "$out" > draft.md
+
+      - name: Το σχόλιο-προσχέδιο
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n="${{ github.event.issue.number }}"
+          id="${{ steps.prev.outputs.id }}"
+          if [ -n "$id" ]; then
+            jq -Rs '{body: .}' < draft.md \
+              | gh api --method PATCH \
+                  "repos/${{ github.repository }}/issues/comments/$id" --input -
+          else
+            gh issue comment "$n" --body-file draft.md
+          fi
+          [ "${{ steps.round.outputs.code }}" = "0" ] || exit 1
 
       - name: Commit του μενού
+        if: steps.round.outputs.mode == 'published'
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          rm -f menu-photo.jpg menu-text.txt result.txt comment.md
+          # Το reply.md ΔΕΝ σβήνεται εδώ — το χρειάζεται η ανακοίνωση παρακάτω.
+          rm -f menu-photo.jpg body.txt draft.md prev.json draft_id.txt
           git add menu-today.txt
           if git diff --cached --quiet; then
             echo "Το μενού ήταν ήδη έτσι."
           else
-            if [ "${{ steps.input.outputs.mode }}" = "text" ]; then
-              why="Μενού επόμενης ημέρας από κείμενο"
-            else
-              why="Μενού ημέρας από φωτογραφία μαυροπίνακα"
-            fi
-            git commit -m "$why (#${{ github.event.issue.number }})"
+            git commit -m "Μενού από προσχέδιο issue (#${{ github.event.issue.number }})"
             git push
           fi
 
       # Το build ΔΕΝ ξεκινά μόνο του: τα push του GITHUB_TOKEN δεν πυροδοτούν
       # workflows (προστασία από ατέρμονο βρόχο). Το καλούμε ρητά.
       - name: Ξεκίνα το build
+        if: steps.round.outputs.mode == 'published'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run "Build menu"
 
-      - name: Κλείσιμο του issue
+      - name: Ανακοίνωση και κλείσιμο
+        if: steps.round.outputs.mode == 'published'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           n="${{ github.event.issue.number }}"
-          # Το σχόλιο χωριστά από το κλείσιμο: σε διόρθωση μέσω σχολίου το issue
-          # είναι συχνά ΗΔΗ κλειστό, και δεν θέλουμε η επιβεβαίωση να χαθεί μαζί
-          # με ένα κλείσιμο που δεν είχε τι να κλείσει.
-          gh issue comment "$n" --body "Το μενού ανέβηκε. Σε ένα λεπτό είναι στο site."
+          gh issue comment "$n" --body-file reply.md
+          # Σε επαναδημοσίευση το issue είναι ήδη κλειστό — δεν είναι σφάλμα.
           gh issue close "$n" 2>/dev/null || true
