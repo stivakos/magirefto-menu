@@ -40,6 +40,11 @@ TAB = read_board.TAB
 SEND = {"στειλε", "στειλτο", "ok", "οκ", "δημοσιευσε"}
 CANCEL = {"ακυρωση", "ακυρο", "ξεκινα ξανα", "καθαρισε"}
 DROP = re.compile(r"^(?:βγαλε|αφαιρεσε)\s+(.+)$")
+# «βάλε Χ» κάνει ό,τι και μια σκέτη λίστα. Υπάρχει για συμμετρία με το
+# «βγάλε»: χωρίς αυτό, το «βάλε» περνούσε ως μέρος του ονόματος και το
+# πιάτο εκκρεμούσε («βάλε μουσακάς» δεν βρέθηκε), που είναι το χειρότερο
+# είδος αποτυχίας — μοιάζει με λάθος του ιδιοκτήτη ενώ είναι της ροής.
+ADD = re.compile(r"^(?:βαλε|προσθεσε)\s+(.+)$")
 
 
 def fold(s):
@@ -61,10 +66,12 @@ def command(body):
         return "send", None
     if f in CANCEL:
         return "cancel", None
+    # Το όρισμα από το ΑΡΧΙΚΟ κείμενο: με τόνους, όπως το έγραψε, ώστε να
+    # βγαίνει αναγνωρίσιμο στα μηνύματα.
     if DROP.match(f):
-        # Το όρισμα από το ΑΡΧΙΚΟ κείμενο: με τόνους, όπως το έγραψε, ώστε να
-        # βγαίνει αναγνωρίσιμο στα μηνύματα.
         return "drop", body.strip().split(None, 1)[1]
+    if ADD.match(f):
+        return "add", body.strip().split(None, 1)[1]
     return None, None
 
 
@@ -141,7 +148,8 @@ def render(state, rows, note=None):
     else:
         out.append("Τίποτα δεν εκκρεμεί.")
     out.append("")
-    out.append("Εντολές: **στείλε** για δημοσίευση · **βγάλε <πιάτο>** · **ακύρωση**")
+    out.append("Εντολές: **στείλε** για δημοσίευση · **βάλε <πιάτο>** · "
+               "**βγάλε <πιάτο>** · **ακύρωση**")
     out.append("")
     keep = {k: state[k] for k in ("nums", "pending", "date_line", "source")
             if k in state}
@@ -184,7 +192,14 @@ def main():
             published = True
     else:
         # Λίστα πιάτων. Η φωτογραφία διαβάζεται ΜΟΝΟ όταν έρχεται, ποτέ ξανά.
-        if a.photo:
+        if kind == "add":
+            # Ίδιος δρόμος με τη σκέτη λίστα — δέχεται και κόμματα («βάλε
+            # μουσακάς, γεμιστά»). Φωτογραφία με «βάλε» δεν στέκει: το όρισμα
+            # είναι κείμενο.
+            read, date_line = read_board.read_text(arg)
+            names = [n for n, _ in read]
+            source = "text"
+        elif a.photo:
             read = read_board.read_photo(a.photo)
             names = [n for n, _ in read]
             date_line = read_board.today_line()      # ο πίνακας δείχνει τη σήμερα
