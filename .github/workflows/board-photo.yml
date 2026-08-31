@@ -127,12 +127,22 @@ jobs:
         run: |
           n="${{ github.event.issue.number }}"
           id="${{ steps.prev.outputs.id }}"
+          # ΝΕΟ σχόλιο και μετά σβήσιμο του παλιού — όχι PATCH στο ίδιο. Η
+          # επεξεργασία δεν φαίνεται πουθενά στο κινητό: το προσχέδιο μένει
+          # ψηλά στο νήμα, ο ιδιοκτήτης κοιτάζει τον πάτο και νομίζει ότι η ροή
+          # δεν απάντησε. Έτσι η απάντηση είναι πάντα το τελευταίο σχόλιο, και
+          # έρχεται και ειδοποίηση.
+          #
+          # Πρώτα δημιουργία, μετά διαγραφή: αν σκάσει η διαγραφή μένουν δύο
+          # προσχέδια, που είναι ακίνδυνο — το «Πού είχαμε μείνει» παίρνει το
+          # τελευταίο. Με την αντίστροφη σειρά, μια αποτυχία θα έχανε την
+          # κατάσταση ολόκληρη.
+          jq -Rs '{body: .}' < draft.md \
+            | gh api --method POST \
+                "repos/${{ github.repository }}/issues/$n/comments" --input - >/dev/null
           if [ -n "$id" ]; then
-            jq -Rs '{body: .}' < draft.md \
-              | gh api --method PATCH \
-                  "repos/${{ github.repository }}/issues/comments/$id" --input -
-          else
-            gh issue comment "$n" --body-file draft.md
+            gh api --method DELETE \
+              "repos/${{ github.repository }}/issues/comments/$id" || true
           fi
           [ "${{ steps.round.outputs.code }}" = "0" ] || exit 1
 

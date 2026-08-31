@@ -177,14 +177,26 @@ def aliases():
     return out
 
 
-def resolve_one(name, rows, alias):
+def resolve_one(name, rows, alias, numeric=False):
     """Ένα όνομα -> (Α/Α, σφάλμα). Το ένα από τα δύο είναι πάντα None.
 
     Χωριστή συνάρτηση επειδή τη χρειάζεται και το menu_draft.py, που δουλεύει
     πιάτο-πιάτο για να ξέρει ΠΟΙΟ εκκρεμεί. Αν την αντέγραφε, οι δύο ροές θα
     μπορούσαν να αποκλίνουν και το προσχέδιο θα ενέκρινε άλλο μενού από αυτό
     που θα δημοσιευόταν.
+
+    numeric=True: δέχεται και σκέτο Α/Α («17»). Το ΓΡΑΦΕΙ Ο ΙΔΙΟΚΤΗΤΗΣ — το
+    menu-today.txt δέχεται αριθμούς από πάντα και το README υπόσχεται ότι «οι
+    αριθμοί δουλεύουν πάντα». ΔΕΝ ισχύει για τη μεταγραφή της φωτογραφίας: εκεί
+    ένα «17» θα ήταν τιμή ή αρίθμηση γραμμής που διάβασε στραβά το μοντέλο, και
+    θα έμπαινε σιωπηλά άσχετο πιάτο.
     """
+    if numeric and name.strip().isdigit():
+        aa = int(name.strip())
+        if aa in rows:
+            return aa, None
+        return None, f"δεν υπάρχει πιάτο με Α/Α {aa} στο DAILY_MENU.xlsx."
+
     aa = alias.get(dish_names.sound(dish_names.norm(name)))
     if aa is None:
         return dish_names.resolve(name, rows, where="στο DAILY_MENU.xlsx")

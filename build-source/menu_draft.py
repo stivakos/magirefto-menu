@@ -98,7 +98,7 @@ def apply_round(state, names, rows, alias):
     """Προσθέτει τα πιάτα του γύρου. Τα εκκρεμή ΑΝΤΙΚΑΘΙΣΤΑΝΤΑΙ, δεν σωρεύονται."""
     pending = []
     for name in names:
-        aa, err = read_board.resolve_one(name, rows, alias)
+        aa, err = read_board.resolve_one(name, rows, alias, numeric=True)
         if err:
             pending.append({"name": name, "why": err})
         elif aa not in state["nums"]:
@@ -110,7 +110,7 @@ def apply_round(state, names, rows, alias):
 def drop(state, token, rows, alias):
     """«βγάλε Χ» — χωρίς αυτό, πιάτο που μπήκε κατά λάθος αλλά αναγνωρίστηκε
     κανονικά δεν έβγαινε με τίποτα, παρά μόνο κλείνοντας το issue."""
-    aa, err = read_board.resolve_one(token, rows, alias)
+    aa, err = read_board.resolve_one(token, rows, alias, numeric=True)
     if err:
         return f"Δεν κατάλαβα ποιο πιάτο να βγάλω: {err}"
     if aa not in state["nums"]:
