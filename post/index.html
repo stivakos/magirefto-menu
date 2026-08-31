@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Μενού για το Facebook — Merci Μαγειρευτό</title>
+<!--
+  ΣΕΛΙΔΑ ΓΙΑ ΤΟΝ ΙΔΙΟΚΤΗΤΗ, όχι για τον πελάτη. Δεν υπάρχει σύνδεσμος προς τα
+  εδώ από το μενού και είναι noindex.
+
+  Γιατί υπάρχει: η εικόνα των social ζει στο raw.githubusercontent.com με την
+  ΙΔΙΑ διεύθυνση κάθε μέρα, οπότε ο browser του κινητού κρατάει τη χθεσινή και
+  δεν ρωτάει καν. Εδώ η διεύθυνση παίρνει κάθε φορά ?t=<τώρα>, άρα δεν υπάρχει
+  αποθηκευμένη εκδοχή να δείξει.
+
+  ΣΤΑΤΙΚΟ ΑΡΧΕΙΟ — δεν το γράφει το build.py. Η ημερομηνία έρχεται από το
+  menu-state.json, που το build δημοσιεύει έτσι κι αλλιώς: μία πηγή αλήθειας,
+  χωρίς νέο παραγόμενο αρχείο και χωρίς αλλαγή στο CI.
+-->
+<style>
+  :root{
+    --bg:#141414; --ink:#F4F1E8; --gold:#E9C892; --dim:#9d968a;
+    --card:#1e1e1e; --line:#333;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--ink);
+       font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       padding:20px 16px 48px;max-width:560px;margin:0 auto;}
+  h1{font-size:20px;font-weight:600;letter-spacing:.01em;}
+  .sub{color:var(--dim);font-size:14px;margin-top:4px;}
+  .date{color:var(--gold);font-size:15px;margin-top:14px;}
+  .shot{margin:16px 0 0;border:1px solid var(--line);border-radius:10px;
+        overflow:hidden;background:var(--card);min-height:120px;}
+  .shot img{display:block;width:100%;height:auto;}
+  .msg{padding:28px 18px;color:var(--dim);font-size:15px;text-align:center;}
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  button,a.btn{flex:1 1 45%;min-height:50px;border-radius:10px;cursor:pointer;
+       font:600 16px/1.2 inherit;border:1px solid var(--line);
+       background:var(--card);color:var(--ink);
+       display:flex;align-items:center;justify-content:center;gap:7px;
+       text-decoration:none;padding:8px 12px;text-align:center;}
+  button.main{background:var(--gold);color:#1b1b1b;border-color:var(--gold);}
+  button:active,a.btn:active{opacity:.7;}
+  h2{font-size:14px;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;
+     margin:30px 0 10px;font-weight:600;}
+  .cap{background:var(--card);border:1px solid var(--line);border-radius:10px;
+       padding:14px;white-space:pre-wrap;font-size:15px;color:#ddd7cb;}
+  .tip{color:var(--dim);font-size:13px;margin-top:12px;}
+  .tip b{color:#c9c2b4;font-weight:600;}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+         background:var(--gold);color:#1b1b1b;font-weight:600;font-size:15px;
+         padding:11px 20px;border-radius:22px;opacity:0;pointer-events:none;
+         transition:opacity .2s;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+  .toast.on{opacity:1;}
+</style>
+</head>
+<body>
+
+<h1>Μενού για το Facebook</h1>
+<div class="sub">Η σημερινή εικόνα, πάντα φρέσκια.</div>
+<div class="date" id="date">Φορτώνει…</div>
+
+<div class="shot" id="shot">
+  <div class="msg" id="msg">Φορτώνει την εικόνα…</div>
+</div>
+
+<div class="row">
+  <button class="main" id="save">⬇︎ Αποθήκευση</button>
+  <button id="reload">↻ Ανανέωση</button>
+</div>
+
+<h2>Λεζάντα</h2>
+<div class="cap" id="cap"></div>
+<div class="row">
+  <button id="copy">⧉ Αντιγραφή λεζάντας</button>
+  <a class="btn" id="fb" href="https://www.facebook.com/profile.php?id=61592404852822"
+     target="_blank" rel="noopener">Άνοιγμα σελίδας ↗</a>
+</div>
+
+<div class="tip">
+  <b>Δημοσίευση, όχι μόνο στόρυ.</b> Ανέβασέ την ως κανονική δημοσίευση — μένει,
+  δέχεται σχόλια και μοιράζεται. Μετά «Κοινοποίηση → Στο στόρυ σου», για να
+  ανέβεις και στους κύκλους από πάνω.
+</div>
+<div class="tip">
+  Αν η «Αποθήκευση» δεν δουλέψει, κράτα πατημένη την εικόνα → <b>Αποθήκευση
+  εικόνας</b>. Το ίδιο αποτέλεσμα.
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var IMG = "https://raw.githubusercontent.com/stivakos/magirefto-menu/social-preview/menu.jpg";
+  var SITE = "https://stivakos.github.io/magirefto-menu/";
+  var TEL  = "2414010332";
+
+  var shot = document.getElementById("shot");
+  var msg  = document.getElementById("msg");
+  var dateEl = document.getElementById("date");
+  var capEl  = document.getElementById("cap");
+  var toastEl = document.getElementById("toast");
+
+  var state = null;          // ό,τι λέει το menu-state.json
+  var blobUrl = null;        // για να το ελευθερώνουμε πριν το επόμενο
+
+  function toast(t) {
+    toastEl.textContent = t;
+    toastEl.classList.add("on");
+    setTimeout(function () { toastEl.classList.remove("on"); }, 2200);
+  }
+
+  // Κάθε αίτημα παίρνει διαφορετική διεύθυνση: ο browser δεν έχει τίποτα
+  // αποθηκευμένο να δείξει, ούτε το CDN να σερβίρει από τη μνήμη του.
+  function fresh(url) {
+    return url + (url.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now();
+  }
+
+  function caption() {
+    var d = state && state.date ? state.date : "";
+    if (state && state.closed) {
+      // Η ημερομηνία ανοίγματος είναι το «reopen» (η γραμμή ΚΛΕΙΣΤΑ), ΟΧΙ το
+      // «date» — εκείνο μένει η ΗΜΕΡΟΜΗΝΙΑ του μενού και θα έλεγε άλλη μέρα.
+      return "Κλειστά για διακοπές" + (state.reopen ? " — ανοίγουμε " + state.reopen : "")
+           + ".\n\nΘα τα πούμε από κοντά! Μέχρι τότε, ρίξτε μια ματιά στο μαγαζί μας:\n"
+           + SITE;
+    }
+    return "Καλημέρα! Το σημερινό μας μενού" + (d ? " — " + d.replace(/\/\d\d$/, "") : "")
+         + ". Σπιτικό φαγητό, μαγειρεμένο από το πρωί.\n\n"
+         + "👉 Όλο το μενού και παραγγελία: " + SITE + "\n\n"
+         + "Καρδίτσης 22, Λάρισα · 12:00–16:00 · take away & delivery ☎ " + TEL;
+  }
+
+  function fileName() {
+    var d = (state && state.date ? state.date : "menu")
+              .replace(/[^0-9]+/g, "-").replace(/^-|-$/g, "");
+    return "merci-menu-" + (d || "shmera") + ".jpg";
+  }
+
+  function load() {
+    msg.textContent = "Φορτώνει την εικόνα…";
+    var old = shot.querySelector("img");
+    if (old) { old.remove(); }
+    msg.style.display = "";
+
+    var img = new Image();
+    img.alt = "Το σημερινό μενού";
+    img.onload = function () { msg.style.display = "none"; };
+    img.onerror = function () {
+      msg.textContent = "Δεν φόρτωσε η εικόνα. Έλεγξε τη σύνδεση και πάτα Ανανέωση.";
+    };
+    img.src = fresh(IMG);
+    shot.appendChild(img);
+  }
+
+  // Το menu-state.json είναι στο ΙΔΙΟ site, οπότε δεν χρειάζεται CORS.
+  function loadState() {
+    fetch(fresh("../menu-state.json"), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        state = j;
+        dateEl.textContent = j && j.date
+          ? (j.closed ? "Κλειστά" + (j.reopen ? " · ανοίγουμε " + j.reopen : "")
+                       : "Εικόνα για: " + j.date)
+          : "";
+        capEl.textContent = caption();
+      })
+      .catch(function () {
+        dateEl.textContent = "";
+        capEl.textContent = caption();
+      });
+  }
+
+  document.getElementById("reload").addEventListener("click", function () {
+    load(); loadState(); toast("Ανανεώθηκε");
+  });
+
+  // Η raw.githubusercontent στέλνει «access-control-allow-origin: *», οπότε
+  // μπορούμε να την κατεβάσουμε ως blob. Το σκέτο <a download> δεν θα έφτανε:
+  // σε διαφορετικό domain ο browser το αγνοεί και απλώς ανοίγει την εικόνα.
+  document.getElementById("save").addEventListener("click", function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = "Κατεβάζει…";
+    fetch(fresh(IMG), { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) { throw new Error(r.status); }
+        return r.blob();
+      })
+      .then(function (b) {
+        if (blobUrl) { URL.revokeObjectURL(blobUrl); }
+        blobUrl = URL.createObjectURL(b);
+        var a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = fileName();
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast("Αποθηκεύτηκε");
+      })
+      .catch(function () {
+        toast("Κράτα πατημένη την εικόνα → Αποθήκευση");
+      })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = "⬇︎ Αποθήκευση";
+      });
+  });
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var text = capEl.textContent;
+    function fallback() {
+      // Χωρίς clipboard API (παλιός browser): παλιά μέθοδος με textarea.
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      ta.remove();
+      toast(ok ? "Αντιγράφηκε" : "Κράτα πατημένο το κείμενο για αντιγραφή");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(function () { toast("Αντιγράφηκε"); })
+        .catch(fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  // Το κινητό μένει ανοιχτό όλη μέρα: κάθε φορά που επιστρέφεις στην καρτέλα,
+  // ξαναφέρνει την εικόνα — αλλιώς θα κοίταζες το χθεσινό μενού.
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) { load(); loadState(); }
+  });
+
+  load();
+  loadState();
+})();
+</script>
+</body>
+</html>

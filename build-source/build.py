@@ -946,8 +946,12 @@ if __name__ == "__main__":
 
     # Η υπογραφή που ρωτά η ανοιχτή σελίδα για να δει αν άλλαξε κάτι.
     with open(STATE_JSON, "w", encoding="utf-8") as f:
+        # «reopen» = το κείμενο της γραμμής ΚΛΕΙΣΤΑ, για τη σελίδα /post/. Το
+        # «closed» μένει boolean: το ίδιο το site διαβάζει μόνο το stamp, αλλά
+        # αλλαγή τύπου σε δημοσιευμένο json είναι άσκοπο ρίσκο.
         json.dump({"stamp": MENU_STAMP, "date": MENU_DATE,
-                   "closed": bool(CLOSED)}, f, ensure_ascii=False)
+                   "closed": bool(CLOSED), "reopen": CLOSED}, f,
+                  ensure_ascii=False)
     print(f"Wrote {STATE_JSON}  ({MENU_STAMP or 'κλειστά'})")
 
 # NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
