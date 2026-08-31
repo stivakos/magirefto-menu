@@ -15,10 +15,18 @@ name: Μενού από φωτογραφία ή κείμενο
 #
 # Μπόνους: το ίδιο το issue γίνεται το αποδεικτικό — γράφεται από κάτω τι
 # διαβάστηκε, και το βλέπεις από το κινητό.
+#
+# ΔΙΟΡΘΩΣΗ: σχολιάζεις στο ΙΔΙΟ issue τη σωστή λίστα (ή νέα φωτό) και ξανατρέχει,
+# διαβάζοντας το σχόλιο αντί για το σώμα. Δουλεύει και σε κλειστό issue — εκεί
+# είναι που το χρειάζεσαι επειγόντως: ανέβηκε, βγήκε λάθος πιάτο, θες διόρθωση.
+# Προσοχή: ΚΑΘΕ σχόλιο του ιδιοκτήτη διαβάζεται ως μενού. Ένα «ευχαριστώ» θα
+# απαντηθεί με «δεν βρέθηκε πιάτο» — άκακο, αλλά θορυβώδες.
 
 on:
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write        # commit του menu-today.txt
@@ -31,9 +39,22 @@ concurrency:
 
 jobs:
   read:
-    # ΜΟΝΟ ο ιδιοκτήτης του repo. Χωρίς αυτό, οποιοσδήποτε περαστικός θα
-    # άλλαζε το μενού του μαγαζιού ανοίγοντας ένα issue με μια φωτογραφία.
-    if: github.event.issue.author_association == 'OWNER'
+    # ΜΟΝΟ ο ιδιοκτήτης του repo. Χωρίς αυτό, οποιοσδήποτε περαστικός θα άλλαζε
+    # το μενού του μαγαζιού ανοίγοντας ένα issue με μια φωτογραφία.
+    #
+    # Στο σχόλιο ελέγχεται ο συγγραφέας ΤΟΥ ΣΧΟΛΙΟΥ, όχι του issue: αλλιώς αρκεί
+    # ένα δικό μου issue για να γράφει μενού οποιοσδήποτε από κάτω.
+    #
+    # Ο έλεγχος για Bot κρατά έξω τα ίδια τα σχόλια της ροής («διάβασα αυτά…»).
+    # Τα events του GITHUB_TOKEN ούτως ή άλλως δεν πυροδοτούν workflows — η ίδια
+    # προστασία που αναγκάζει το ρητό «gh workflow run» πιο κάτω — αλλά ένας
+    # ατέρμονος βρόχος που γράφει στο repo δεν αξίζει να στηρίζεται σε παρενέργεια.
+    if: >-
+      (github.event_name == 'issues'
+      && github.event.issue.author_association == 'OWNER')
+      || (github.event_name == 'issue_comment'
+      && github.event.comment.author_association == 'OWNER'
+      && github.event.comment.user.type != 'Bot')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,8 +66,19 @@ jobs:
       - name: Φωτογραφία ή κείμενο;
         id: input
         env:
-          BODY: ${{ github.event.issue.body }}
+          # Και τα δύο ως μεταβλητές, και η επιλογή γίνεται στο bash: το
+          # «A && B || C» των expressions πέφτει στο C όταν το B είναι κενό, που
+          # εδώ σημαίνει «άδειο σχόλιο ⇒ ξαναδιάβασε το σώμα του issue» — δηλαδή
+          # να ξαναγραφτεί σιωπηλά το παλιό μενού αντί να βγει σφάλμα.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          EVENT: ${{ github.event_name }}
         run: |
+          if [ "$EVENT" = "issue_comment" ]; then
+            BODY="$COMMENT_BODY"
+          else
+            BODY="$ISSUE_BODY"
+          fi
           # ![alt](url)  ή  <img src="url">
           url=$(printf '%s' "$BODY" \
                 | grep -oE 'https://[^)" ]+(user-attachments|githubusercontent)[^)" ]*' \
@@ -115,5 +147,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue close "${{ github.event.issue.number }}" \
-            --comment "Το μενού ανέβηκε. Σε ένα λεπτό είναι στο site."
+          n="${{ github.event.issue.number }}"
+          # Το σχόλιο χωριστά από το κλείσιμο: σε διόρθωση μέσω σχολίου το issue
+          # είναι συχνά ΗΔΗ κλειστό, και δεν θέλουμε η επιβεβαίωση να χαθεί μαζί
+          # με ένα κλείσιμο που δεν είχε τι να κλείσει.
+          gh issue comment "$n" --body "Το μενού ανέβηκε. Σε ένα λεπτό είναι στο site."
+          gh issue close "$n" 2>/dev/null || true
