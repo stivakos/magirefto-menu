@@ -41,7 +41,9 @@ TWO_COL = ("salates", "glyka")     # κοντά ονόματα -> δύο στή�
 # Ό,τι δεν αναφέρεται εδώ (Συνοδευτικά, Αναψυκτικά) μπαίνει στη μία γραμμή
 # «και ακόμη:». Τα Συνοδευτικά ούτως ή άλλως δεν έχουν τιμές.
 
-LIST_H = 860               # px για τη λίστα: 1350 μείον κεφαλίδα και υποσέλιδο
+SITE = "stivakos.github.io/magirefto-menu"   # ό,τι κωδικοποιεί και το τυπωμένο QR
+
+LIST_H = 828               # px για τη λίστα: 1350 μείον κεφαλίδα και υποσέλιδο
 LINE = 1.72                # ύψος γραμμής + κενό, ως πολλαπλάσιο του font-size
 MIN_PT, MAX_PT = 26, 46    # κάτω από 26px δεν διαβάζεται σε κινητό μέσα στο feed
 FLOOR_PT = 15              # απόλυτο κατώτατο: καλύτερα δυσανάγνωστο παρά κομμένο
@@ -93,7 +95,8 @@ def page_html():
       <div class="closed-title">Ανοίγουμε<br>{esc(build.CLOSED)}</div>
       <div class="closed-sub">Σας ευχαριστούμε — τα λέμε από κοντά!</div>
     </div>'''
-        foot = f'☎ {esc(build.VIBER_DISPLAY)}'
+        foot = (f'☎ {esc(build.VIBER_DISPLAY)}'
+                f'<div class="site">{SITE}</div>')
     else:
         # Ό,τι τελείωσε δεν μπαίνει στην εικόνα: αν κάποιος την ανοίξει το
         # μεσημέρι, πρέπει να δείχνει τι ΥΠΑΡΧΕΙ ακόμη.
@@ -142,7 +145,8 @@ def page_html():
       </div>
     </div>
     {extra_line}'''
-        foot = "Take away &amp; Delivery &nbsp;·&nbsp; ☎ 2414010332"
+        foot = ("Take away &amp; Delivery &nbsp;·&nbsp; ☎ 2414010332"
+                f'<div class="site">{SITE}</div>')
 
     return f'''<!doctype html>
 <html lang="el"><head><meta charset="utf-8"><style>
@@ -185,6 +189,8 @@ def page_html():
   .extra{{font-family:Georgia,serif;font-size:23px;color:#D8D2C4;margin-top:26px;}}
   .foot{{font-family:Georgia,serif;font-size:24px;letter-spacing:.06em;
         color:#E9C892;margin-top:auto;padding-top:26px;}}
+  .site{{font-family:Georgia,serif;font-size:21px;letter-spacing:.02em;
+        color:#D8D2C4;margin-top:9px;}}
   .closed-wrap{{flex:1 1 auto;display:flex;flex-direction:column;
                justify-content:center;}}
   .closed-eyebrow{{font-family:Georgia,serif;font-size:27px;letter-spacing:.24em;
