@@ -1,6 +1,13 @@
-name: Μενού από φωτογραφία
+name: Μενού από φωτογραφία ή κείμενο
 
-# Ανοίγεις issue με τη φωτογραφία του μαυροπίνακα -> το μενού ενημερώνεται.
+# Ανοίγεις issue -> το μενού ενημερώνεται. Δύο τρόποι, ίδιος προορισμός:
+#
+#   φωτογραφία μαυροπίνακα  -> το μοντέλο τη διαβάζει  -> μενού για ΣΗΜΕΡΑ
+#   σκέτο κείμενο με κόμματα -> κανένα μοντέλο         -> μενού για ΑΥΡΙΟ
+#
+# Το κείμενο είναι για το βράδυ, όταν ετοιμάζεις την επόμενη μέρα και ο πίνακας
+# δεν έχει γραφτεί ακόμα. Μελλοντική ημερομηνία δεν κλειδώνει τη σελίδα — το
+# `.stale` μπαίνει μόνο για ημερομηνία παλιότερη από σήμερα.
 #
 # Γιατί issue και όχι αρχείο στο repo: το git κρατά ΚΑΘΕ έκδοση. Μια φωτό
 # κινητού είναι 2-4 MB· 250 μέρες τον χρόνο = μισό γίγα σε repo που σήμερα
@@ -35,8 +42,8 @@ jobs:
           python-version: "3.12"
       - run: pip install --quiet openpyxl anthropic
 
-      - name: Κατέβασμα της φωτογραφίας
-        id: photo
+      - name: Φωτογραφία ή κείμενο;
+        id: input
         env:
           BODY: ${{ github.event.issue.body }}
         run: |
@@ -44,31 +51,29 @@ jobs:
           url=$(printf '%s' "$BODY" \
                 | grep -oE 'https://[^)" ]+(user-attachments|githubusercontent)[^)" ]*' \
                 | head -1)
-          if [ -z "$url" ]; then
-            echo "no-photo=1" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ -n "$url" ]; then
+            curl -sSL --max-time 120 -o menu-photo.jpg "$url"
+            file menu-photo.jpg
+            echo "mode=photo" >> "$GITHUB_OUTPUT"
+          else
+            # Ό,τι έγραψες, όπως το έγραψες. Το read_board.py το χωρίζει σε
+            # γραμμές και κόμματα — δεν μπαίνει μοντέλο στη μέση.
+            printf '%s' "$BODY" > menu-text.txt
+            echo "mode=text" >> "$GITHUB_OUTPUT"
           fi
-          curl -sSL --max-time 120 -o menu-photo.jpg "$url"
-          file menu-photo.jpg
-          echo "no-photo=0" >> "$GITHUB_OUTPUT"
 
-      - name: Δεν βρέθηκε φωτογραφία
-        if: steps.photo.outputs.no-photo == '1'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh issue comment "${{ github.event.issue.number }}" --body \
-            "Δεν βρήκα φωτογραφία σε αυτό το issue. Άνοιξε καινούργιο και επισύναψε τη φωτό του πίνακα."
-          exit 1
-
-      - name: Ανάγνωση του πίνακα
+      - name: Ανάγνωση
         id: read
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         working-directory: build-source
         run: |
           set +e
-          python read_board.py ../menu-photo.jpg > ../result.txt 2>&1
+          if [ "${{ steps.input.outputs.mode }}" = "text" ]; then
+            python read_board.py --text ../menu-text.txt > ../result.txt 2>&1
+          else
+            python read_board.py ../menu-photo.jpg > ../result.txt 2>&1
+          fi
           echo "code=$?" >> "$GITHUB_OUTPUT"
           cat ../result.txt
 
@@ -85,12 +90,17 @@ jobs:
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          rm -f menu-photo.jpg result.txt comment.md
+          rm -f menu-photo.jpg menu-text.txt result.txt comment.md
           git add menu-today.txt
           if git diff --cached --quiet; then
             echo "Το μενού ήταν ήδη έτσι."
           else
-            git commit -m "Μενού ημέρας από φωτογραφία μαυροπίνακα (#${{ github.event.issue.number }})"
+            if [ "${{ steps.input.outputs.mode }}" = "text" ]; then
+              why="Μενού επόμενης ημέρας από κείμενο"
+            else
+              why="Μενού ημέρας από φωτογραφία μαυροπίνακα"
+            fi
+            git commit -m "$why (#${{ github.event.issue.number }})"
             git push
           fi
 

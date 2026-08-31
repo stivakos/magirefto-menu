@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Διαβάζει φωτογραφία μαυροπίνακα και γράφει το μενού της ημέρας.
+"""Διαβάζει φωτογραφία μαυροπίνακα — ή σκέτο κείμενο — και γράφει το μενού.
 
     python3 read_board.py ../menu-photo.jpg
+    python3 read_board.py --text ../menu-text.txt
 
 Ο ιδιοκτήτης φωτογραφίζει τον πίνακα που έχει ήδη γράψει με το χέρι. Αυτό το
 σενάριο τον διαβάζει και ενημερώνει το `menu-today.txt` — τίποτε άλλο.
+
+Με `--text` δεν καλείται μοντέλο καθόλου: το κείμενο το γράφει ο ίδιος, σωστά.
+Το μοντέλο υπάρχει επειδή η κιμωλία είναι χειρόγραφη, όχι επειδή χρειάζεται
+ερμηνεία — ο resolver παρακάτω είναι ο ίδιος και στις δύο περιπτώσεις. Το
+κείμενο αφορά **αύριο**: το γράφεις το βράδυ για την επόμενη μέρα.
 
 ΤΟ ΜΟΝΤΕΛΟ ΚΑΝΕΙ ΜΟΝΟ ΑΝΑΓΝΩΣΗ. Γυρίζει ονόματα πιάτων όπως είναι γραμμένα
 στην κιμωλία· ΔΕΝ του ζητείται ποτέ Α/Α και δεν βλέπει τον κατάλογο. Ποιο πιάτο
@@ -23,11 +29,12 @@ import mimetypes
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import build          # ο guard __main__ του build.py το κρατά αβλαβές (βλ. social.py)
 import dish_names
+import menu_date
 from menu_date import GREEK_DAYS
 
 MODEL = os.environ.get("BOARD_MODEL", "claude-opus-5")
@@ -106,6 +113,46 @@ def read_photo(path):
     return [(d["name"].strip(), d["price"]) for d in json.loads(text)["dishes"]]
 
 
+_BULLET = re.compile(r"^\s*(?:[-–—*•]|\d+[.)])\s+")
+
+
+def read_text(body):
+    """Πιάτα από σκέτο κείμενο. Γυρίζει ([(όνομα, None), ...], γραμμή ημερομηνίας).
+
+    Χωρίζει ΜΟΝΟ σε γραμμές και κόμματα — ποτέ σε κάθετο: «Μπακαλιάρος/Γλώσσα»
+    είναι ένα πιάτο, όπως ακριβώς και στον πίνακα.
+
+    Τιμή δεν διαβάζεται. Στη φωτογραφία χρησίμευε μόνο για την προειδοποίηση
+    «ο πίνακας γράφει άλλη τιμή από το DAILY_MENU.xlsx»· οι τιμές του site
+    βγαίνουν ούτως ή άλλως από το xlsx, ποτέ από εδώ.
+
+    Η ημερομηνία είναι **αύριο**, γιατί αυτό είναι το νόημα του κειμένου: το
+    στέλνεις σήμερα για την επόμενη μέρα. Μπορείς να τη δηλώσεις ρητά σε πρώτη
+    γραμμή («Τρίτη 1/9»), οπότε κερδίζει αυτή — έτσι γράφεις και για σήμερα.
+    """
+    lines = [l.strip() for l in body.replace("\r\n", "\n").split("\n")]
+    lines = [l for l in lines if l and not l.startswith("#")]
+
+    # Πρώτη γραμμή ΧΩΡΙΣ κόμμα που διαβάζεται ως ημερομηνία = δήλωση ημέρας. Το
+    # κόμμα είναι ο διαχωριστής των πιάτων, άρα γραμμή με κόμμα είναι λίστα — και
+    # χωρίς αυτόν τον όρο ένα «1/2 κοτόπουλο» μέσα στη λίστα θα την κατάπινε όλη.
+    day = None
+    if lines and "," not in lines[0]:
+        day = menu_date.parse(lines[0])
+        if day is not None:
+            lines.pop(0)
+    if day is None:
+        day = datetime.now(ATHENS).date() + timedelta(days=1)
+
+    dishes = []
+    for line in lines:
+        for part in _BULLET.sub("", line).split(","):
+            part = part.strip()
+            if part:
+                dishes.append((part, None))
+    return dishes, day_line(day)
+
+
 def aliases():
     """Το λεξικό συντομογραφιών του μαγαζιού: {κανονικοποιημένο κείμενο: Α/Α}.
 
@@ -151,9 +198,13 @@ def resolve(read, rows):
     return nums, errors, prices
 
 
+def day_line(d):
+    """«Δευτέρα 31/8/26» — η μορφή που ξαναδιαβάζουν menu_date.py και check.py."""
+    return f"{GREEK_DAYS[d.weekday()]} {d.day}/{d.month}/{d:%y}"
+
+
 def today_line():
-    now = datetime.now(ATHENS)
-    return f"{GREEK_DAYS[now.weekday()]} {now.day}/{now.month}/{now:%y}"
+    return day_line(datetime.now(ATHENS).date())
 
 
 def write_menu(names, date_line):
@@ -166,7 +217,7 @@ def write_menu(names, date_line):
     for line in lines:
         stripped = line.strip()
         if stripped.startswith("ΚΛΕΙΣΤΑ:"):
-            continue                          # φωτογραφίζεις πίνακα => είσαι ανοιχτά
+            continue                          # στέλνεις μενού => έχεις ανοιχτά
         if stripped.startswith("ΗΜΕΡΟΜΗΝΙΑ:"):
             out.append(f"ΗΜΕΡΟΜΗΝΙΑ: {date_line}")
             seen_date = True
@@ -189,29 +240,38 @@ def write_menu(names, date_line):
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    photo = args[0] if args else os.path.join(build.HERE, "..", "menu-photo.jpg")
-    if not os.path.isfile(photo):
-        raise SystemExit(f"!! Δεν βρήκα την εικόνα: {photo}")
+    text_mode = "--text" in sys.argv
+    src = args[0] if args else os.path.join(
+        build.HERE, "..", "menu-text.txt" if text_mode else "menu-photo.jpg")
+    if not os.path.isfile(src):
+        raise SystemExit(f"!! Δεν βρήκα {'το κείμενο' if text_mode else 'την εικόνα'}: {src}")
 
     rows = build._tab_rows(TAB)
-    date_line = today_line()
 
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("— ΣΤΕΓΝΗ ΔΟΚΙΜΗ (λείπει το ANTHROPIC_API_KEY) —")
-        print(f"  εικόνα:     {photo}")
-        print(f"  μοντέλο:    {MODEL}")
-        print(f"  ημερομηνία: {date_line}")
-        print(f"  κατάλογος:  {len(rows)} πιάτα στο tab «{TAB}»")
-        return 0
-
-    read = read_photo(photo)
-    if not read:
-        raise SystemExit("!! Δεν διάβασα κανένα πιάτο. Ξαναβγάλε τη φωτογραφία "
-                         "πιο κοντά και με τον πίνακα ίσιο στο κάδρο.")
+    if text_mode:
+        # Καμία κλήση μοντέλου, άρα ούτε κλειδί — τρέχει και τοπικά όπως είναι.
+        with open(src, encoding="utf-8") as f:
+            read, date_line = read_text(f.read())
+        if not read:
+            raise SystemExit("!! Δεν βρήκα κανένα πιάτο στο κείμενο. Γράψε τα "
+                             "ονόματα χωρισμένα με κόμμα.")
+    else:
+        date_line = today_line()
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print("— ΣΤΕΓΝΗ ΔΟΚΙΜΗ (λείπει το ANTHROPIC_API_KEY) —")
+            print(f"  εικόνα:     {src}")
+            print(f"  μοντέλο:    {MODEL}")
+            print(f"  ημερομηνία: {date_line}")
+            print(f"  κατάλογος:  {len(rows)} πιάτα στο tab «{TAB}»")
+            return 0
+        read = read_photo(src)
+        if not read:
+            raise SystemExit("!! Δεν διάβασα κανένα πιάτο. Ξαναβγάλε τη φωτογραφία "
+                             "πιο κοντά και με τον πίνακα ίσιο στο κάδρο.")
 
     nums, errors, prices = resolve(read, rows)
     if errors:
-        print("Διάβασα από τον πίνακα:")
+        print("Διάβασα από " + ("το κείμενο:" if text_mode else "τον πίνακα:"))
         for name, price in read:
             print(f"  · {name}" + (f" — {price}" if price is not None else ""))
         print()
@@ -219,8 +279,10 @@ def main():
             "!! Δεν μπόρεσα να αντιστοιχίσω:\n  ✗ "
             + "\n  ✗ ".join(errors)
             + "\n\nΤο μενού ΔΕΝ άλλαξε — το site μένει όπως ήταν.\n"
-            + "Αν ο πίνακας το γράφει έτσι κάθε φορά, πρόσθεσε μια γραμμή στο "
-            + "board-aliases.txt (π.χ. «φιλέτο κοτόπουλο = 40»).")
+            + ("Γράψε το πλήρες όνομα του πιάτου και ξαναστείλ' το."
+               if text_mode else
+               "Αν ο πίνακας το γράφει έτσι κάθε φορά, πρόσθεσε μια γραμμή στο "
+               "board-aliases.txt (π.χ. «φιλέτο κοτόπουλο = 40»)."))
 
     names = [rows[n][0] for n in nums]
     write_menu(names, date_line)
