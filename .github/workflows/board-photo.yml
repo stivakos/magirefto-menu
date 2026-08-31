@@ -140,7 +140,11 @@ jobs:
           jq -Rs '{body: .}' < draft.md \
             | gh api --method POST \
                 "repos/${{ github.repository }}/issues/$n/comments" --input - >/dev/null
-          if [ -n "$id" ]; then
+          # ΜΟΝΟ σε επιτυχία σβήνεται το παλιό. Σε σφάλμα το draft.md είναι το
+          # μήνυμα λάθους και ΔΕΝ κουβαλά δείκτη MENU-STATE — σβήνοντας το παλιό
+          # θα χανόταν ολόκληρο το προσχέδιο, και μια στιγμιαία αποτυχία (δίκτυο,
+          # API) θα γινόταν μόνιμη απώλεια. Μένουν δύο σχόλια, το προσχέδιο ζει.
+          if [ -n "$id" ] && [ "${{ steps.round.outputs.code }}" = "0" ]; then
             gh api --method DELETE \
               "repos/${{ github.repository }}/issues/comments/$id" || true
           fi

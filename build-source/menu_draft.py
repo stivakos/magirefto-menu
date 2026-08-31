@@ -38,6 +38,12 @@ TAB = read_board.TAB
 # Ο έλεγχος γίνεται σε ΟΛΟΚΛΗΡΟ το σχόλιο: ένα «στείλε» μέσα σε πρόταση δεν
 # δημοσιεύει κατά λάθος.
 SEND = {"στειλε", "στειλτο", "ok", "οκ", "δημοσιευσε"}
+# Δημοσίευση ΠΑΡΑ τις εκκρεμότητες — πρέπει να ζητηθεί ρητά. Σκέτο «στείλε»
+# με εκκρεμή πιάτα τα πετούσε σιωπηλά: ο ιδιοκτήτης έβλεπε «Ανέβηκε» και το
+# μενού είχε λιγότερα πιάτα απ' όσα ζήτησε, χωρίς λέξη. Ακριβώς το είδος
+# σιωπής που αλλού σε αυτό το repo σταματά τη ροή.
+SEND_ANYWAY = {"στειλε ετσι", "στειλε χωρις αυτα", "στειλε ετσι κι αλλιως",
+               "στειλε τα υπολοιπα"}
 CANCEL = {"ακυρωση", "ακυρο", "ξεκινα ξανα", "καθαρισε"}
 DROP = re.compile(r"^(?:βγαλε|αφαιρεσε)\s+(.+)$")
 # «βάλε Χ» κάνει ό,τι και μια σκέτη λίστα. Υπάρχει για συμμετρία με το
@@ -62,6 +68,8 @@ def fold(s):
 def command(body):
     """(είδος, όρισμα) ή (None, None) αν το σχόλιο είναι λίστα πιάτων."""
     f = fold(body)
+    if f in SEND_ANYWAY:          # πριν το SEND: δεν επικαλύπτονται, αλλά η
+        return "send", "force"    # σειρά κάνει την πρόθεση προφανή
     if f in SEND:
         return "send", None
     if f in CANCEL:
@@ -80,6 +88,20 @@ def blank():
     return {"nums": [], "pending": [], "date_line": None, "source": None}
 
 
+def prune(state, rows):
+    """Βγάζει Α/Α που δεν υπάρχουν πια στο xlsx. Γυρίζει όσα έφυγαν.
+
+    Χωρίς αυτό το render() σκάει με KeyError, και το προσχέδιο ΚΟΛΛΑΕΙ ΓΙΑ
+    ΠΑΝΤΑ: η κατάσταση ξαναδιαβάζεται από το ίδιο σχόλιο σε κάθε γύρο, οπότε
+    κάθε επόμενο σχόλιο ξανασκάει στο ίδιο σημείο. Δεν είναι υποθετικό — το #36
+    διαγράφηκε από το xlsx ενώ υπήρχαν ανοιχτά issues που το κρατούσαν.
+    """
+    gone = [a for a in state["nums"] if a not in rows]
+    if gone:
+        state["nums"] = [a for a in state["nums"] if a in rows]
+    return gone
+
+
 def load(path):
     if path and os.path.isfile(path):
         try:
@@ -87,17 +109,6 @@ def load(path):
         except (json.JSONDecodeError, OSError):
             pass          # χαλασμένη κατάσταση => ξεκινάμε καθαρά, όχι σκάσιμο
     return blank()
-
-
-def parse_comment(text):
-    """Βγάζει την κατάσταση από το σχόλιο-προσχέδιο (τον κρυφό δείκτη)."""
-    m = re.search(rf"<!--\s*{MARK}\s*(\{{.*?\}})\s*-->", text or "", re.S)
-    if not m:
-        return blank()
-    try:
-        return {**blank(), **json.loads(m.group(1))}
-    except json.JSONDecodeError:
-        return blank()
 
 
 # ── ο γύρος ─────────────────────────────────────────────────────────────────
@@ -172,6 +183,10 @@ def main():
     state = load(a.state)
     body = open(a.body, encoding="utf-8").read() if os.path.isfile(a.body) else ""
 
+    # ΠΡΙΝ από οτιδήποτε άλλο: παλιό προσχέδιο μπορεί να δείχνει σε πιάτο που
+    # ο ιδιοκτήτης έσβησε στο μεταξύ.
+    gone = prune(state, rows)
+
     kind, arg = command(body)
     note = None
     published = False
@@ -186,6 +201,11 @@ def main():
     elif kind == "send":
         if not state["nums"]:
             note = "Δεν υπάρχει τίποτα να σταλεί — το προσχέδιο είναι άδειο."
+        elif state["pending"] and arg != "force":
+            note = (f"**Δεν το έστειλα.** Εκκρεμούν {len(state['pending'])} πιάτα "
+                    "και θα έλειπαν από το μενού χωρίς να το πάρεις είδηση.\n\n"
+                    "Γράψε τα σωστά ονόματα (ή τους αριθμούς τους), ή "
+                    "**«στείλε έτσι»** για να δημοσιευτεί χωρίς αυτά.")
         else:
             names = [rows[n][0] for n in state["nums"]]
             read_board.write_menu(names, state["date_line"])
@@ -222,9 +242,15 @@ def main():
     # Το σχόλιο-προσχέδιο γράφεται ΠΑΝΤΑ, ακόμη και μετά τη δημοσίευση: κρατά την
     # κατάσταση ζωντανή, ώστε ένα σχόλιο σε κλειστό issue («βγάλε Χ», «στείλε»)
     # να συνεχίζει από εκεί που έμεινε αντί να ξεκινά από το μηδέν.
-    open(a.draft_out, "w", encoding="utf-8").write(
-        render(state, rows, "Δημοσιεύτηκε. Μπορείς ακόμη να διορθώσεις και να "
-                            "ξαναστείλεις." if published else note))
+    if published:
+        note = "Δημοσιεύτηκε. Μπορείς ακόμη να διορθώσεις και να ξαναστείλεις."
+    if gone:
+        warn = ("⚠ Έβγαλα από το προσχέδιο "
+                + ", ".join(f"#{a}" for a in gone)
+                + " — δεν υπάρχει πια στο DAILY_MENU.xlsx.")
+        note = f"{warn}\n\n{note}" if note else warn
+
+    open(a.draft_out, "w", encoding="utf-8").write(render(state, rows, note))
     if published:
         open(a.reply_out, "w", encoding="utf-8").write(
             f"Ανέβηκε — **{state['date_line']}**, {len(state['nums'])} πιάτα:\n\n"
