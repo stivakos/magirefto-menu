@@ -33,6 +33,7 @@ jobs:
         working-directory: build-source
         run: python check.py
       - name: Build index.html
+        id: build
         working-directory: build-source
         run: python build.py
 
@@ -64,6 +65,14 @@ jobs:
         run: python publish.py --reset
 
       - name: Commit index.html + ΠΙΑΤΑ.md + post.txt
+        # ΑΡΚΕΙ να πέτυχε το build. Τα βήματα των social είναι στολίδι: ο
+        # headless Chrome, το force-push στο orphan branch ή το --reset μπορούν
+        # να σκάσουν, και μέχρι τώρα έπαιρναν μαζί τους ΚΑΙ το site — το
+        # index.html χτιζόταν κανονικά αλλά δεν γινόταν ποτέ commit, οπότε ο
+        # πελάτης έβλεπε το χθεσινό μενού επειδή δεν άνοιξε ένας browser.
+        # (Το σχόλιο του βήματος «Εικόνα μαυροπίνακα» υποσχόταν ήδη αυτή τη
+        # συμπεριφορά· απλώς δεν την υλοποιούσε κανείς.)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
