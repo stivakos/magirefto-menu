@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 
@@ -31,6 +32,7 @@ import dish_names
 import read_board
 
 MARK = "MENU-STATE"          # ο κρυφός δείκτης μέσα στο σχόλιο-προσχέδιο
+HERE = os.path.dirname(os.path.abspath(__file__))
 TAB = read_board.TAB
 
 
@@ -86,6 +88,28 @@ def command(body):
 # ── κατάσταση ───────────────────────────────────────────────────────────────
 def blank():
     return {"nums": [], "pending": [], "date_line": None, "source": None}
+
+
+def verify():
+    """Τρέχει το check.py πάνω στο γραμμένο menu-today.txt. None = εντάξει.
+
+    Χωρίς αυτό, το «στείλε» έκανε commit και ανακοίνωνε «Ανέβηκε», και ΜΕΤΑ το
+    «Build menu» έτρεχε τον έλεγχο. Αν ο έλεγχος έσκαγε εκεί, η δημοσίευση
+    σταματούσε — αλλά το issue είχε ήδη κλείσει λέγοντας ότι ανέβηκε, και το
+    site έμενε στο χθεσινό μενού χωρίς να το πάρει κανείς είδηση. Ο έλεγχος
+    κοιτά ΟΛΟ το menu-today.txt, όχι μόνο τη γραμμή που γράψαμε: μια χαλασμένη
+    γραμμή «Σαλάτες» μπλοκάρει το ίδιο.
+    """
+    r = subprocess.run([sys.executable, "check.py"], cwd=HERE,
+                       capture_output=True, text=True)
+    if r.returncode == 0:
+        return None
+    out = ((r.stdout or "") + (r.stderr or "")).splitlines()
+    # Το check.py τυπώνει ολόκληρη αναφορά· στο issue θέλουμε ΜΟΝΟ τα σφάλματα.
+    # Χωρίς αυτό το απόσπασμα ήταν οι τελευταίες γραμμές, δηλαδή σαλάτες και
+    # γλυκά — και ο ιδιοκτήτης δεν μάθαινε ποτέ τι έφταιξε.
+    bad = [l.strip() for l in out if l.lstrip().startswith(("✗", "!!"))]
+    return "\n".join(bad or out[-20:]).strip()
 
 
 def prune(state, rows):
@@ -208,8 +232,20 @@ def main():
                     "**«στείλε έτσι»** για να δημοσιευτεί χωρίς αυτά.")
         else:
             names = [rows[n][0] for n in state["nums"]]
+            with open(build.MENU_TXT, encoding="utf-8") as f:
+                before = f.read()
             read_board.write_menu(names, state["date_line"])
-            published = True
+            bad = verify()
+            if bad:
+                # Επαναφορά χωρίς git: το αρχείο δεν πρέπει να μείνει
+                # χαλασμένο, γιατί το επόμενο βήμα κάνει «git add».
+                with open(build.MENU_TXT, "w", encoding="utf-8") as f:
+                    f.write(before)
+                note = ("**Δεν δημοσιεύτηκε** — ο έλεγχος βρήκε πρόβλημα στο "
+                        "menu-today.txt:\n\n```\n"
+                        + "\n".join(bad.splitlines()[-20:]) + "\n```")
+            else:
+                published = True
     else:
         # Λίστα πιάτων. Η φωτογραφία διαβάζεται ΜΟΝΟ όταν έρχεται, ποτέ ξανά.
         # Η φωτογραφία προηγείται του «βάλε»: ένα «βάλε αυτά» με συνημμένη
