@@ -76,7 +76,8 @@ jobs:
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html ΠΙΑΤΑ.md post.txt menu-state.json
+          # menu.json: το διαβάζει το merci-app — χωρίς αυτό θα έμενε στο χθεσινό
+          git add index.html ΠΙΑΤΑ.md post.txt menu-state.json menu.json
           if git diff --cached --quiet; then
             echo "Δεν άλλαξε κάτι."
           else

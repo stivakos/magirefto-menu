@@ -9,7 +9,8 @@ commit messages.
 
 ## Κανόνες που δεν σπάνε
 
-1. **Το `index.html` και το `ΠΙΑΤΑ.md` είναι ΠΑΡΑΓΟΜΕΝΑ.** Ποτέ μην τα
+1. **Τα `index.html`, `ΠΙΑΤΑ.md`, `menu-state.json` και `menu.json` είναι
+   ΠΑΡΑΓΟΜΕΝΑ.** Ποτέ μην τα
    επεξεργάζεσαι με το χέρι — το επόμενο build τα ξαναγράφει. Αλλαγές
    εμφάνισης γίνονται στο `build-source/build.py`.
 2. **Το `DAILY_MENU.xlsx` το συντηρεί ο ιδιοκτήτης.** Το build το διαβάζει,
@@ -17,7 +18,11 @@ commit messages.
 3. **Τιμές: ρώτα πριν γράψεις.** Δες «Πηγές τιμών» πιο κάτω.
 4. **Ποτέ μην αλλάζεις υπάρχοντα Α/Α.** Δείχνει σε αυτά το `menu-today.txt`·
    η αλλαγή βγάζει σιωπηλά λάθος μενού. Νέα πιάτα παίρνουν το επόμενο
-   ελεύθερο Α/Α στο τέλος του tab.
+   ελεύθερο Α/Α στο τέλος του tab. Το ίδιο Α/Α είναι και ο **κωδικός πιάτου
+   του merci-app** — η αλλαγή του θα μπέρδευε και παραγγελίες.
+5. **Το `menu.json` είναι συμβόλαιο με το merci-app.** Νέα πεδία ελεύθερα·
+   μετονομασία, αφαίρεση ή αλλαγή τύπου μόνο με `MENU_JSON_VERSION + 1`.
+   Βλ. «`menu.json` — για το merci-app».
 
 ## Ροή
 
@@ -26,7 +31,7 @@ menu-today.txt   (τι σερβίρεται σήμερα — αριθμοί Α/�
 DAILY_MENU.xlsx  (η βάση: πιάτα, τιμές)
         │
         ├─→ check.py   επικύρωση· exit 1 => σταματά η δημοσίευση
-        └─→ build.py   ─→ index.html  +  ΠΙΑΤΑ.md
+        └─→ build.py   ─→ index.html  +  ΠΙΑΤΑ.md  +  menu.json
                               │
                        GitHub Action ─→ commit ─→ Pages
 ```
@@ -63,6 +68,7 @@ python3 build.py     # τοπικό preview -> ../index.html
 | `index.html` | Το site. Παραγόμενο. |
 | `post/index.html` | Σελίδα **για τον ιδιοκτήτη** (`/post/`): σημερινή εικόνα social, αποθήκευση, έτοιμη λεζάντα. **Στατικό — δεν το γράφει το build.** |
 | `menu-state.json` | `{stamp, date, closed, reopen}`. Το site διαβάζει μόνο το `stamp`· το `/post/` διαβάζει ημερομηνία και `reopen`. Παραγόμενο. |
+| `menu.json` | Το μενού της ημέρας για προγράμματα — το διαβάζει το **merci-app**. Παραγόμενο. Βλ. «`menu.json` — για το merci-app». |
 
 ## `menu-today.txt`
 
@@ -171,11 +177,43 @@ python3 build.py     # τοπικό preview -> ../index.html
 
 `.github/workflows/build-menu.yml` — τρέχει σε push που αγγίζει
 `menu-today.txt`, `DAILY_MENU.xlsx` ή `build-source/**`.
-Σειρά: `check.py` → `build.py` → commit `index.html` + `ΠΙΑΤΑ.md` με
-`[skip ci]` (αλλιώς θα καλούσε τον εαυτό του).
+Σειρά: `check.py` → `build.py` → commit `index.html`, `ΠΙΑΤΑ.md`,
+`menu-state.json`, `menu.json` και `post.txt` με `[skip ci]` (αλλιώς θα
+καλούσε τον εαυτό του).
 
 Αν το `check.py` βγάλει σφάλμα, η δημοσίευση σταματά και το site μένει στην
 τελευταία καλή έκδοση.
+
+## `menu.json` — για το merci-app
+
+Το app παραγγελιών (`~/Projects/merci-app`, ιδιωτικό repo) διαβάζει το μενού
+από **https://stivakos.github.io/magirefto-menu/menu.json**. Το site μένει
+ανέγγιχτο: το `menu.json` βγαίνει από τα **ίδια** δεδομένα με το `index.html`
+(`menu_payload()` στο `build.py`), άρα το app δείχνει ό,τι και το site, χωρίς
+δεύτερη υλοποίηση της αναγνώρισης ονομάτων. Το app **μόνο διαβάζει** — δεν
+γράφει ποτέ σε αυτό το repo.
+
+```json
+{"version": 1, "stamp": "39a08861fac3dd51",
+ "date": "Τρίτη 1/9/26", "date_iso": "2026-09-01",
+ "closed": false, "reopen": "",
+ "categories": [{"slug": "menu-hmeras", "label": "Μενού Ημέρας",
+   "items": [{"aa": 8, "name": "Γεμιστά", "price": 6.5, "side": false}]}]}
+```
+
+- **`aa` είναι μοναδικό μόνο μέσα στην κατηγορία** (κάθε tab μετράει από το 1).
+  Κωδικός πιάτου = `slug` + `aa`.
+- `stamp`: ίδια υπογραφή με το `menu-state.json` — κενό όταν είναι κλειστά.
+- `date_iso`: `null` αν η ημερομηνία δεν διαβάζεται.
+- **Κλειστά** => `closed: true`, `reopen` = το κείμενο της γραμμής `ΚΛΕΙΣΤΑ`,
+  `categories: []` — όπως το site, που δεν δείχνει μενού.
+- `price: null` στα **Συνοδευτικά** (`HIDE_PRICE`), ακόμη κι αν το xlsx έχει
+  τιμή — το json δείχνει ό,τι ο πελάτης, όχι ό,τι η βάση.
+- `side: true` = δωρεάν συνοδευτικό ανά μερίδα, από τα `synodeytika` της ημέρας.
+
+⚠ Το **`social/menu.json`** είναι **άλλο αρχείο**: η ταυτότητα της εικόνας των
+social, που ταξιδεύει στο branch `social-preview` για το `publish.py`. Ίδιο
+όνομα, άσχετο περιεχόμενο.
 
 ## Πηγές τιμών — έχουν αποκλίνει
 

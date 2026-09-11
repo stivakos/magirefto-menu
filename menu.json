@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "stamp": "39a08861fac3dd51",
+  "date": "Τρίτη 1/9/26",
+  "date_iso": "2026-09-01",
+  "closed": false,
+  "reopen": "",
+  "categories": [
+    {
+      "slug": "menu-hmeras",
+      "label": "Μενού Ημέρας",
+      "items": [
+        {
+          "aa": 8,
+          "name": "Γεμιστά",
+          "price": 6.5,
+          "side": false
+        },
+        {
+          "aa": 35,
+          "name": "Γεμιστά με κιμά",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 5,
+          "name": "Γίγαντες Καστοριάς",
+          "price": 6.0,
+          "side": false
+        },
+        {
+          "aa": 16,
+          "name": "Παστίτσιο",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 29,
+          "name": "Κοτόπουλο με μπάμιες",
+          "price": 7.5,
+          "side": false
+        },
+        {
+          "aa": 21,
+          "name": "Μοσχαράκι κοκκινιστό",
+          "price": 9.0,
+          "side": true
+        },
+        {
+          "aa": 34,
+          "name": "Ψαρόσουπα",
+          "price": 7.5,
+          "side": false
+        },
+        {
+          "aa": 27,
+          "name": "Πέννες με κιμά",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 38,
+          "name": "Μπιφτέκι κοτόπουλο",
+          "price": 7.0,
+          "side": true
+        },
+        {
+          "aa": 49,
+          "name": "Σολομός φούρνου",
+          "price": 12.0,
+          "side": true
+        },
+        {
+          "aa": 50,
+          "name": "Τσιπούρα φούρνου",
+          "price": 10.0,
+          "side": true
+        },
+        {
+          "aa": 47,
+          "name": "Μπακαλιάρος τηγανητός",
+          "price": 10.0,
+          "side": true
+        },
+        {
+          "aa": 17,
+          "name": "Μουσακάς",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 57,
+          "name": "Μπούτι με γαρνιτούρα",
+          "price": 7.5,
+          "side": true
+        },
+        {
+          "aa": 12,
+          "name": "Μπάμιες φούρνου",
+          "price": 6.0,
+          "side": false
+        },
+        {
+          "aa": 55,
+          "name": "Κεφτεδάκια τηγανητά",
+          "price": 7.0,
+          "side": true
+        },
+        {
+          "aa": 37,
+          "name": "Κεφτεδάκια κοκκινιστά",
+          "price": 7.0,
+          "side": true
+        }
+      ]
+    },
+    {
+      "slug": "synodeytika",
+      "label": "Συνοδευτικά (Μερίδα)",
+      "items": [
+        {
+          "aa": 1,
+          "name": "Πατάτες τηγανητές",
+          "price": null,
+          "side": false
+        },
+        {
+          "aa": 2,
+          "name": "Πατάτες φούρνου",
+          "price": null,
+          "side": false
+        },
+        {
+          "aa": 4,
+          "name": "Ρύζι",
+          "price": null,
+          "side": false
+        },
+        {
+          "aa": 5,
+          "name": "Πουρές πατάτας",
+          "price": null,
+          "side": false
+        }
+      ]
+    },
+    {
+      "slug": "salates",
+      "label": "Σαλάτες",
+      "items": [
+        {
+          "aa": 1,
+          "name": "Χωριάτικη",
+          "price": 6.5,
+          "side": false
+        },
+        {
+          "aa": 2,
+          "name": "Αγγουροντομάτα",
+          "price": 4.5,
+          "side": false
+        },
+        {
+          "aa": 3,
+          "name": "Μαρούλι",
+          "price": 4.0,
+          "side": false
+        },
+        {
+          "aa": 6,
+          "name": "Merci",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 12,
+          "name": "Φρουτοσαλάτα",
+          "price": 5.0,
+          "side": false
+        },
+        {
+          "aa": 13,
+          "name": "Φέτα",
+          "price": 4.0,
+          "side": false
+        }
+      ]
+    },
+    {
+      "slug": "glyka",
+      "label": "Γλυκά",
+      "items": [
+        {
+          "aa": 10,
+          "name": "Πορτοκαλόπιτα",
+          "price": 4.0,
+          "side": false
+        },
+        {
+          "aa": 3,
+          "name": "Σοκολατόπιτα",
+          "price": 4.8,
+          "side": false
+        }
+      ]
+    },
+    {
+      "slug": "anapsyktika",
+      "label": "Αναψυκτικά / Ποτά",
+      "items": [
+        {
+          "aa": 1,
+          "name": "Coca-Cola 330ml",
+          "price": 1.8,
+          "side": false
+        },
+        {
+          "aa": 2,
+          "name": "Coca-Cola zero 330ml",
+          "price": 1.8,
+          "side": false
+        },
+        {
+          "aa": 3,
+          "name": "Coca-Cola light 330ml",
+          "price": 1.8,
+          "side": false
+        },
+        {
+          "aa": 8,
+          "name": "Νερό 500ml",
+          "price": 0.5,
+          "side": false
+        },
+        {
+          "aa": 10,
+          "name": "Νερό 1,5lt",
+          "price": 1.5,
+          "side": false
+        }
+      ]
+    }
+  ]
+}

@@ -197,7 +197,9 @@ for label, slug, tab in CATEGORIES:
     for n in nums:
         if n in rows:
             name, price, side = rows[n]
-            items.append({"name": name,
+            # «aa» = το Α/Α του xlsx. Το site δεν το δείχνει· το χρειάζεται το
+            # menu.json ως σταθερό κωδικό πιάτου (βλ. menu_payload).
+            items.append({"aa": n, "name": name,
                           "price": None if slug in HIDE_PRICE else price,
                           "side": side})
     cat = {"slug": slug, "label": label, "items": items}
@@ -932,6 +934,36 @@ HTML = f'''<!doctype html>
 </html>
 '''
 
+# --- menu.json: το μενού της ημέρας για προγράμματα -----------------------
+# Το διαβάζει το merci-app (~/Projects/merci-app), που ΔΕΝ πρέπει να ξαναγράψει
+# το parsing του menu-today.txt: δύο υλοποιήσεις της αναγνώρισης ονομάτων θα
+# απέκλιναν σιωπηλά. Βγαίνει από τα ΙΔΙΑ δεδομένα με το index.html, οπότε το
+# app δείχνει ό,τι και το site.
+# Δημοσιευμένο συμβόλαιο: νέα πεδία προστίθενται ελεύθερα· μετονομασία,
+# αφαίρεση ή αλλαγή τύπου θέλει MENU_JSON_VERSION + 1 και ενημέρωση του app.
+MENU_JSON = os.path.join(HERE, "..", "menu.json")
+MENU_JSON_VERSION = 1
+
+
+def menu_payload():
+    return {
+        "version": MENU_JSON_VERSION,
+        "stamp": MENU_STAMP,              # ίδια υπογραφή με το menu-state.json
+        "date": MENU_DATE,
+        "date_iso": MENU_ISO or None,
+        "closed": bool(CLOSED),
+        "reopen": CLOSED,
+        # Κλειστά => χωρίς πιάτα, όπως και το site: δεν υπάρχει μενού για να
+        # παραγγείλει κανείς, ούτε κατά λάθος.
+        "categories": [] if CLOSED else [
+            {"slug": c["slug"], "label": c["label"],
+             "items": [{"aa": it["aa"], "name": it["name"],
+                        "price": it["price"], "side": it["side"]}
+                       for it in c["items"]]}
+            for c in MENU],
+    }
+
+
 # Τα γραψίματα μπαίνουν πίσω από main-guard ώστε το social.py να κάνει
 # «import build» και να πάρει MENU / MENU_DATE / CLOSED χωρίς να ξαναγράψει
 # αρχεία — μία πηγή αλήθειας για τα δεδομένα της ημέρας, χωρίς αντιγραφή.
@@ -953,6 +985,12 @@ if __name__ == "__main__":
                    "closed": bool(CLOSED), "reopen": CLOSED}, f,
                   ensure_ascii=False)
     print(f"Wrote {STATE_JSON}  ({MENU_STAMP or 'κλειστά'})")
+
+    with open(MENU_JSON, "w", encoding="utf-8") as f:
+        # indent: αλλαγές ανά πιάτο στο git diff, διαβάσιμο και από κινητό
+        json.dump(menu_payload(), f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    print(f"Wrote {MENU_JSON}")
 
 # NOTE: DAILY_MENU.xlsx is the OWNER-maintained SOURCE of common dishes (per-category
 # tabs: Α/Α | Ονομασία | Τιμή). The daily selection ("μαγειρευτά 1 2 4 …") is read FROM
