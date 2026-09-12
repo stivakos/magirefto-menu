@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "stamp": "39a08861fac3dd51",
-  "date": "Τρίτη 1/9/26",
-  "date_iso": "2026-09-01",
+  "stamp": "7340345e6abb8434",
+  "date": "Δευτέρα 14/9/26",
+  "date_iso": "2026-09-14",
   "closed": false,
   "reopen": "",
   "categories": [
@@ -11,14 +11,26 @@
       "label": "Μενού Ημέρας",
       "items": [
         {
+          "aa": 1,
+          "name": "Κοτόσουπα",
+          "price": 7.0,
+          "side": false
+        },
+        {
           "aa": 8,
           "name": "Γεμιστά",
           "price": 6.5,
           "side": false
         },
         {
-          "aa": 35,
-          "name": "Γεμιστά με κιμά",
+          "aa": 16,
+          "name": "Παστίτσιο",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 17,
+          "name": "Μουσακάς",
           "price": 7.0,
           "side": false
         },
@@ -29,75 +41,27 @@
           "side": false
         },
         {
-          "aa": 16,
-          "name": "Παστίτσιο",
-          "price": 7.0,
-          "side": false
-        },
-        {
-          "aa": 29,
-          "name": "Κοτόπουλο με μπάμιες",
-          "price": 7.5,
-          "side": false
-        },
-        {
-          "aa": 21,
-          "name": "Μοσχαράκι κοκκινιστό",
+          "aa": 20,
+          "name": "Μοσχαράκι γιουβέτσι",
           "price": 9.0,
-          "side": true
-        },
-        {
-          "aa": 34,
-          "name": "Ψαρόσουπα",
-          "price": 7.5,
           "side": false
         },
         {
-          "aa": 27,
-          "name": "Πέννες με κιμά",
-          "price": 7.0,
+          "aa": 75,
+          "name": "Μοσχαράκι με Αρακά",
+          "price": 9.0,
           "side": false
         },
         {
-          "aa": 38,
-          "name": "Μπιφτέκι κοτόπουλο",
-          "price": 7.0,
-          "side": true
-        },
-        {
-          "aa": 49,
-          "name": "Σολομός φούρνου",
-          "price": 12.0,
-          "side": true
-        },
-        {
-          "aa": 50,
-          "name": "Τσιπούρα φούρνου",
-          "price": 10.0,
-          "side": true
-        },
-        {
-          "aa": 47,
-          "name": "Μπακαλιάρος τηγανητός",
-          "price": 10.0,
-          "side": true
-        },
-        {
-          "aa": 17,
-          "name": "Μουσακάς",
-          "price": 7.0,
+          "aa": 33,
+          "name": "Γιουβέτσι με χταπόδι",
+          "price": 9.0,
           "side": false
         },
         {
-          "aa": 57,
-          "name": "Μπούτι με γαρνιτούρα",
-          "price": 7.5,
-          "side": true
-        },
-        {
-          "aa": 12,
-          "name": "Μπάμιες φούρνου",
-          "price": 6.0,
+          "aa": 24,
+          "name": "Σουφλέ ζυμαρικών",
+          "price": 7.0,
           "side": false
         },
         {
