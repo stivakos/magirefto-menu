@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "stamp": "afa81493d80f7a07",
+  "stamp": "ac11d5768ec402dd",
   "date": "Δευτέρα 14/9/26",
   "date_iso": "2026-09-14",
   "closed": false,
@@ -35,33 +35,15 @@
           "side": false
         },
         {
-          "aa": 5,
-          "name": "Γίγαντες Καστοριάς",
-          "price": 6.0,
-          "side": false
-        },
-        {
           "aa": 20,
           "name": "Μοσχαράκι γιουβέτσι",
           "price": 9.0,
           "side": false
         },
         {
-          "aa": 75,
-          "name": "Μοσχαράκι με Αρακά",
-          "price": 9.0,
-          "side": false
-        },
-        {
-          "aa": 33,
-          "name": "Γιουβέτσι με χταπόδι",
-          "price": 9.0,
-          "side": false
-        },
-        {
-          "aa": 24,
-          "name": "Σουφλέ ζυμαρικών",
-          "price": 7.0,
+          "aa": 5,
+          "name": "Γίγαντες Καστοριάς",
+          "price": 6.0,
           "side": false
         },
         {
@@ -77,8 +59,92 @@
           "side": true
         },
         {
+          "aa": 33,
+          "name": "Χταπόδι κριθαρότο",
+          "price": 9.0,
+          "side": false
+        },
+        {
+          "aa": 40,
+          "name": "Φιλέτο κοτόπουλο",
+          "price": 8.0,
+          "side": true
+        },
+        {
+          "aa": 39,
+          "name": "Σνίτσελ κοτόπουλο",
+          "price": 8.5,
+          "side": true
+        },
+        {
+          "aa": 53,
+          "name": "Σνίτσελ χοιρινό",
+          "price": 9.0,
+          "side": true
+        },
+        {
+          "aa": 80,
+          "name": "Σνίτσελ κοτόπουλο a la creme",
+          "price": 9.0,
+          "side": false
+        },
+        {
+          "aa": 38,
+          "name": "Μπιφτέκι κοτόπουλο",
+          "price": 7.0,
+          "side": true
+        },
+        {
+          "aa": 27,
+          "name": "Πέννες με κιμά",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 28,
+          "name": "Πέννες a la creme",
+          "price": 6.5,
+          "side": false
+        },
+        {
+          "aa": 77,
+          "name": "Φιλετίνια κοτόπουλο a la creme με πέννες",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 78,
+          "name": "Μακαρόνια με κιμά",
+          "price": 7.0,
+          "side": false
+        },
+        {
+          "aa": 79,
+          "name": "Σπαγγέτι με μπούτι κοτόπουλο κοκκινιστό",
+          "price": 7.5,
+          "side": false
+        },
+        {
+          "aa": 50,
+          "name": "Τσιπούρα φούρνου",
+          "price": 9.0,
+          "side": true
+        },
+        {
           "aa": 76,
           "name": "Λαβράκι φούρνου",
+          "price": 9.0,
+          "side": true
+        },
+        {
+          "aa": 47,
+          "name": "Μπακαλιάρος τηγανητός",
+          "price": 9.0,
+          "side": true
+        },
+        {
+          "aa": 46,
+          "name": "Καλαμαράκια τηγανητά",
           "price": 9.0,
           "side": true
         }
