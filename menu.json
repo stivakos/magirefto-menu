@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "stamp": "7340345e6abb8434",
+  "stamp": "afa81493d80f7a07",
   "date": "Δευτέρα 14/9/26",
   "date_iso": "2026-09-14",
   "closed": false,
@@ -74,6 +74,12 @@
           "aa": 37,
           "name": "Κεφτεδάκια κοκκινιστά",
           "price": 7.0,
+          "side": true
+        },
+        {
+          "aa": 76,
+          "name": "Λαβράκι φούρνου",
+          "price": 9.0,
           "side": true
         }
       ]
