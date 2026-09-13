@@ -47,6 +47,7 @@ LIST_H = 828               # px για τη λίστα: 1350 μείον κεφα
 LINE = 1.72                # ύψος γραμμής + κενό, ως πολλαπλάσιο του font-size
 MIN_PT, MAX_PT = 26, 46    # κάτω από 26px δεν διαβάζεται σε κινητό μέσα στο feed
 FLOOR_PT = 15              # απόλυτο κατώτατο: καλύτερα δυσανάγνωστο παρά κομμένο
+MAX_MAIN_WITH_EXTRAS = 16  # πάνω από τόσα μαγειρευτά, σαλάτες/γλυκά μόνο στο «και ακόμη»
 
 CHROME_CANDIDATES = [
     os.environ.get("CHROME", ""),
@@ -104,18 +105,28 @@ def page_html():
         shown = [dict(c, items=avail[c["slug"]]) for c in build.MENU
                  if avail[c["slug"]] and (c["slug"] == MAIN_SLUG or c["slug"] in TWO_COL)]
 
-        lines = 0.0
-        for c in shown:
-            n = len(c["items"])
-            lines += (n + 1) // 2 if c["slug"] in TWO_COL else n
-            if c["slug"] != MAIN_SLUG:
-                lines += 1.5          # η επικεφαλίδα της ομάδας
+        def count(groups):
+            lines = 0.0
+            for c in groups:
+                n = len(c["items"])
+                lines += (n + 1) // 2 if c["slug"] in TWO_COL else n
+                if c["slug"] != MAIN_SLUG:
+                    lines += 1.5          # η επικεφαλίδα της ομάδας
+            return lines
+
+        # Πυκνή εικόνα => σαλάτες και γλυκά πάνε στη γραμμή «και ακόμη» και τα
+        # μαγειρευτά παίρνουν όλο τον χώρο (απόφαση ιδιοκτήτη 13/9/2026: με 23
+        # πιάτα + σαλάτες + γλυκά τα γράμματα έπεφταν στα 15px, δυσανάγνωστα).
+        main = sum(len(c["items"]) for c in shown if c["slug"] == MAIN_SLUG)
+        dense = main > MAX_MAIN_WITH_EXTRAS
+        if dense:
+            shown = [c for c in shown if c["slug"] == MAIN_SLUG]
+        lines = count(shown)
         size, gap = scale_for(lines)
-        # Η σελίδα μικραίνει μόνη της μέχρι να χωρέσει (ως FLOOR_PT), οπότε εδώ
-        # δεν προειδοποιούμε για κόψιμο — μόνο ότι η εικόνα βγαίνει πυκνή.
-        if lines > LIST_H / (MIN_PT * LINE):
-            print(f"ℹ  {lines:.0f} γραμμές — πυκνή εικόνα. Θα χωρέσουν όλα, αλλά "
-                  f"με μικρά γράμματα· σκέψου δεύτερη εικόνα για σαλάτες/γλυκά.",
+        # Πολλά πιάτα: μικρότερο κενό ανάμεσα στις γραμμές, μεγαλύτερα γράμματα.
+        gap_ratio = 0.24 if lines > LIST_H / (MIN_PT * LINE) else 0.42
+        if dense:
+            print(f"ℹ  πολλά πιάτα — σαλάτες/γλυκά μόνο στη γραμμή «και ακόμη».",
                   file=sys.stderr)
 
         groups = []
@@ -139,7 +150,8 @@ def page_html():
                       if extra else "")
         body = f'''
     <div class="date">{esc(date_line)}</div>
-    <div class="board" style="font-size:{size}px;--gap:{gap}px">
+    <div class="board" style="font-size:{size}px;--gap:{round(size * gap_ratio)}px"
+         data-gap="{gap_ratio}">
       <div class="board-inner">
 {chr(10).join(groups)}
       </div>
@@ -212,11 +224,18 @@ def page_html():
     var inner = document.querySelector(".board-inner");
     if (!b || !inner) return;
     b.style.justifyContent = "";                 // ξανά από την αρχή
-    var size = parseFloat(getComputedStyle(b).fontSize);
+    // Ξεκινά από το ΜΕΓΙΣΤΟ, όχι από την εκτίμηση: η εκτίμηση είναι συντηρητική
+    // και μόνο μικραίνοντας από εκεί θα έμεναν γράμματα μικρότερα απ' όσο χωράει.
+    var ratio = parseFloat(b.dataset.gap) || 0.42;
+    function set(s) {{
+      b.style.fontSize = s + "px";
+      b.style.setProperty("--gap", Math.round(s * ratio) + "px");
+    }}
+    var size = {MAX_PT};
+    set(size);
     while (inner.offsetHeight > b.clientHeight && size > {FLOOR_PT}) {{
       size -= 1;
-      b.style.fontSize = size + "px";
-      b.style.setProperty("--gap", Math.round(size * 0.42) + "px");
+      set(size);
     }}
     // Αν ούτε στο κατώτατο μέγεθος χωράει, τουλάχιστον να μη χάνονται τα
     // ΠΡΩΤΑ πιάτα: το κεντράρισμα κόβει και από πάνω, το flex-start μόνο κάτω.
