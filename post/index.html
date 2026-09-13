@@ -119,6 +119,17 @@
     return url + (url.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now();
   }
 
+  // «Δευτέρα 14/9/26» -> true αν είναι μετά από σήμερα. Χωρίς έτος => φέτος.
+  function isFuture(d) {
+    var m = /(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/.exec(d || "");
+    if (!m) { return false; }
+    var now = new Date();
+    var y = m[3] ? (m[3].length === 2 ? 2000 + +m[3] : +m[3]) : now.getFullYear();
+    var menu = new Date(y, +m[2] - 1, +m[1]);
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return menu > today;
+  }
+
   function caption() {
     var d = state && state.date ? state.date : "";
     if (state && state.closed) {
@@ -128,7 +139,12 @@
            + ".\n\nΘα τα πούμε από κοντά! Μέχρι τότε, ρίξτε μια ματιά στο μαγαζί μας:\n"
            + SITE;
     }
-    return "Καλημέρα! Το σημερινό μας μενού" + (d ? " — " + d.replace(/\/\d\d$/, "") : "")
+    var day = d.replace(/\/\d\d$/, "");
+    // Μενού που ανεβαίνει από την προηγούμενη μέρα δεν είναι «σημερινό».
+    var intro = isFuture(d)
+      ? "Το μενού μας για " + (/^Σάββατο/.test(day) ? "το " : "τη ") + day
+      : "Καλημέρα! Το σημερινό μας μενού" + (day ? " — " + day : "");
+    return intro
          + ". Σπιτικό φαγητό, μαγειρεμένο από το πρωί.\n\n"
          + "👉 Όλο το μενού και παραγγελία: " + SITE + "\n\n"
          + "Καρδίτσης 22, Λάρισα · 12:00–16:00 · take away & delivery ☎ " + TEL;
