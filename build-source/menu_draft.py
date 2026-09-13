@@ -140,11 +140,13 @@ def apply_round(state, names, rows, alias):
     """Προσθέτει τα πιάτα του γύρου. Τα εκκρεμή ΑΝΤΙΚΑΘΙΣΤΑΝΤΑΙ, δεν σωρεύονται."""
     pending = []
     for name in names:
-        aa, err = read_board.resolve_one(name, rows, alias, numeric=True)
+        found, err = read_board.resolve_one(name, rows, alias, numeric=True)
         if err:
             pending.append({"name": name, "why": err})
-        elif aa not in state["nums"]:
-            state["nums"].append(aa)     # η σειρά γραψίματος = η σειρά στη σελίδα
+            continue
+        for aa in found:                 # «κεφτεδάκια τηγ/κοκκ» = δύο πιάτα
+            if aa not in state["nums"]:
+                state["nums"].append(aa) # η σειρά γραψίματος = η σειρά στη σελίδα
     state["pending"] = pending
     return state
 
@@ -152,12 +154,14 @@ def apply_round(state, names, rows, alias):
 def drop(state, token, rows, alias):
     """«βγάλε Χ» — χωρίς αυτό, πιάτο που μπήκε κατά λάθος αλλά αναγνωρίστηκε
     κανονικά δεν έβγαινε με τίποτα, παρά μόνο κλείνοντας το issue."""
-    aa, err = read_board.resolve_one(token, rows, alias, numeric=True)
+    found, err = read_board.resolve_one(token, rows, alias, numeric=True)
     if err:
         return f"Δεν κατάλαβα ποιο πιάτο να βγάλω: {err}"
-    if aa not in state["nums"]:
-        return f"Το «{rows[aa][0]}» δεν είναι στο προσχέδιο."
-    state["nums"].remove(aa)
+    present = [aa for aa in found if aa in state["nums"]]
+    if not present:
+        return f"Το «{' / '.join(rows[aa][0] for aa in found)}» δεν είναι στο προσχέδιο."
+    for aa in present:                   # «βγάλε κεφτεδάκια τηγ/κοκκ» = και τα δύο
+        state["nums"].remove(aa)
     return None
 
 

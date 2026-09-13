@@ -122,9 +122,11 @@ def page_html():
         if dense:
             shown = [c for c in shown if c["slug"] == MAIN_SLUG]
         lines = count(shown)
-        size, gap = scale_for(lines)
+        size, _ = scale_for(lines)
         # Πολλά πιάτα: μικρότερο κενό ανάμεσα στις γραμμές, μεγαλύτερα γράμματα.
-        gap_ratio = 0.24 if lines > LIST_H / (MIN_PT * LINE) else 0.42
+        # Και με το ΙΔΙΟ όριο που βγάζει τις σαλάτες: με ξεχωριστό όριο γραμμών,
+        # 17–18 μαγειρευτά έπαιρναν μικρότερα γράμματα από 19.
+        gap_ratio = 0.24 if dense else 0.42
         if dense:
             print(f"ℹ  πολλά πιάτα — σαλάτες/γλυκά μόνο στη γραμμή «και ακόμη».",
                   file=sys.stderr)

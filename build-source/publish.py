@@ -17,6 +17,7 @@
 Τα tokens έρχονται από GitHub Secrets. Αν λείπουν, τυπώνει τι ΘΑ έστελνε και
 βγαίνει με 0: η ροή δοκιμάζεται ολόκληρη χωρίς λογαριασμούς.
 """
+import datetime
 import json
 import os
 import re
@@ -24,6 +25,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from zoneinfo import ZoneInfo
+
+import menu_date                     # ίδιος parser ημερομηνίας με build/check
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
@@ -69,6 +73,31 @@ def read_caption(path):
         if grab:
             out.append(line.rstrip())
     return "\n".join(out).strip()
+
+
+PLACEHOLDER = "{ΜΕΝΟΥ}"
+ATHENS = ZoneInfo("Europe/Athens")
+
+
+def intro(date_text, today=None):
+    """Η αρχή της λεζάντας, ανάλογα με το ΠΟΤΕ δημοσιεύεται.
+
+    Ίδια φράση με τη σελίδα /post/. Χωρίς αυτό η λεζάντα του post.txt έμενε
+    σταθερή («Καλημέρα! Το σημερινό μας μενού») και ένα μενού Δευτέρας που
+    δημοσιεύεται Κυριακή βράδυ θα έλεγε «σημερινό».
+    """
+    today = today or datetime.datetime.now(ATHENS).date()
+    day = re.sub(r"/\d{2,4}\s*$", "", (date_text or "").strip())
+    when = menu_date.parse(date_text, today=today)
+    if when and when > today:
+        article = "το" if day.startswith("Σάββατο") else "τη"
+        return f"Το μενού μας για {article} {day}"
+    return "Καλημέρα! Το σημερινό μας μενού" + (f" — {day}" if day else "")
+
+
+def expand(caption, date_text, today=None):
+    """Αντικαθιστά το {ΜΕΝΟΥ} της λεζάντας. Λεζάντα χωρίς αυτό μένει ως έχει."""
+    return caption.replace(PLACEHOLDER, intro(date_text, today))
 
 
 def image_date():
@@ -228,7 +257,7 @@ def main():
     if read_field(MENU_TXT, "ΚΛΕΙΣΤΑ"):
         print("Το μαγαζί είναι κλειστό — η ανακοίνωση δημοσιεύεται κανονικά.")
 
-    caption = read_caption(POST_TXT)
+    caption = expand(read_caption(POST_TXT), post_date)
     if not caption:
         raise SystemExit("!! Κενή ΛΕΖΑΝΤΑ στο post.txt.")
 

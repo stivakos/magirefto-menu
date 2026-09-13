@@ -171,11 +171,15 @@ def read_text(body):
 
 
 def aliases():
-    """Το λεξικό συντομογραφιών του μαγαζιού: {κανονικοποιημένο κείμενο: Α/Α}.
+    """Το λεξικό συντομογραφιών του μαγαζιού: {κανονικοποιημένο κείμενο: [Α/Α, …]}.
 
     Ο πίνακας γράφει «Φιλέτο κοτόπουλο», που στη βάση είναι δύο πιάτα (#40 και
     #54). Καμία αυτόματη λογική δεν μπορεί να το λύσει — και δεν πρέπει να το
     μαντέψει. Το λύνει ο ιδιοκτήτης, μία φορά, γραπτώς.
+
+    Μία γραμμή μπορεί να δείχνει σε ΠΟΛΛΑ πιάτα («κεφτεδάκια τηγ/κοκκ = 55 37»):
+    ο πίνακας γράφει δύο φαγητά σε μία φράση. Με έναν μόνο αριθμό το ένα από τα
+    δύο έπεφτε σιωπηλά — το «τηγ/κοκκ» έβγαζε μόνο τα κοκκινιστά.
     """
     out = {}
     if not os.path.isfile(ALIASES):
@@ -186,16 +190,21 @@ def aliases():
             continue
         if "=" not in line:
             raise SystemExit(f"!! board-aliases.txt γραμμή {i}: λείπει το «=».")
-        text, num = line.rsplit("=", 1)
-        if not num.strip().isdigit():
+        text, nums = line.rsplit("=", 1)
+        nums = nums.replace(",", " ").split()
+        bad = [n for n in nums if not n.isdigit()]
+        if not nums or bad:
             raise SystemExit(f"!! board-aliases.txt γραμμή {i}: "
-                             f"το «{num.strip()}» δεν είναι αριθμός πιάτου.")
-        out[dish_names.sound(dish_names.norm(text))] = int(num)
+                             f"το «{(bad or [''])[0]}» δεν είναι αριθμός πιάτου.")
+        out[dish_names.sound(dish_names.norm(text))] = [int(n) for n in nums]
     return out
 
 
 def resolve_one(name, rows, alias, numeric=False):
-    """Ένα όνομα -> (Α/Α, σφάλμα). Το ένα από τα δύο είναι πάντα None.
+    """Ένα όνομα -> ([Α/Α, …], σφάλμα). Το ένα από τα δύο είναι πάντα None.
+
+    Λίστα, όχι ένας αριθμός: μια γραμμή του board-aliases.txt μπορεί να είναι
+    δύο πιάτα («κεφτεδάκια τηγ/κοκκ»). Χωρίς αντίστοιχη γραμμή είναι πάντα ένα.
 
     Χωριστή συνάρτηση επειδή τη χρειάζεται και το menu_draft.py, που δουλεύει
     πιάτο-πιάτο για να ξέρει ΠΟΙΟ εκκρεμεί. Αν την αντέγραφε, οι δύο ροές θα
@@ -211,15 +220,18 @@ def resolve_one(name, rows, alias, numeric=False):
     if numeric and name.strip().isdigit():
         aa = int(name.strip())
         if aa in rows:
-            return aa, None
+            return [aa], None
         return None, f"δεν υπάρχει πιάτο με Α/Α {aa} στο DAILY_MENU.xlsx."
 
-    aa = alias.get(dish_names.sound(dish_names.norm(name)))
-    if aa is None:
-        return dish_names.resolve(name, rows, where="στο DAILY_MENU.xlsx")
-    if aa not in rows:
-        return None, f"το board-aliases.txt δείχνει στο #{aa}, που δεν υπάρχει."
-    return aa, None
+    nums = alias.get(dish_names.sound(dish_names.norm(name)))
+    if nums is None:
+        aa, err = dish_names.resolve(name, rows, where="στο DAILY_MENU.xlsx")
+        return (None, err) if err else ([aa], None)
+    missing = [a for a in nums if a not in rows]
+    if missing:
+        return None, (f"το board-aliases.txt δείχνει στο #{missing[0]}, "
+                      f"που δεν υπάρχει.")
+    return list(nums), None
 
 
 def resolve(read, rows):
@@ -227,14 +239,18 @@ def resolve(read, rows):
     alias = aliases()
     nums, errors, prices = [], [], []
     for name, price in read:
-        aa, err = resolve_one(name, rows, alias)
+        found, err = resolve_one(name, rows, alias)
         if err:
             errors.append(f"«{name}»: {err}")
             continue
-        if aa in nums:                       # ο πίνακας γράφει κάτι δύο φορές
-            continue
-        nums.append(aa)
-        prices.append((aa, rows[aa][0], rows[aa][1], price))
+        for aa in found:
+            if aa in nums:                   # ο πίνακας γράφει κάτι δύο φορές
+                continue
+            nums.append(aa)
+            # Η τιμή της κιμωλίας ανήκει σε ΕΝΑ πιάτο· σε «τηγ/κοκκ» δεν ξέρουμε
+            # σε ποιο, οπότε δεν τη συγκρίνουμε — αλλιώς ψευδής προειδοποίηση.
+            prices.append((aa, rows[aa][0], rows[aa][1],
+                           price if len(found) == 1 else None))
     return nums, errors, prices
 
 
