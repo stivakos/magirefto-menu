@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "stamp": "ac11d5768ec402dd",
+  "stamp": "316a81561bd4fd31",
   "date": "Δευτέρα 14/9/26",
   "date_iso": "2026-09-14",
   "closed": false,
@@ -86,7 +86,7 @@
           "aa": 80,
           "name": "Σνίτσελ κοτόπουλο a la creme",
           "price": 9.0,
-          "side": false
+          "side": true
         },
         {
           "aa": 38,
