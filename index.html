@@ -134,6 +134,11 @@
 
   /* ---- order bar ---- */
   .order-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;transform:translateY(120%);transition:transform .28s ease;background:color-mix(in srgb,var(--mist-2) 96%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--hairline);padding:.7rem 1rem calc(.7rem + env(safe-area-inset-bottom));}
+  /* Ποτέ ψηλότερη από την οθόνη: με ανοιχτά τα στοιχεία πελάτη είναι ~475px, και
+     με το πληκτρολόγιο του κινητού η ορατή οθόνη πέφτει στα ~330px — το πάνω μέρος
+     (Delivery/Παραλαβή, ώρα, ακόμη και η διεύθυνση) έβγαινε έξω χωρίς να κυλά.
+     dvh = το ορατό ύψος, που μικραίνει με το πληκτρολόγιο· vh για παλιούς browser. */
+  .order-bar{max-height:100vh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;}
   .order-bar.show{transform:translateY(0);}
   .order-opts{max-width:44rem;margin:0 auto .55rem;display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;}
   .seg{display:inline-flex;border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:var(--chip-bg);}
