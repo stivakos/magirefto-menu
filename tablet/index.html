@@ -118,7 +118,9 @@
   var LS_TOKEN = "merci-tablet-token";
   var LS_STATE = "merci-tablet-state";
   var DEBOUNCE = 2500;        // πολλά πατήματα στη σειρά = ένα αίτημα
-  var RESEND = 2 * 60 * 1000; // τόσο διαφωνία site/tablet => ξαναστέλνει μόνο του
+  // Το GitHub Pages θέλει ως ~1,5' να ανεβάσει το αρχείο (μετρημένο 14/9/2026).
+  // Με ξαναστείλιμο στα 2' θα έστελνε διπλά για κάτι που απλώς ερχόταν.
+  var RESEND = 3 * 60 * 1000; // τόσο διαφωνία site/tablet => ξαναστέλνει μόνο του
   var SLOW = 5 * 60 * 1000;   // τόσο χωρίς να φανεί στο site => κάτι δεν πήγε καλά
 
   var $ = function (id) { return document.getElementById(id); };
@@ -197,6 +199,7 @@
     var cls = "", txt;
     if (!menu) { txt = "Φορτώνει…"; }
     else if (menu.closed) { txt = "Κλειστά"; }
+    else if (!menu.date_iso) { txt = "⚠ Η ημερομηνία του μενού δεν διαβάζεται"; cls = "err"; }
     else if (!token()) { txt = "🔑 Χρειάζεται κλειδί"; cls = "err"; }
     else if (lastError) { txt = "⚠ " + lastError; cls = "err"; }
     else if (!state.sent) { txt = "⏳ Στέλνεται…"; cls = "wait"; }
@@ -210,12 +213,29 @@
     statusEl.className = "status " + cls;
   }
 
-  function update() { render(); showStatus(); }
+  // Τα κουμπιά ξαναχτίζονται ΜΟΝΟ όταν αλλάζει κάτι ορατό. Το poll τρέχει ανά
+  // 15''/60'': αν ξανάχτιζε κάθε φορά, ένα δάχτυλο που πατούσε εκείνη τη στιγμή
+  // θα σήκωνε το δάχτυλο πάνω σε άλλο κουμπί και το πάτημα θα χανόταν.
+  var lastView = "";
+  function update() {
+    var view = menu ? [menu.stamp, menu.date_iso, menu.closed, sig(state && state.items),
+                       siteItems === null ? "?" : sig(siteItems)].join("|") : "";
+    if (view !== lastView) { lastView = view; render(); }
+    showStatus();
+  }
 
   // --- πάτημα ----------------------------------------------------------------
   function toggle(key) {
     // Πριν διαβαστεί το site, ένα πάτημα θα έσβηνε ό,τι έχει ήδη σημειωθεί.
-    if (state.fromSite) return;
+    // Όχι σιωπηλά όμως: ένα πάτημα που «δεν πιάνει» μέσα στη βάρδια μοιάζει χάλασμα.
+    if (state.fromSite) {
+      statusEl.textContent = "⏳ Διαβάζει το site — πάτα ξανά σε λίγο";
+      statusEl.className = "status wait";
+      loadSite();
+      return;
+    }
+    // Χωρίς ημερομηνία το soldout.py θα αρνιόταν έτσι κι αλλιώς.
+    if (!menu.date_iso) return;
     var i = state.items.indexOf(key);
     if (i >= 0) state.items.splice(i, 1); else state.items.push(key);
     state.sent = false;
@@ -227,7 +247,7 @@
 
   function send() {
     clearTimeout(sendTimer); clearTimeout(retryTimer);
-    if (!menu || state.sent) return;
+    if (!menu || !menu.date_iso || state.sent) return;
     if (!token()) { showStatus(); return; }
     // πιάτο που έφυγε από το μενού μέσα στη μέρα δεν ξαναστέλνεται
     var ok = validKeys();

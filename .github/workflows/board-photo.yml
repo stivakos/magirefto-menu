@@ -162,7 +162,14 @@ jobs:
             echo "Το μενού ήταν ήδη έτσι."
           else
             git commit -m "Μενού από προσχέδιο issue (#${{ github.event.issue.number }})"
-            git push
+            # Το tablet («τελείωσε») γράφει soldout.json στο main μέσα στη βάρδια· αν
+            # πρόλαβε, το σκέτο push απορριπτόταν. Το rebase δεν συγκρούεται: εκείνο
+            # αγγίζει μόνο το soldout.json.
+            for i in 1 2 3; do
+              git push -q origin HEAD:main && break
+              [ "$i" = 3 ] && exit 1
+              git pull -q --rebase origin main
+            done
           fi
 
       # Το build ΔΕΝ ξεκινά μόνο του: τα push του GITHUB_TOKEN δεν πυροδοτούν
