@@ -118,6 +118,7 @@
   var LS_TOKEN = "merci-tablet-token";
   var LS_STATE = "merci-tablet-state";
   var DEBOUNCE = 2500;        // πολλά πατήματα στη σειρά = ένα αίτημα
+  var RESEND = 2 * 60 * 1000; // τόσο διαφωνία site/tablet => ξαναστέλνει μόνο του
   var SLOW = 5 * 60 * 1000;   // τόσο χωρίς να φανεί στο site => κάτι δεν πήγε καλά
 
   var $ = function (id) { return document.getElementById(id); };
@@ -321,6 +322,13 @@
   function pollSoon() { clearTimeout(pollTimer); pollTimer = setTimeout(poll, 15000); }
   function poll() {
     loadSite().then(function () {
+      // Το site διαφωνεί με το tablet πολύ ώρα μετά την αποστολή (χάθηκε
+      // εκτέλεση, ή άλλος έγραψε από πάνω): ξαναστείλε. Κάθε αίτημα είναι
+      // ολόκληρη η λίστα, οπότε το ξαναστείλιμο δεν μπορεί να κάνει ζημιά.
+      if (state && state.sent && siteItems && sig(siteItems) !== sig(state.items)
+          && Date.now() - (state.sentAt || 0) > RESEND) {
+        state.sent = false; save(); send();
+      }
       var waiting = state && (!state.sent || sig(siteItems) !== sig(state.items));
       clearTimeout(pollTimer);
       pollTimer = setTimeout(poll, waiting ? 15000 : 60000);
