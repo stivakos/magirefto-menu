@@ -44,6 +44,7 @@
          padding:14px 0 12px;border-bottom:1px solid var(--line);}
   h1{font-size:22px;font-weight:700;}
   .date{color:var(--gold);font-size:17px;}
+  .date.old{color:#ff8a80;}
   .status{margin-left:auto;font-size:17px;font-weight:600;padding:8px 14px;border-radius:999px;
           background:var(--card);border:1px solid var(--line);color:var(--dim);}
   .status.ok{color:var(--ok);border-color:#2f5d3c;}
@@ -145,8 +146,9 @@
            String(d.getDate()).padStart(2, "0");
   }
   // Το πρωί, πριν ανέβει το σημερινό μενού, η σελίδα δείχνει το χθεσινό. Ένα
-  // «τελείωσε» εκεί θα γραφόταν για χθες και θα χανόταν σιωπηλά μόλις ανέβει το
-  // νέο. Μελλοντική ημερομηνία (μενού αυριανό από το βράδυ) δεν μπλοκάρει.
+  // «τελείωσε» εκεί γράφεται για χθες και χάνεται μόλις ανέβει το νέο — γι' αυτό
+  // φαίνεται δίπλα στην ημερομηνία. ΔΕΝ μπλοκάρει (απόφαση ιδιοκτήτη 15/9/2026:
+  // χρειάζεται για δοκιμές) και δεν πιάνει τη θέση της κατάστασης αποστολής.
   function oldMenu() { return !!(menu && menu.date_iso && menu.date_iso < todayISO()); }
 
   function validKeys() {
@@ -161,7 +163,9 @@
   function render() {
     board.innerHTML = "";
     if (!menu) return;
-    $("date").textContent = menu.closed ? "Κλειστά" : (menu.date || "");
+    $("date").textContent = menu.closed ? "Κλειστά"
+      : (menu.date || "") + (oldMenu() ? " · όχι σημερινό" : "");
+    $("date").classList.toggle("old", oldMenu());
     if (menu.closed || !menu.categories.length) {
       var e = document.createElement("p");
       e.className = "empty";
@@ -210,7 +214,6 @@
     if (!menu) { txt = "Φορτώνει…"; }
     else if (menu.closed) { txt = "Κλειστά"; }
     else if (!menu.date_iso) { txt = "⚠ Η ημερομηνία του μενού δεν διαβάζεται"; cls = "err"; }
-    else if (oldMenu()) { txt = "⚠ Δεν έχει ανέβει ακόμη το σημερινό μενού"; cls = "err"; }
     else if (!token()) { txt = "🔑 Χρειάζεται κλειδί"; cls = "err"; }
     else if (lastError) { txt = "⚠ " + lastError; cls = "err"; }
     else if (!state.sent) { txt = "⏳ Στέλνεται…"; cls = "wait"; }
@@ -246,7 +249,7 @@
       return;
     }
     // Χωρίς ημερομηνία το soldout.py θα αρνιόταν έτσι κι αλλιώς.
-    if (!menu.date_iso || oldMenu()) { showStatus(); return; }
+    if (!menu.date_iso) { showStatus(); return; }
     var i = state.items.indexOf(key);
     if (i >= 0) state.items.splice(i, 1); else state.items.push(key);
     state.sent = false;
