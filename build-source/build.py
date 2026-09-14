@@ -231,7 +231,7 @@ while _h < 16 or (_h == 16 and _m == 0):
 TIME_OPTIONS = '<option value="">Διάλεξε ώρα…</option>' + "".join(
     f'<option value="{s}">{s}</option>' for s in _slots)
 
-def item_html(it):
+def item_html(it, slug):
     portion = f' <span class="portion">{esc(it["portion"])}</span>' if it.get("portion") else ""
     p = fmt_price(it.get("price"))
     price_span = f'<span class="price">{esc(p)}</span>' if p else ""
@@ -250,7 +250,9 @@ def item_html(it):
     side_attr = ' data-side="1"' if (it.get("side") and SIDES) else ""
     if side_attr:
         line += '\n        <div class="sides" hidden></div>'
-    return (f'      <li class="item" data-name="{esc(it["name"])}" '
+    # data-key = κωδικός του menu.json (slug:Α/Α). Με αυτόν το soldout.json λέει
+    # τι τελείωσε — όχι με το όνομα, που θα ήθελε ξανά αναγνώριση.
+    return (f'      <li class="item" data-key="{slug}:{it["aa"]}" data-name="{esc(it["name"])}" '
             f'data-price="{pnum}"{side_attr}>{line}</li>')
 
 nav = "\n".join(f'    <a class="chip" href="#{c["slug"]}">{esc(c["label"])}</a>' for c in MENU)
@@ -259,7 +261,7 @@ nav += f'\n    <a class="chip" href="#magazi">{esc(ABOUT_CHIP)}</a>'
 secs = []
 for c in MENU:
     if c["items"]:
-        body = '<ul class="items">\n' + "\n".join(item_html(it) for it in c["items"]) + '\n    </ul>'
+        body = '<ul class="items">\n' + "\n".join(item_html(it, c["slug"]) for it in c["items"]) + '\n    </ul>'
     else:
         body = '<p class="empty-note">— σύντομα —</p>'
     if c.get("note"):
@@ -429,9 +431,14 @@ CSS = """
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
-  /* Τελείωσε: μένει ορατό αλλά προφανώς μη διαθέσιμο. Η διαγραφή μπαίνει μόνο
-     στο όνομα και στην τιμή — η ετικέτα πρέπει να διαβάζεται καθαρά. */
-               text-transform:uppercase;color:var(--paper);background:var(--faint);
+  /* Τελείωσε (βάζει .is-soldout η JS από το soldout.json): μένει ορατό αλλά
+     προφανώς μη διαθέσιμο — ο πελάτης βλέπει τι μαγειρέψαμε και γιατί λείπει.
+     Η ετικέτα γράφεται ήδη κεφαλαία: το text-transform θα κρατούσε τους τόνους. */
+  .is-soldout .gr,.is-soldout .price{text-decoration:line-through;text-decoration-thickness:1px;opacity:.6;}
+  .is-soldout .dots{opacity:.4;}
+  .is-soldout .qty,.is-soldout .sides{display:none !important;}
+  .is-soldout .item-line::after{content:"ΤΕΛΕΙΩΣΕ";flex:0 0 auto;font-size:.68rem;font-weight:800;
+               letter-spacing:.08em;color:var(--paper);background:var(--faint);
                border-radius:999px;padding:.2rem .6rem;white-space:nowrap;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
@@ -684,6 +691,30 @@ ORDER_JS = r'''
 
   // --- συνοδευτικά χωρίς χρέωση -------------------------------------------
   // Ένα select ανά μερίδα: 2× μπιφτέκι μπορεί να πάρει πατάτες και ρύζι.
+  var sidesOut = {};          // όνομα συνοδευτικού -> τελείωσε (από το soldout.json)
+
+  // Γεμίζει (ή ξαναγεμίζει) τις επιλογές, χωρίς όσα τελείωσαν. Κρατά την
+  // επιλογή του πελάτη μόνο αν υπάρχει ακόμη· αλλιώς μένει αδιάλεκτο και το
+  // validSides() ζητά να ξαναδιαλέξει — όχι σιωπηλά «χωρίς συνοδευτικό».
+  function fillSides(sel) {
+    var keep = sel.value;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    var avail = SIDES.filter(function (s) { return !sidesOut[s]; });
+    // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
+    // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
+    [["", "Διάλεξε συνοδευτικό…"]]
+      .concat(avail.map(function (s) { return [s, s]; }))
+      .concat([["—", "Χωρίς συνοδευτικό"]])
+      .forEach(function (pair) {
+        var o = document.createElement("option");
+        o.value = pair[0];
+        o.textContent = pair[1];
+        sel.appendChild(o);
+      });
+    sel.value = (keep === "—" || avail.indexOf(keep) >= 0) ? keep : "";
+    return !!keep && sel.value !== keep;       // true = χάθηκε η επιλογή
+  }
+
   function syncSides(li) {
     var box = li.querySelector(".sides");
     if (!box) return;
@@ -694,17 +725,7 @@ ORDER_JS = r'''
       var txt = document.createElement("span");
       txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
       var sel = document.createElement("select");
-      // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
-      // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
-      [["", "Διάλεξε συνοδευτικό…"]]
-        .concat(SIDES.map(function (s) { return [s, s]; }))
-        .concat([["—", "Χωρίς συνοδευτικό"]])
-        .forEach(function (pair) {
-          var o = document.createElement("option");
-          o.value = pair[0];
-          o.textContent = pair[1];
-          sel.appendChild(o);
-        });
+      fillSides(sel);
       sel.addEventListener("change", refresh);
       row.appendChild(txt); row.appendChild(sel);
       box.appendChild(row);
@@ -756,15 +777,22 @@ ORDER_JS = r'''
     bar.classList.toggle("show", count > 0);
   }
 
+  function setQty(li, q) {
+    q = Math.max(0, q);
+    li.querySelector(".qty").setAttribute("data-qty", q);
+    li.querySelector(".q-n").textContent = q;
+  }
+
   items.forEach(function (li) {
-    var qty = li.querySelector(".qty"), nEl = li.querySelector(".q-n");
-    function set(q) { q = Math.max(0, q); qty.setAttribute("data-qty", q); nEl.textContent = q; refresh(); }
-    li.querySelector(".q-plus").addEventListener("click", function () { set(qOf(li) + 1); });
-    li.querySelector(".q-minus").addEventListener("click", function () { set(qOf(li) - 1); });
+    li.querySelector(".q-plus").addEventListener("click", function () {
+      if (li.classList.contains("is-soldout")) return;
+      setQty(li, qOf(li) + 1); refresh();
+    });
+    li.querySelector(".q-minus").addEventListener("click", function () { setQty(li, qOf(li) - 1); refresh(); });
   });
 
   clearBtn.addEventListener("click", function () {
-    items.forEach(function (li) { li.querySelector(".qty").setAttribute("data-qty", 0); li.querySelector(".q-n").textContent = "0"; });
+    items.forEach(function (li) { setQty(li, 0); });
     refresh();
   });
 
@@ -852,9 +880,64 @@ ORDER_JS = r'''
     });
   }
 
+  // --- τι τελείωσε μέσα στη μέρα --------------------------------------------
+  // Το soldout.json το γράφει το tablet του μαγαζιού (μέσω soldout.yml) και
+  // ΔΕΝ ξαναχτίζει τη σελίδα· γι' αυτό διαβάζεται εδώ, στον browser. Ισχύει
+  // μόνο για την ημερομηνία αυτού του μενού: χθεσινό «τελείωσε» αγνοείται.
+  //
+  // Δεν ρωτάμε τη στιγμή της αποστολής: το sms: και η αντιγραφή για το Viber
+  // θέλουν το ίδιο το πάτημα — μετά από αναμονή δικτύου οι browser τα μπλοκάρουν.
+  // Ρωτάμε όταν ανοίγει η σελίδα, όταν επιστρέφει ο πελάτης, και ανά λεπτό.
+  var MENU_ISO = __ISO_JSON__;
+  var soldSig = "";
+
+  function applySoldout(list) {
+    var sig = list.slice().sort().join(",");
+    if (sig === soldSig) return;
+    soldSig = sig;
+    var out = {}, removed = [];
+    list.forEach(function (k) { out[k] = true; });
+    sidesOut = {};
+    items.forEach(function (li) {
+      var gone = !!out[li.getAttribute("data-key")];
+      li.classList.toggle("is-soldout", gone);
+      if (!gone) return;
+      if (li.getAttribute("data-key").indexOf("synodeytika:") === 0)
+        sidesOut[li.getAttribute("data-name")] = true;
+      if (qOf(li) > 0) { removed.push(li.getAttribute("data-name")); setQty(li, 0); }
+    });
+    var lostSide = false;
+    Array.prototype.forEach.call(document.querySelectorAll(".sides select"), function (sel) {
+      if (fillSides(sel)) lostSide = true;
+    });
+    refresh();
+    // Ό,τι έφυγε από το καλάθι το λέμε — αλλιώς ο πελάτης θα έβλεπε απλώς
+    // μικρότερο σύνολο χωρίς να ξέρει γιατί.
+    if (removed.length) showToast("Μόλις τελείωσε: " + removed.join(", ") + ". Βγήκε από την παραγγελία σου.");
+    else if (lostSide) showToast("Τελείωσε ένα συνοδευτικό που είχες διαλέξει — διάλεξε άλλο.");
+  }
+
+  function checkSoldout() {
+    if (!MENU_ISO) return;
+    fetch("soldout.json?ts=" + Date.now(), {cache: "no-store"})
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) return;                    // δεν υπάρχει ακόμη αρχείο: όλα διαθέσιμα
+        applySoldout(j.date_iso === MENU_ISO && Array.isArray(j.items) ? j.items : []);
+      })
+      .catch(function () { /* χωρίς δίκτυο: μένει ό,τι ξέραμε */ });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) checkSoldout();
+  });
+  setInterval(function () { if (!document.hidden) checkSoldout(); }, 60000);
+  checkSoldout();
+
   refresh();
 })();
 '''.replace("__DATE_JSON__", json.dumps(MENU_DATE, ensure_ascii=False)) \
+   .replace("__ISO_JSON__", json.dumps(MENU_ISO or "")) \
    .replace("__NUMBER_JSON__", json.dumps(VIBER_NUMBER, ensure_ascii=False)) \
    .replace("__SIDES_JSON__", json.dumps(SIDES, ensure_ascii=False))
 

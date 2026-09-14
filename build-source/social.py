@@ -99,8 +99,9 @@ def page_html():
         foot = (f'☎ {esc(build.VIBER_DISPLAY)}'
                 f'<div class="site">{SITE}</div>')
     else:
-        # Ό,τι τελείωσε δεν μπαίνει στην εικόνα: αν κάποιος την ανοίξει το
-        # μεσημέρι, πρέπει να δείχνει τι ΥΠΑΡΧΕΙ ακόμη.
+        # Η εικόνα δείχνει ΟΛΟ το μενού της ημέρας. Το «τελείωσε» του tablet
+        # (soldout.json) δεν την αγγίζει: γίνεται το πρωί, πριν τελειώσει τίποτα,
+        # και ένα ξαναχτίσιμο μέσα στη βάρδια θα μηδένιζε την έγκριση δημοσίευσης.
         avail = {c["slug"]: list(c["items"]) for c in build.MENU}
         shown = [dict(c, items=avail[c["slug"]]) for c in build.MENU
                  if avail[c["slug"]] and (c["slug"] == MAIN_SLUG or c["slug"] in TWO_COL)]

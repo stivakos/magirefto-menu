@@ -1,0 +1,65 @@
+name: Τελείωσε (tablet)
+
+# Το καλεί η σελίδα /tablet/ του μαγαζιού με ΕΝΑ αίτημα, όποτε πατηθεί πιάτο:
+#
+#   POST /repos/stivakos/magirefto-menu/actions/workflows/soldout.yml/dispatches
+#   {"ref":"main","inputs":{"date":"2026-09-14","items":"menu-hmeras:8,synodeytika:2"}}
+#
+# Γράφει ΜΟΝΟ το soldout.json. Δεν ξαναχτίζει το site — η σελίδα το διαβάζει
+# όταν ανοίγει — άρα δεν αγγίζει index.html, social ή έγκριση δημοσίευσης, και
+# δεν μπορεί να συγκρουστεί με ένα build μενού που τρέχει την ίδια ώρα.
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Ημερομηνία μενού (ISO, όπως στο menu.json)"
+        required: true
+        type: string
+      items:
+        description: "Τι τελείωσε: slug:aa με κόμμα — κενό = όλα διαθέσιμα"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+# Ένα τη φορά. Αν περιμένουν δύο, το GitHub κρατά μόνο το νεότερο — σωστό,
+# αφού κάθε αίτημα κουβαλά ολόκληρη τη λίστα του tablet.
+concurrency:
+  group: soldout
+  cancel-in-progress: false
+
+jobs:
+  mark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Γράψιμο soldout.json
+        # Οι είσοδοι περνούν ως μεταβλητές, ΠΟΤΕ μέσα στο script: αλλιώς ένα
+        # κείμενο από το αίτημα θα εκτελούνταν ως εντολή.
+        env:
+          DATE: ${{ inputs.date }}
+          ITEMS: ${{ inputs.items }}
+          COMMIT_MSG_FILE: ${{ runner.temp }}/msg.txt
+        run: python3 build-source/soldout.py --date "$DATE" --items "$ITEMS"
+      - name: Commit
+        env:
+          COMMIT_MSG_FILE: ${{ runner.temp }}/msg.txt
+        run: |
+          git config user.name "merci-menu-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add soldout.json
+          if git diff --cached --quiet; then
+            echo "Δεν άλλαξε κάτι."
+            exit 0
+          fi
+          git commit -q -F "$COMMIT_MSG_FILE"
+          # Το soldout.json το γράφει μόνο αυτό το workflow, οπότε το rebase
+          # πάνω σε ένα build μενού που πρόλαβε να κάνει push δεν συγκρούεται.
+          for i in 1 2 3; do
+            git push -q && exit 0
+            git pull -q --rebase
+          done
+          exit 1
