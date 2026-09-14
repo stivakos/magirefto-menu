@@ -644,6 +644,8 @@ ORDER_JS = r'''
   function syncCust() {
     var deliv = orderType === "delivery";
     bar.classList.toggle("pickup", !deliv);
+    // όροφος και κουδούνι δεν έχουν νόημα όταν ο πελάτης έρχεται στο μαγαζί
+    cust.note.placeholder = deliv ? "Όροφος, κουδούνι, σχόλια" : "Σχόλια για την παραλαβή";
     var name = val("name"), addr = val("addr");
     var need = deliv && !addr;
     custSum.classList.toggle("need", need);
