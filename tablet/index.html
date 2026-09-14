@@ -139,6 +139,16 @@
   function fresh(u) { return u + (u.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(); }
   function sig(list) { return (list || []).slice().sort().join(","); }
 
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" +
+           String(d.getDate()).padStart(2, "0");
+  }
+  // Το πρωί, πριν ανέβει το σημερινό μενού, η σελίδα δείχνει το χθεσινό. Ένα
+  // «τελείωσε» εκεί θα γραφόταν για χθες και θα χανόταν σιωπηλά μόλις ανέβει το
+  // νέο. Μελλοντική ημερομηνία (μενού αυριανό από το βράδυ) δεν μπλοκάρει.
+  function oldMenu() { return !!(menu && menu.date_iso && menu.date_iso < todayISO()); }
+
   function validKeys() {
     var k = {};
     (menu && menu.categories || []).forEach(function (c) {
@@ -200,6 +210,7 @@
     if (!menu) { txt = "Φορτώνει…"; }
     else if (menu.closed) { txt = "Κλειστά"; }
     else if (!menu.date_iso) { txt = "⚠ Η ημερομηνία του μενού δεν διαβάζεται"; cls = "err"; }
+    else if (oldMenu()) { txt = "⚠ Δεν έχει ανέβει ακόμη το σημερινό μενού"; cls = "err"; }
     else if (!token()) { txt = "🔑 Χρειάζεται κλειδί"; cls = "err"; }
     else if (lastError) { txt = "⚠ " + lastError; cls = "err"; }
     else if (!state.sent) { txt = "⏳ Στέλνεται…"; cls = "wait"; }
@@ -235,7 +246,7 @@
       return;
     }
     // Χωρίς ημερομηνία το soldout.py θα αρνιόταν έτσι κι αλλιώς.
-    if (!menu.date_iso) return;
+    if (!menu.date_iso || oldMenu()) { showStatus(); return; }
     var i = state.items.indexOf(key);
     if (i >= 0) state.items.splice(i, 1); else state.items.push(key);
     state.sent = false;
