@@ -36,30 +36,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Γράψιμο soldout.json
+        with:
+          # ΟΧΙ το SHA του αιτήματος: με γρήγορα πατήματα αυτό είναι πριν από το
+          # push της προηγούμενης εκτέλεσης.
+          ref: main
+      - name: Γράψιμο soldout.json και commit
         # Οι είσοδοι περνούν ως μεταβλητές, ΠΟΤΕ μέσα στο script: αλλιώς ένα
         # κείμενο από το αίτημα θα εκτελούνταν ως εντολή.
         env:
           DATE: ${{ inputs.date }}
           ITEMS: ${{ inputs.items }}
           COMMIT_MSG_FILE: ${{ runner.temp }}/msg.txt
-        run: python3 build-source/soldout.py --date "$DATE" --items "$ITEMS"
-      - name: Commit
-        env:
-          COMMIT_MSG_FILE: ${{ runner.temp }}/msg.txt
         run: |
           git config user.name "merci-menu-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add soldout.json
-          if git diff --cached --quiet; then
-            echo "Δεν άλλαξε κάτι."
-            exit 0
-          fi
-          git commit -q -F "$COMMIT_MSG_FILE"
-          # Το soldout.json το γράφει μόνο αυτό το workflow, οπότε το rebase
-          # πάνω σε ένα build μενού που πρόλαβε να κάνει push δεν συγκρούεται.
-          for i in 1 2 3; do
-            git push -q && exit 0
-            git pull -q --rebase
+          # Αν το push απορριφθεί (πρόλαβε άλλο commit), ΔΕΝ κάνουμε rebase: δύο
+          # εκδοχές του soldout.json συγκρούονται. Το αρχείο βγαίνει ολόκληρο από
+          # την είσοδο, οπότε απλώς το ξαναγράφουμε πάνω στο τελευταίο main.
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main
+            git reset -q --hard origin/main
+            python3 build-source/soldout.py --date "$DATE" --items "$ITEMS"
+            git add soldout.json
+            if git diff --cached --quiet; then
+              echo "Δεν άλλαξε κάτι."
+              exit 0
+            fi
+            git commit -q -F "$COMMIT_MSG_FILE"
+            git push -q origin HEAD:main && exit 0
+            sleep 2
           done
           exit 1
