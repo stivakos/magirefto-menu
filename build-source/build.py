@@ -334,6 +334,15 @@ orderbar_html = "" if CLOSED else f'''<div class="order-bar" id="orderBar" role=
     </div>
     <label class="time-field">Ώρα<select id="orderTime">{TIME_OPTIONS}</select></label>
   </div>
+  <details class="cust" id="orderCust">
+    <summary id="custSum">Στοιχεία παράδοσης</summary>
+    <div class="cust-grid">
+      <input id="custName" type="text" autocomplete="name" placeholder="Όνομα" aria-label="Όνομα" maxlength="60">
+      <input id="custPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Τηλέφωνο" aria-label="Τηλέφωνο" maxlength="20">
+      <input id="custAddr" class="wide deliv-only" type="text" autocomplete="street-address" placeholder="Διεύθυνση (οδός, αριθμός) *" aria-label="Διεύθυνση παράδοσης" maxlength="120">
+      <input id="custNote" class="wide" type="text" placeholder="Όροφος, κουδούνι, σχόλια" aria-label="Σχόλια" maxlength="160">
+    </div>
+  </details>
   <div class="order-inner">
     <button class="order-clear" id="orderClear" type="button">Καθαρισμός</button>
     <div class="order-sum"><div class="order-list" id="orderItems"></div><b id="orderTotal">0,00 €</b><small id="orderCount">0 είδη</small></div>
@@ -479,6 +488,19 @@ CSS = """
   .time-field{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);font-size:.88rem;font-weight:600;}
   .time-field select{background:var(--chip-bg);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.5rem .6rem;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;-webkit-appearance:menulist;appearance:menulist;}
   .time-field select:required:invalid{color:var(--faint);font-weight:600;}
+  .cust{max-width:44rem;margin:0 auto .55rem;border:1px solid var(--hairline);border-radius:12px;background:var(--chip-bg);}
+  .cust summary{cursor:pointer;list-style:none;padding:.5rem .8rem;font-size:.88rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cust summary::-webkit-details-marker{display:none;}
+  .cust summary::before{content:"▸ ";color:var(--faint);}
+  .cust[open] summary::before{content:"▾ ";}
+  .cust summary.need{color:var(--sand);}
+  .cust-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding:0 .6rem .6rem;}
+  .cust-grid .wide{grid-column:1/-1;}
+  /* 16px: κάτω από αυτό το iOS κάνει zoom μόλις πατήσεις το πεδίο */
+  .cust-grid input{min-width:0;width:100%;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;color:var(--ink);padding:.5rem .6rem;font-size:16px;font-family:inherit;}
+  .cust-grid input::placeholder{color:var(--faint);}
+  .cust-grid input.missing{border-color:var(--sea);}
+  .order-bar.pickup .deliv-only{display:none;}
   .order-inner{max-width:44rem;margin:0 auto;display:flex;align-items:center;gap:.8rem;}
   .order-sum{flex:1 1 auto;min-width:0;line-height:1.25;}
   .order-sum b{display:block;font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -595,8 +617,66 @@ ORDER_JS = r'''
       segBtns.forEach(function (x) { x.classList.remove("active"); });
       b.classList.add("active");
       orderType = b.getAttribute("data-type");
+      syncCust();
     });
   });
+
+  // --- στοιχεία πελάτη ------------------------------------------------------
+  // Πριν έμπαινε στο μήνυμα μόνο «(Συμπλήρωσε όνομα & διεύθυνση)» και ο πελάτης
+  // το ξεχνούσε — ειδικά στο Viber, όπου κάνει απλώς επικόλληση.
+  // Μένουν στον browser του πελάτη για την επόμενη παραγγελία· αν το storage
+  // είναι κλειστό (ιδιωτική περιήγηση), απλώς δεν θυμάται.
+  var CUST_KEY = "merci-cust";
+  var custBox = document.getElementById("orderCust");
+  var custSum = document.getElementById("custSum");
+  var cust = {
+    name: document.getElementById("custName"),
+    phone: document.getElementById("custPhone"),
+    addr: document.getElementById("custAddr"),
+    note: document.getElementById("custNote")
+  };
+  function val(k) { return cust[k].value.replace(/\s+/g, " ").trim(); }
+  try {
+    var saved = JSON.parse(localStorage.getItem(CUST_KEY) || "{}");
+    Object.keys(cust).forEach(function (k) { if (typeof saved[k] === "string") cust[k].value = saved[k]; });
+  } catch (e) {}
+
+  function syncCust() {
+    var deliv = orderType === "delivery";
+    bar.classList.toggle("pickup", !deliv);
+    var name = val("name"), addr = val("addr");
+    var need = deliv && !addr;
+    custSum.classList.toggle("need", need);
+    if (deliv) {
+      custSum.textContent = addr ? "📍 " + addr + (name ? " · " + name : "")
+                                 : "📍 Πρόσθεσε διεύθυνση παράδοσης";
+    } else {
+      custSum.textContent = "👤 " + (name || "Όνομα & σχόλια (προαιρετικά)");
+    }
+    if (addr) cust.addr.classList.remove("missing");
+  }
+
+  Object.keys(cust).forEach(function (k) {
+    cust[k].addEventListener("input", function () {
+      syncCust();
+      try {
+        var o = {};
+        Object.keys(cust).forEach(function (j) { o[j] = cust[j].value; });
+        localStorage.setItem(CUST_KEY, JSON.stringify(o));
+      } catch (e) {}
+    });
+  });
+  syncCust();
+  if (!val("addr")) custBox.open = true;
+
+  function validCust() {
+    if (orderType !== "delivery" || val("addr")) return true;
+    custBox.open = true;
+    cust.addr.classList.add("missing");
+    showToast("Γράψε τη διεύθυνση παράδοσης.");
+    cust.addr.focus();
+    return false;
+  }
 
   function qOf(li) { return parseInt(li.querySelector(".qty").getAttribute("data-qty"), 10) || 0; }
 
@@ -705,10 +785,12 @@ ORDER_JS = r'''
     lines.push("");
     lines.push("Τρόπος: " + (orderType === "delivery" ? "🛵 Delivery" : "🏠 Παραλαβή"));
     lines.push("Ώρα: " + timeEl.value);
-    lines.push("");
-    lines.push(orderType === "delivery"
-      ? "(Συμπλήρωσε όνομα & διεύθυνση παράδοσης)"
-      : "(Συμπλήρωσε το όνομά σου)");
+    var info = [];
+    if (val("name")) info.push("Όνομα: " + val("name"));
+    if (val("phone")) info.push("Τηλ.: " + val("phone"));
+    if (orderType === "delivery") info.push("Διεύθυνση: " + val("addr"));
+    if (val("note")) info.push("Σχόλια: " + val("note"));
+    if (info.length) { lines.push(""); lines = lines.concat(info); }
     return lines.join("\n");
   }
 
@@ -738,7 +820,7 @@ ORDER_JS = r'''
   var smsBtn = document.getElementById("orderSms");
   smsBtn.addEventListener("click", function (e) {
     e.preventDefault();
-    if (!validTime() || !validSides()) return;
+    if (!validTime() || !validSides() || !validCust()) return;
     var txt = buildText();
     var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     var sep = isIOS ? "&" : "?";
@@ -753,7 +835,7 @@ ORDER_JS = r'''
   if (viberBtn) {
     viberBtn.addEventListener("click", function (e) {
       e.preventDefault();
-      if (!validTime() || !validSides()) return;
+      if (!validTime() || !validSides() || !validCust()) return;
       var txt = buildText();
       function go() {
         showToast("Η παραγγελία αντιγράφηκε. Άνοιξε το Viber και κάνε "
