@@ -78,9 +78,14 @@
   .portion{font-weight:400;font-size:.8rem;color:var(--faint);}
   .dots{flex:1 1 1.5rem;min-width:1.5rem;border-bottom:2px dotted var(--leader);transform:translateY(-.28em);}
   .price{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap;color:var(--sand);}
-  /* Τελείωσε: μένει ορατό αλλά προφανώς μη διαθέσιμο. Η διαγραφή μπαίνει μόνο
-     στο όνομα και στην τιμή — η ετικέτα πρέπει να διαβάζεται καθαρά. */
-               text-transform:uppercase;color:var(--paper);background:var(--faint);
+  /* Τελείωσε (βάζει .is-soldout η JS από το soldout.json): μένει ορατό αλλά
+     προφανώς μη διαθέσιμο — ο πελάτης βλέπει τι μαγειρέψαμε και γιατί λείπει.
+     Η ετικέτα γράφεται ήδη κεφαλαία: το text-transform θα κρατούσε τους τόνους. */
+  .is-soldout .gr,.is-soldout .price{text-decoration:line-through;text-decoration-thickness:1px;opacity:.6;}
+  .is-soldout .dots{opacity:.4;}
+  .is-soldout .qty,.is-soldout .sides{display:none !important;}
+  .is-soldout .item-line::after{content:"ΤΕΛΕΙΩΣΕ";flex:0 0 auto;font-size:.68rem;font-weight:800;
+               letter-spacing:.08em;color:var(--paper);background:var(--faint);
                border-radius:999px;padding:.2rem .6rem;white-space:nowrap;}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
@@ -276,39 +281,39 @@
       <h2 id="h-menu-hmeras" lang="el">Μενού Ημέρας</h2>
     </div>
     <ul class="items">
-      <li class="item" data-name="Κοτόσουπα" data-price="7.00"><div class="item-line"><span class="gr">Κοτόσουπα</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Γεμιστά" data-price="6.50"><div class="item-line"><span class="gr">Γεμιστά</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Παστίτσιο" data-price="7.00"><div class="item-line"><span class="gr">Παστίτσιο</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Μουσακάς" data-price="7.00"><div class="item-line"><span class="gr">Μουσακάς</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Μοσχαράκι γιουβέτσι" data-price="9.00"><div class="item-line"><span class="gr">Μοσχαράκι γιουβέτσι</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Γίγαντες Καστοριάς" data-price="6.00"><div class="item-line"><span class="gr">Γίγαντες Καστοριάς</span><span class="dots"></span><span class="price">6,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Κεφτεδάκια τηγανητά" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Κεφτεδάκια τηγανητά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:1" data-name="Κοτόσουπα" data-price="7.00"><div class="item-line"><span class="gr">Κοτόσουπα</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:8" data-name="Γεμιστά" data-price="6.50"><div class="item-line"><span class="gr">Γεμιστά</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:16" data-name="Παστίτσιο" data-price="7.00"><div class="item-line"><span class="gr">Παστίτσιο</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:17" data-name="Μουσακάς" data-price="7.00"><div class="item-line"><span class="gr">Μουσακάς</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:20" data-name="Μοσχαράκι γιουβέτσι" data-price="9.00"><div class="item-line"><span class="gr">Μοσχαράκι γιουβέτσι</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:5" data-name="Γίγαντες Καστοριάς" data-price="6.00"><div class="item-line"><span class="gr">Γίγαντες Καστοριάς</span><span class="dots"></span><span class="price">6,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:55" data-name="Κεφτεδάκια τηγανητά" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Κεφτεδάκια τηγανητά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Κεφτεδάκια κοκκινιστά" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Κεφτεδάκια κοκκινιστά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:37" data-name="Κεφτεδάκια κοκκινιστά" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Κεφτεδάκια κοκκινιστά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Χταπόδι κριθαρότο" data-price="9.00"><div class="item-line"><span class="gr">Χταπόδι κριθαρότο</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Φιλέτο κοτόπουλο" data-price="8.00" data-side="1"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο</span><span class="dots"></span><span class="price">8,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:33" data-name="Χταπόδι κριθαρότο" data-price="9.00"><div class="item-line"><span class="gr">Χταπόδι κριθαρότο</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:40" data-name="Φιλέτο κοτόπουλο" data-price="8.00" data-side="1"><div class="item-line"><span class="gr">Φιλέτο κοτόπουλο</span><span class="dots"></span><span class="price">8,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Σνίτσελ κοτόπουλο" data-price="8.50" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο</span><span class="dots"></span><span class="price">8,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:39" data-name="Σνίτσελ κοτόπουλο" data-price="8.50" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο</span><span class="dots"></span><span class="price">8,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Σνίτσελ χοιρινό" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ χοιρινό</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:53" data-name="Σνίτσελ χοιρινό" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ χοιρινό</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Σνίτσελ κοτόπουλο a la creme" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο a la creme</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:80" data-name="Σνίτσελ κοτόπουλο a la creme" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Σνίτσελ κοτόπουλο a la creme</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Μπιφτέκι κοτόπουλο" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Μπιφτέκι κοτόπουλο</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:38" data-name="Μπιφτέκι κοτόπουλο" data-price="7.00" data-side="1"><div class="item-line"><span class="gr">Μπιφτέκι κοτόπουλο</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Πέννες με κιμά" data-price="7.00"><div class="item-line"><span class="gr">Πέννες με κιμά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Πέννες a la creme" data-price="6.50"><div class="item-line"><span class="gr">Πέννες a la creme</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Φιλετίνια κοτόπουλο a la creme με πέννες" data-price="7.00"><div class="item-line"><span class="gr">Φιλετίνια κοτόπουλο a la creme με πέννες</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Μακαρόνια με κιμά" data-price="7.00"><div class="item-line"><span class="gr">Μακαρόνια με κιμά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Σπαγγέτι με μπούτι κοτόπουλο κοκκινιστό" data-price="7.50"><div class="item-line"><span class="gr">Σπαγγέτι με μπούτι κοτόπουλο κοκκινιστό</span><span class="dots"></span><span class="price">7,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Τσιπούρα φούρνου" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Τσιπούρα φούρνου</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:27" data-name="Πέννες με κιμά" data-price="7.00"><div class="item-line"><span class="gr">Πέννες με κιμά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:28" data-name="Πέννες a la creme" data-price="6.50"><div class="item-line"><span class="gr">Πέννες a la creme</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:77" data-name="Φιλετίνια κοτόπουλο a la creme με πέννες" data-price="7.00"><div class="item-line"><span class="gr">Φιλετίνια κοτόπουλο a la creme με πέννες</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:78" data-name="Μακαρόνια με κιμά" data-price="7.00"><div class="item-line"><span class="gr">Μακαρόνια με κιμά</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:79" data-name="Σπαγγέτι με μπούτι κοτόπουλο κοκκινιστό" data-price="7.50"><div class="item-line"><span class="gr">Σπαγγέτι με μπούτι κοτόπουλο κοκκινιστό</span><span class="dots"></span><span class="price">7,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="menu-hmeras:50" data-name="Τσιπούρα φούρνου" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Τσιπούρα φούρνου</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Λαβράκι φούρνου" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Λαβράκι φούρνου</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:76" data-name="Λαβράκι φούρνου" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Λαβράκι φούρνου</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Μπακαλιάρος τηγανητός" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Μπακαλιάρος τηγανητός</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:47" data-name="Μπακαλιάρος τηγανητός" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Μπακαλιάρος τηγανητός</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
-      <li class="item" data-name="Καλαμαράκια τηγανητά" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Καλαμαράκια τηγανητά</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
+      <li class="item" data-key="menu-hmeras:46" data-name="Καλαμαράκια τηγανητά" data-price="9.00" data-side="1"><div class="item-line"><span class="gr">Καλαμαράκια τηγανητά</span><span class="dots"></span><span class="price">9,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div>
         <div class="sides" hidden></div></li>
     </ul>
   </section>
@@ -318,10 +323,10 @@
       <h2 id="h-synodeytika" lang="el">Συνοδευτικά (Μερίδα)</h2>
     </div>
     <ul class="items">
-      <li class="item" data-name="Πατάτες τηγανητές" data-price=""><div class="item-line"><span class="gr">Πατάτες τηγανητές</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Πατάτες φούρνου" data-price=""><div class="item-line"><span class="gr">Πατάτες φούρνου</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Ρύζι" data-price=""><div class="item-line"><span class="gr">Ρύζι</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Πουρές πατάτας" data-price=""><div class="item-line"><span class="gr">Πουρές πατάτας</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="synodeytika:1" data-name="Πατάτες τηγανητές" data-price=""><div class="item-line"><span class="gr">Πατάτες τηγανητές</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="synodeytika:2" data-name="Πατάτες φούρνου" data-price=""><div class="item-line"><span class="gr">Πατάτες φούρνου</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="synodeytika:4" data-name="Ρύζι" data-price=""><div class="item-line"><span class="gr">Ρύζι</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="synodeytika:5" data-name="Πουρές πατάτας" data-price=""><div class="item-line"><span class="gr">Πουρές πατάτας</span><span class="dots"></span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
     </ul>
   </section>
 
@@ -330,12 +335,12 @@
       <h2 id="h-salates" lang="el">Σαλάτες</h2>
     </div>
     <ul class="items">
-      <li class="item" data-name="Χωριάτικη" data-price="6.50"><div class="item-line"><span class="gr">Χωριάτικη</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Αγγουροντομάτα" data-price="4.50"><div class="item-line"><span class="gr">Αγγουροντομάτα</span><span class="dots"></span><span class="price">4,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Μαρούλι" data-price="4.00"><div class="item-line"><span class="gr">Μαρούλι</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Merci" data-price="7.00"><div class="item-line"><span class="gr">Merci</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Φρουτοσαλάτα" data-price="5.00"><div class="item-line"><span class="gr">Φρουτοσαλάτα</span><span class="dots"></span><span class="price">5,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Φέτα" data-price="4.00"><div class="item-line"><span class="gr">Φέτα</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:1" data-name="Χωριάτικη" data-price="6.50"><div class="item-line"><span class="gr">Χωριάτικη</span><span class="dots"></span><span class="price">6,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:2" data-name="Αγγουροντομάτα" data-price="4.50"><div class="item-line"><span class="gr">Αγγουροντομάτα</span><span class="dots"></span><span class="price">4,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:3" data-name="Μαρούλι" data-price="4.00"><div class="item-line"><span class="gr">Μαρούλι</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:6" data-name="Merci" data-price="7.00"><div class="item-line"><span class="gr">Merci</span><span class="dots"></span><span class="price">7,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:12" data-name="Φρουτοσαλάτα" data-price="5.00"><div class="item-line"><span class="gr">Φρουτοσαλάτα</span><span class="dots"></span><span class="price">5,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="salates:13" data-name="Φέτα" data-price="4.00"><div class="item-line"><span class="gr">Φέτα</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
     </ul>
   </section>
 
@@ -344,8 +349,8 @@
       <h2 id="h-glyka" lang="el">Γλυκά</h2>
     </div>
     <ul class="items">
-      <li class="item" data-name="Πορτοκαλόπιτα" data-price="4.00"><div class="item-line"><span class="gr">Πορτοκαλόπιτα</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Σοκολατόπιτα" data-price="4.80"><div class="item-line"><span class="gr">Σοκολατόπιτα</span><span class="dots"></span><span class="price">4,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="glyka:10" data-name="Πορτοκαλόπιτα" data-price="4.00"><div class="item-line"><span class="gr">Πορτοκαλόπιτα</span><span class="dots"></span><span class="price">4,00 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="glyka:3" data-name="Σοκολατόπιτα" data-price="4.80"><div class="item-line"><span class="gr">Σοκολατόπιτα</span><span class="dots"></span><span class="price">4,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
     </ul>
   </section>
 
@@ -354,11 +359,11 @@
       <h2 id="h-anapsyktika" lang="el">Αναψυκτικά / Ποτά</h2>
     </div>
     <ul class="items">
-      <li class="item" data-name="Coca-Cola 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Coca-Cola zero 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola zero 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Coca-Cola light 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola light 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Νερό 500ml" data-price="0.50"><div class="item-line"><span class="gr">Νερό 500ml</span><span class="dots"></span><span class="price">0,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
-      <li class="item" data-name="Νερό 1,5lt" data-price="1.50"><div class="item-line"><span class="gr">Νερό 1,5lt</span><span class="dots"></span><span class="price">1,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="anapsyktika:1" data-name="Coca-Cola 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="anapsyktika:2" data-name="Coca-Cola zero 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola zero 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="anapsyktika:3" data-name="Coca-Cola light 330ml" data-price="1.80"><div class="item-line"><span class="gr">Coca-Cola light 330ml</span><span class="dots"></span><span class="price">1,80 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="anapsyktika:8" data-name="Νερό 500ml" data-price="0.50"><div class="item-line"><span class="gr">Νερό 500ml</span><span class="dots"></span><span class="price">0,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
+      <li class="item" data-key="anapsyktika:10" data-name="Νερό 1,5lt" data-price="1.50"><div class="item-line"><span class="gr">Νερό 1,5lt</span><span class="dots"></span><span class="price">1,50 €</span><div class="qty" data-qty="0"><button class="q-minus" type="button" aria-label="Αφαίρεση" tabindex="-1">−</button><span class="q-n">0</span><button class="q-plus" type="button" aria-label="Προσθήκη">＋</button></div></div></li>
     </ul>
   </section>
 
@@ -557,6 +562,30 @@
 
   // --- συνοδευτικά χωρίς χρέωση -------------------------------------------
   // Ένα select ανά μερίδα: 2× μπιφτέκι μπορεί να πάρει πατάτες και ρύζι.
+  var sidesOut = {};          // όνομα συνοδευτικού -> τελείωσε (από το soldout.json)
+
+  // Γεμίζει (ή ξαναγεμίζει) τις επιλογές, χωρίς όσα τελείωσαν. Κρατά την
+  // επιλογή του πελάτη μόνο αν υπάρχει ακόμη· αλλιώς μένει αδιάλεκτο και το
+  // validSides() ζητά να ξαναδιαλέξει — όχι σιωπηλά «χωρίς συνοδευτικό».
+  function fillSides(sel) {
+    var keep = sel.value;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    var avail = SIDES.filter(function (s) { return !sidesOut[s]; });
+    // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
+    // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
+    [["", "Διάλεξε συνοδευτικό…"]]
+      .concat(avail.map(function (s) { return [s, s]; }))
+      .concat([["—", "Χωρίς συνοδευτικό"]])
+      .forEach(function (pair) {
+        var o = document.createElement("option");
+        o.value = pair[0];
+        o.textContent = pair[1];
+        sel.appendChild(o);
+      });
+    sel.value = (keep === "—" || avail.indexOf(keep) >= 0) ? keep : "";
+    return !!keep && sel.value !== keep;       // true = χάθηκε η επιλογή
+  }
+
   function syncSides(li) {
     var box = li.querySelector(".sides");
     if (!box) return;
@@ -567,17 +596,7 @@
       var txt = document.createElement("span");
       txt.textContent = q > 1 ? "Μερίδα " + (i + 1) : "Συνοδευτικό";
       var sel = document.createElement("select");
-      // Χτίζεται με DOM, ΟΧΙ με innerHTML: ένα όνομα πιάτου με εισαγωγικά
-      // (π.χ. Πατάτες "country") έσπαγε σιωπηλά το value του option.
-      [["", "Διάλεξε συνοδευτικό…"]]
-        .concat(SIDES.map(function (s) { return [s, s]; }))
-        .concat([["—", "Χωρίς συνοδευτικό"]])
-        .forEach(function (pair) {
-          var o = document.createElement("option");
-          o.value = pair[0];
-          o.textContent = pair[1];
-          sel.appendChild(o);
-        });
+      fillSides(sel);
       sel.addEventListener("change", refresh);
       row.appendChild(txt); row.appendChild(sel);
       box.appendChild(row);
@@ -629,15 +648,22 @@
     bar.classList.toggle("show", count > 0);
   }
 
+  function setQty(li, q) {
+    q = Math.max(0, q);
+    li.querySelector(".qty").setAttribute("data-qty", q);
+    li.querySelector(".q-n").textContent = q;
+  }
+
   items.forEach(function (li) {
-    var qty = li.querySelector(".qty"), nEl = li.querySelector(".q-n");
-    function set(q) { q = Math.max(0, q); qty.setAttribute("data-qty", q); nEl.textContent = q; refresh(); }
-    li.querySelector(".q-plus").addEventListener("click", function () { set(qOf(li) + 1); });
-    li.querySelector(".q-minus").addEventListener("click", function () { set(qOf(li) - 1); });
+    li.querySelector(".q-plus").addEventListener("click", function () {
+      if (li.classList.contains("is-soldout")) return;
+      setQty(li, qOf(li) + 1); refresh();
+    });
+    li.querySelector(".q-minus").addEventListener("click", function () { setQty(li, qOf(li) - 1); refresh(); });
   });
 
   clearBtn.addEventListener("click", function () {
-    items.forEach(function (li) { li.querySelector(".qty").setAttribute("data-qty", 0); li.querySelector(".q-n").textContent = "0"; });
+    items.forEach(function (li) { setQty(li, 0); });
     refresh();
   });
 
@@ -724,6 +750,60 @@
       });
     });
   }
+
+  // --- τι τελείωσε μέσα στη μέρα --------------------------------------------
+  // Το soldout.json το γράφει το tablet του μαγαζιού (μέσω soldout.yml) και
+  // ΔΕΝ ξαναχτίζει τη σελίδα· γι' αυτό διαβάζεται εδώ, στον browser. Ισχύει
+  // μόνο για την ημερομηνία αυτού του μενού: χθεσινό «τελείωσε» αγνοείται.
+  //
+  // Δεν ρωτάμε τη στιγμή της αποστολής: το sms: και η αντιγραφή για το Viber
+  // θέλουν το ίδιο το πάτημα — μετά από αναμονή δικτύου οι browser τα μπλοκάρουν.
+  // Ρωτάμε όταν ανοίγει η σελίδα, όταν επιστρέφει ο πελάτης, και ανά λεπτό.
+  var MENU_ISO = "2026-09-14";
+  var soldSig = "";
+
+  function applySoldout(list) {
+    var sig = list.slice().sort().join(",");
+    if (sig === soldSig) return;
+    soldSig = sig;
+    var out = {}, removed = [];
+    list.forEach(function (k) { out[k] = true; });
+    sidesOut = {};
+    items.forEach(function (li) {
+      var gone = !!out[li.getAttribute("data-key")];
+      li.classList.toggle("is-soldout", gone);
+      if (!gone) return;
+      if (li.getAttribute("data-key").indexOf("synodeytika:") === 0)
+        sidesOut[li.getAttribute("data-name")] = true;
+      if (qOf(li) > 0) { removed.push(li.getAttribute("data-name")); setQty(li, 0); }
+    });
+    var lostSide = false;
+    Array.prototype.forEach.call(document.querySelectorAll(".sides select"), function (sel) {
+      if (fillSides(sel)) lostSide = true;
+    });
+    refresh();
+    // Ό,τι έφυγε από το καλάθι το λέμε — αλλιώς ο πελάτης θα έβλεπε απλώς
+    // μικρότερο σύνολο χωρίς να ξέρει γιατί.
+    if (removed.length) showToast("Μόλις τελείωσε: " + removed.join(", ") + ". Βγήκε από την παραγγελία σου.");
+    else if (lostSide) showToast("Τελείωσε ένα συνοδευτικό που είχες διαλέξει — διάλεξε άλλο.");
+  }
+
+  function checkSoldout() {
+    if (!MENU_ISO) return;
+    fetch("soldout.json?ts=" + Date.now(), {cache: "no-store"})
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) return;                    // δεν υπάρχει ακόμη αρχείο: όλα διαθέσιμα
+        applySoldout(j.date_iso === MENU_ISO && Array.isArray(j.items) ? j.items : []);
+      })
+      .catch(function () { /* χωρίς δίκτυο: μένει ό,τι ξέραμε */ });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) checkSoldout();
+  });
+  setInterval(function () { if (!document.hidden) checkSoldout(); }, 60000);
+  checkSoldout();
 
   refresh();
 })();
