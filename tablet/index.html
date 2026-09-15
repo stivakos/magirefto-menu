@@ -61,6 +61,9 @@
         display:flex;flex-direction:column;justify-content:center;gap:6px;
         transition:background-color .12s,border-color .12s;}
   .tile:active{transform:scale(.97);}
+  /* manipulation: τρία γρήγορα πατήματα (2 → 1 → ΤΕΛΕΙΩΣΕ) δεν διαβάζονται ως
+     «διπλό πάτημα = ζουμ». touch-callout: χωρίς το μενού του iOS στο κράτημα. */
+  .tile{touch-action:manipulation;-webkit-touch-callout:none;}
   .tile .tag{display:none;align-self:flex-start;font-size:12px;font-weight:800;letter-spacing:.08em;
              background:rgba(0,0,0,.28);border-radius:999px;padding:3px 9px;}
   .tile.out{background:var(--red);border-color:var(--red);color:var(--red-ink);}
@@ -139,7 +142,7 @@
   var siteItems = null;       // ό,τι λέει το δημοσιευμένο soldout.json για σήμερα
   var siteFew = {};           // …και οι τελευταίες μερίδες του
   var FEW_SLUGS = { "menu-hmeras": 1, "salates": 1, "glyka": 1 };
-  var HOLD = 550;             // ms παρατεταμένου πατήματος για επαναφορά
+  var HOLD = 500;             // ms παρατεταμένου πατήματος για επαναφορά
   var sendTimer = null, retryTimer = null;
   var lastError = "";
 
@@ -261,17 +264,37 @@
   // Πάτημα και παρατεταμένο πάτημα στο ίδιο κουμπί. Με pointer events και όχι
   // με click, για να ξεχωρίζουν: μετά από παρατεταμένο πάτημα, το click που
   // ακολουθεί αγνοείται — αλλιώς η επαναφορά θα έκανε αμέσως και ένα βήμα.
+  //
+  // Δύο παγίδες των οθονών αφής:
+  // - Ο Chrome του Android αναγνωρίζει μόνος του το κράτημα γύρω στα 500ms,
+  //   στέλνει pointercancel και μετά contextmenu. Ο χρονομετρητής μας θα
+  //   ακυρωνόταν πριν τρέξει — γι' αυτό η επαναφορά γίνεται ΚΑΙ στο contextmenu.
+  // - Η επαναφορά ξαναχτίζει τα κουμπιά, οπότε το click του σηκώματος μπορεί να
+  //   πέσει στο ΚΑΙΝΟΥΡΓΙΟ κουμπί, που δεν ξέρει τίποτα για το κράτημα. Γι' αυτό
+  //   η σίγαση είναι κοινή για όλη τη σελίδα (με χρόνο), όχι σημαία ανά κουμπί.
+  var muteClicksUntil = 0;
+  function holdReset(key) {
+    if (Date.now() < muteClicksUntil) return;     // ήδη έγινε από τον άλλο δρόμο
+    muteClicksUntil = Date.now() + 800;
+    reset(key);
+  }
   function press(b, key) {
-    var timer = null, held = false;
+    var timer = null;
     function cancel() { clearTimeout(timer); timer = null; }
     b.addEventListener("pointerdown", function () {
-      held = false; cancel();
-      timer = setTimeout(function () { held = true; timer = null; reset(key); }, HOLD);
+      cancel();
+      timer = setTimeout(function () { timer = null; holdReset(key); }, HOLD);
     });
     ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { b.addEventListener(ev, cancel); });
-    b.addEventListener("click", function () { if (held) { held = false; return; } step(key); });
-    // Android: παρατεταμένο πάτημα ανοίγει μενού «αντιγραφή/επιλογή»
-    b.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    b.addEventListener("click", function () {
+      if (Date.now() < muteClicksUntil) return;
+      step(key);
+    });
+    b.addEventListener("contextmenu", function (e) {
+      e.preventDefault();                          // όχι μενού «αντιγραφή/επιλογή»
+      cancel();
+      holdReset(key);
+    });
   }
 
   function flash(msg) {
