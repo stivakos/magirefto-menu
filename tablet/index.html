@@ -13,9 +13,11 @@
   ΣΕΛΙΔΑ ΓΙΑ ΤΟ TABLET ΤΟΥ ΜΑΓΑΖΙΟΥ, όχι για τον πελάτη. Δεν υπάρχει σύνδεσμος
   προς τα εδώ από το μενού και είναι noindex.
 
-  Ένα πάτημα = το είδος τελείωσε (κόκκινο). Άλλο ένα = ξανά διαθέσιμο. Μέσα στη
-  βάρδια δεν υπάρχει χρόνος για τίποτα παραπάνω: ούτε επιβεβαίωση ούτε
-  πληκτρολόγηση.
+  Κάθε πάτημα = ένα βήμα: διαθέσιμο → μένουν 2 → μένει 1 → ΤΕΛΕΙΩΣΕ, και ΕΚΕΙ
+  σταματά (απόφαση ιδιοκτήτη 15/9/2026: ένα λάθος πάτημα δεν ξανανοίγει πιάτο που
+  τελείωσε). Επαναφορά = παρατεταμένο πάτημα. Συνοδευτικά και ποτά: κατευθείαν
+  ΤΕΛΕΙΩΣΕ, χωρίς 2/1. Μέσα στη βάρδια δεν υπάρχει χρόνος για τίποτα παραπάνω:
+  ούτε επιβεβαίωση ούτε πληκτρολόγηση.
 
   Πώς φτάνει στο site: μετά από 2,5'' ησυχίας στέλνει ΟΛΗ τη λίστα στο
   soldout.yml (GitHub Actions), που γράφει το soldout.json. Το site το διαβάζει
@@ -63,6 +65,9 @@
              background:rgba(0,0,0,.28);border-radius:999px;padding:3px 9px;}
   .tile.out{background:var(--red);border-color:var(--red);color:var(--red-ink);}
   .tile.out .tag{display:inline-block;}
+  .tile.few{background:#7a4a1c;border-color:#E0885A;}
+  .tile.few .tag{display:inline-block;background:#E0885A;color:#1b1b1b;font-size:14px;}
+  .hint{margin-top:26px;text-align:center;color:var(--dim);font-size:15px;}
   /* πατήθηκε αλλά δεν έχει φανεί ακόμη στο site */
   .tile.pending::after{content:"⏳";position:absolute;top:6px;right:8px;font-size:15px;}
   .empty{margin:60px 0;text-align:center;color:var(--dim);font-size:20px;}
@@ -104,6 +109,8 @@
 
 <main id="board"></main>
 
+<p class="hint">Πάτημα = ένα βήμα (2 → 1 → ΤΕΛΕΙΩΣΕ). <b>Κράτα πατημένο</b> για να ξαναγίνει διαθέσιμο.</p>
+
 <footer>
   <button id="reload">↻ Ανανέωση</button>
   <button id="keyBtn">🔑 Κλειδί</button>
@@ -130,6 +137,9 @@
   var menu = null;            // το menu.json
   var state = null;           // {date, items[], sent, sentAt}
   var siteItems = null;       // ό,τι λέει το δημοσιευμένο soldout.json για σήμερα
+  var siteFew = {};           // …και οι τελευταίες μερίδες του
+  var FEW_SLUGS = { "menu-hmeras": 1, "salates": 1, "glyka": 1 };
+  var HOLD = 550;             // ms παρατεταμένου πατήματος για επαναφορά
   var sendTimer = null, retryTimer = null;
   var lastError = "";
 
@@ -139,6 +149,15 @@
   function save() { lsSet(LS_STATE, JSON.stringify(state)); }
   function fresh(u) { return u + (u.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now(); }
   function sig(list) { return (list || []).slice().sort().join(","); }
+  function fewSig(few) {
+    return Object.keys(few || {}).sort().map(function (k) { return k + "=" + few[k]; }).join(",");
+  }
+  // Όλη η εικόνα (τελείωσαν + λίγες) σε ένα string, για σύγκριση με το site.
+  function fullSig(items, few) { return sig(items) + "|" + fewSig(few); }
+  function level(st, key) {                 // 0 = διαθέσιμο, 2, 1, "out"
+    if (st.items.indexOf(key) >= 0) return "out";
+    return (st.few && st.few[key]) || 0;
+  }
 
   function todayISO() {
     var d = new Date();
@@ -174,9 +193,7 @@
       board.appendChild(e);
       return;
     }
-    var out = {}, site = {};
-    state.items.forEach(function (k) { out[k] = true; });
-    (siteItems || []).forEach(function (k) { site[k] = true; });
+    var siteSt = { items: siteItems || [], few: siteFew };
 
     menu.categories.forEach(function (c) {
       if (!c.items.length) return;
@@ -193,16 +210,17 @@
         var key = c.slug + ":" + it.aa;
         var b = document.createElement("button");
         b.type = "button";
-        b.className = "tile" + (out[key] ? " out" : "")
-          + (siteItems && !!out[key] !== !!site[key] ? " pending" : "");
+        var lv = level(state, key);
+        b.className = "tile" + (lv === "out" ? " out" : lv ? " few" : "")
+          + (siteItems && lv !== level(siteSt, key) ? " pending" : "");
         var n = document.createElement("span");
         n.className = "name";
         n.textContent = it.name;
         var t = document.createElement("span");
         t.className = "tag";
-        t.textContent = "ΤΕΛΕΙΩΣΕ";
+        t.textContent = lv === "out" ? "ΤΕΛΕΙΩΣΕ" : lv === 2 ? "ΜΕΝΟΥΝ 2" : lv === 1 ? "ΜΕΝΕΙ 1" : "";
         b.appendChild(n); b.appendChild(t);
-        b.addEventListener("click", function () { toggle(key); });
+        press(b, key);
         g.appendChild(b);
       });
       board.appendChild(g);
@@ -217,7 +235,7 @@
     else if (!token()) { txt = "🔑 Χρειάζεται κλειδί"; cls = "err"; }
     else if (lastError) { txt = "⚠ " + lastError; cls = "err"; }
     else if (!state.sent) { txt = "⏳ Στέλνεται…"; cls = "wait"; }
-    else if (siteItems === null || sig(siteItems) !== sig(state.items)) {
+    else if (siteItems === null || fullSig(siteItems, siteFew) !== fullSig(state.items, state.few)) {
       if (state.sentAt && Date.now() - state.sentAt > SLOW) {
         txt = "⚠ Δεν φάνηκε ακόμη στο site"; cls = "err";
       } else { txt = "⏳ Ανεβαίνει στο site…"; cls = "wait"; }
@@ -232,26 +250,73 @@
   // θα σήκωνε το δάχτυλο πάνω σε άλλο κουμπί και το πάτημα θα χανόταν.
   var lastView = "";
   function update() {
-    var view = menu ? [menu.stamp, menu.date_iso, menu.closed, sig(state && state.items),
-                       siteItems === null ? "?" : sig(siteItems)].join("|") : "";
+    var view = menu ? [menu.stamp, menu.date_iso, menu.closed,
+                       state ? fullSig(state.items, state.few) : "",
+                       siteItems === null ? "?" : fullSig(siteItems, siteFew)].join("#") : "";
     if (view !== lastView) { lastView = view; render(); }
     showStatus();
   }
 
   // --- πάτημα ----------------------------------------------------------------
-  function toggle(key) {
+  // Πάτημα και παρατεταμένο πάτημα στο ίδιο κουμπί. Με pointer events και όχι
+  // με click, για να ξεχωρίζουν: μετά από παρατεταμένο πάτημα, το click που
+  // ακολουθεί αγνοείται — αλλιώς η επαναφορά θα έκανε αμέσως και ένα βήμα.
+  function press(b, key) {
+    var timer = null, held = false;
+    function cancel() { clearTimeout(timer); timer = null; }
+    b.addEventListener("pointerdown", function () {
+      held = false; cancel();
+      timer = setTimeout(function () { held = true; timer = null; reset(key); }, HOLD);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) { b.addEventListener(ev, cancel); });
+    b.addEventListener("click", function () { if (held) { held = false; return; } step(key); });
+    // Android: παρατεταμένο πάτημα ανοίγει μενού «αντιγραφή/επιλογή»
+    b.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  }
+
+  function flash(msg) {
+    statusEl.textContent = msg;
+    statusEl.className = "status wait";
+    clearTimeout(flash._t);
+    flash._t = setTimeout(showStatus, 2500);
+  }
+
+  function step(key) {
+    if (!canEdit()) return;
+    var lv = level(state, key);
+    if (lv === "out") { flash("Κράτα πατημένο για να ξαναγίνει διαθέσιμο"); return; }
+    var fewOk = FEW_SLUGS[key.split(":")[0]];
+    if (!state.few) state.few = {};
+    if (fewOk && lv === 0) { state.few[key] = 2; }
+    else if (fewOk && lv === 2) { state.few[key] = 1; }
+    else { delete state.few[key]; state.items.push(key); }
+    changed();
+  }
+
+  function reset(key) {
+    if (!canEdit()) return;
+    if (level(state, key) === 0) return;
+    var i = state.items.indexOf(key);
+    if (i >= 0) state.items.splice(i, 1);
+    if (state.few) delete state.few[key];
+    if (navigator.vibrate) navigator.vibrate(40);
+    changed();
+  }
+
+  function canEdit() {
     // Πριν διαβαστεί το site, ένα πάτημα θα έσβηνε ό,τι έχει ήδη σημειωθεί.
     // Όχι σιωπηλά όμως: ένα πάτημα που «δεν πιάνει» μέσα στη βάρδια μοιάζει χάλασμα.
     if (state.fromSite) {
-      statusEl.textContent = "⏳ Διαβάζει το site — πάτα ξανά σε λίγο";
-      statusEl.className = "status wait";
+      flash("⏳ Διαβάζει το site — πάτα ξανά σε λίγο");
       loadSite();
-      return;
+      return false;
     }
     // Χωρίς ημερομηνία το soldout.py θα αρνιόταν έτσι κι αλλιώς.
-    if (!menu.date_iso) { showStatus(); return; }
-    var i = state.items.indexOf(key);
-    if (i >= 0) state.items.splice(i, 1); else state.items.push(key);
+    if (!menu.date_iso) { showStatus(); return false; }
+    return true;
+  }
+
+  function changed() {
     state.sent = false;
     save();
     update();
@@ -266,9 +331,11 @@
     // πιάτο που έφυγε από το μενού μέσα στη μέρα δεν ξαναστέλνεται
     var ok = validKeys();
     state.items = state.items.filter(function (k) { return ok[k]; });
+    Object.keys(state.few || {}).forEach(function (k) { if (!ok[k]) delete state.few[k]; });
     var body = JSON.stringify({ ref: "main",
-      inputs: { date: state.date, items: state.items.slice().sort().join(",") } });
-    var sentSig = sig(state.items);
+      inputs: { date: state.date, items: state.items.slice().sort().join(","),
+                few: fewSig(state.few) } });
+    var sentSig = fullSig(state.items, state.few);
     fetch(API + "/actions/workflows/" + WORKFLOW + "/dispatches", {
       method: "POST",
       headers: { "Authorization": "Bearer " + token(),
@@ -280,7 +347,7 @@
       if (r.status === 204) {
         lastError = "";
         // Αν πατήθηκε κάτι όσο έφευγε το αίτημα, μένει «προς αποστολή».
-        if (sig(state.items) === sentSig) { state.sent = true; state.sentAt = Date.now(); }
+        if (fullSig(state.items, state.few) === sentSig) { state.sent = true; state.sentAt = Date.now(); }
         save();
         pollSoon();
       } else if (r.status === 401) {
@@ -321,9 +388,10 @@
         try { local = JSON.parse(lsGet(LS_STATE) || "null"); } catch (e) {}
         if (local && local.date === j.date_iso && Array.isArray(local.items)) {
           state = local;
+          if (!state.few) state.few = {};     // αποθηκευμένο από πριν τις «λίγες μερίδες»
         } else {
           // Νέα μέρα: η χθεσινή λίστα δεν μεταφέρεται. Αφετηρία = το site.
-          state = { date: j.date_iso, items: [], sent: true, fromSite: true };
+          state = { date: j.date_iso, items: [], few: {}, sent: true, fromSite: true };
           save();
         }
         siteItems = null;
@@ -339,12 +407,15 @@
     return fetch(fresh("../soldout.json"), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : { date_iso: null, items: [] }; })
       .then(function (j) {
-        siteItems = (menu && j.date_iso === menu.date_iso && Array.isArray(j.items)) ? j.items : [];
+        var today = menu && j.date_iso === menu.date_iso;
+        siteItems = today && Array.isArray(j.items) ? j.items : [];
+        siteFew = today && j.few && typeof j.few === "object" ? j.few : {};
         // Το tablet δεν ήξερε τίποτα για σήμερα (π.χ. καθαρίστηκε): πάρε ό,τι
         // έχει ήδη το site, αντί να το σβήσεις με το πρώτο πάτημα.
         if (state && state.fromSite) {
           delete state.fromSite;
           state.items = siteItems.slice();
+          state.few = JSON.parse(JSON.stringify(siteFew));
           save();
         }
         update();
@@ -359,11 +430,11 @@
       // Το site διαφωνεί με το tablet πολύ ώρα μετά την αποστολή (χάθηκε
       // εκτέλεση, ή άλλος έγραψε από πάνω): ξαναστείλε. Κάθε αίτημα είναι
       // ολόκληρη η λίστα, οπότε το ξαναστείλιμο δεν μπορεί να κάνει ζημιά.
-      if (state && state.sent && siteItems && sig(siteItems) !== sig(state.items)
+      if (state && state.sent && siteItems && fullSig(siteItems, siteFew) !== fullSig(state.items, state.few)
           && Date.now() - (state.sentAt || 0) > RESEND) {
         state.sent = false; save(); send();
       }
-      var waiting = state && (!state.sent || sig(siteItems) !== sig(state.items));
+      var waiting = state && (!state.sent || fullSig(siteItems, siteFew) !== fullSig(state.items, state.few));
       clearTimeout(pollTimer);
       pollTimer = setTimeout(poll, waiting ? 15000 : 60000);
     });

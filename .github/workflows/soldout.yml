@@ -3,7 +3,8 @@ name: Τελείωσε (tablet)
 # Το καλεί η σελίδα /tablet/ του μαγαζιού με ΕΝΑ αίτημα, όποτε πατηθεί πιάτο:
 #
 #   POST /repos/stivakos/magirefto-menu/actions/workflows/soldout.yml/dispatches
-#   {"ref":"main","inputs":{"date":"2026-09-14","items":"menu-hmeras:8,synodeytika:2"}}
+#   {"ref":"main","inputs":{"date":"2026-09-14","items":"menu-hmeras:8,synodeytika:2",
+#                           "few":"menu-hmeras:16=2"}}
 #
 # Γράφει ΜΟΝΟ το soldout.json. Δεν ξαναχτίζει το site — η σελίδα το διαβάζει
 # όταν ανοίγει — άρα δεν αγγίζει index.html, social ή έγκριση δημοσίευσης, και
@@ -18,6 +19,11 @@ on:
         type: string
       items:
         description: "Τι τελείωσε: slug:aa με κόμμα — κενό = όλα διαθέσιμα"
+        required: false
+        type: string
+        default: ""
+      few:
+        description: "Τελευταίες μερίδες: slug:aa=2 ή =1 με κόμμα"
         required: false
         type: string
         default: ""
@@ -46,6 +52,7 @@ jobs:
         env:
           DATE: ${{ inputs.date }}
           ITEMS: ${{ inputs.items }}
+          FEW: ${{ inputs.few }}
           COMMIT_MSG_FILE: ${{ runner.temp }}/msg.txt
         run: |
           git config user.name "merci-menu-bot"
@@ -56,7 +63,7 @@ jobs:
           for i in 1 2 3 4 5; do
             git fetch -q origin main
             git reset -q --hard origin/main
-            python3 build-source/soldout.py --date "$DATE" --items "$ITEMS"
+            python3 build-source/soldout.py --date "$DATE" --items "$ITEMS" --few "$FEW"
             git add soldout.json
             if git diff --cached --quiet; then
               echo "Δεν άλλαξε κάτι."
