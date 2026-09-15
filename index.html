@@ -87,6 +87,11 @@
   .is-soldout .item-line::after{content:"ΤΕΛΕΙΩΣΕ";flex:0 0 auto;font-size:.68rem;font-weight:800;
                letter-spacing:.08em;color:var(--paper);background:var(--faint);
                border-radius:999px;padding:.2rem .6rem;white-space:nowrap;}
+  /* Τελευταίες μερίδες (από το «few» του soldout.json): ΧΩΡΙΣ αριθμό — απόφαση
+     ιδιοκτήτη 15/9/2026, ο αριθμός αργεί 1–3' και θα εξέθετε το μαγαζί. Κάτω από
+     το όνομα, όχι δίπλα στην τιμή: σε κινητό η γραμμή δεν χωράει και το «+». */
+  .is-few .gr::after{content:"ΤΕΛΕΥΤΑΙΕΣ ΜΕΡΙΔΕΣ";display:block;margin-top:.2rem;
+               font-size:.66rem;font-weight:800;letter-spacing:.08em;color:var(--sea);}
   .desc{margin:.3rem 0 0;font-size:.86rem;color:var(--muted);max-width:34rem;}
   .sec-note{margin:1rem 0 0;font-family:var(--display);font-size:1.05rem;font-style:italic;color:var(--sea);text-align:center;}
   .empty-note{margin:1.4rem 0 .4rem;color:var(--faint);font-style:italic;text-align:center;}
@@ -662,6 +667,12 @@
   items.forEach(function (li) {
     li.querySelector(".q-plus").addEventListener("click", function () {
       if (li.classList.contains("is-soldout")) return;
+      // όριο από τις «τελευταίες μερίδες» — ο αριθμός δεν φαίνεται, μόνο φρενάρει
+      var max = parseInt(li.getAttribute("data-max"), 10);
+      if (max && qOf(li) >= max) {
+        showToast("Έχουν μείνει λίγες μερίδες — δεν γίνεται περισσότερες.");
+        return;
+      }
       setQty(li, qOf(li) + 1); refresh();
     });
     li.querySelector(".q-minus").addEventListener("click", function () { setQty(li, qOf(li) - 1); refresh(); });
@@ -764,19 +775,29 @@
   // Δεν ρωτάμε τη στιγμή της αποστολής: το sms: και η αντιγραφή για το Viber
   // θέλουν το ίδιο το πάτημα — μετά από αναμονή δικτύου οι browser τα μπλοκάρουν.
   // Ρωτάμε όταν ανοίγει η σελίδα, όταν επιστρέφει ο πελάτης, και ανά λεπτό.
+  //
+  // «few» = τελευταίες μερίδες: {κλειδί: 2 ή 1}. Ο πελάτης βλέπει μόνο την
+  // ένδειξη· ο αριθμός γίνεται όριο στο «+». Στα συνοδευτικά δεν ισχύει (εκεί
+  // επιλέγονται μέσα στο πιάτο) — το soldout.py δεν τα γράφει καν, αλλά και εδώ
+  // αγνοούνται, για να μη μείνει μισή λειτουργία αν αλλάξει ποτέ εκείνο.
   var MENU_ISO = "2026-09-15";
   var soldSig = "";
 
-  function applySoldout(list) {
-    var sig = list.slice().sort().join(",");
+  function applySoldout(list, few) {
+    var sig = list.slice().sort().join(",") + "|" + JSON.stringify(few);
     if (sig === soldSig) return;
     soldSig = sig;
-    var out = {}, removed = [];
+    var out = {}, removed = [], reduced = [];
     list.forEach(function (k) { out[k] = true; });
     sidesOut = {};
     items.forEach(function (li) {
-      var gone = !!out[li.getAttribute("data-key")];
+      var key = li.getAttribute("data-key");
+      var gone = !!out[key];
+      var max = gone || key.indexOf("synodeytika:") === 0 ? 0 : (few[key] === 1 || few[key] === 2 ? few[key] : 0);
       li.classList.toggle("is-soldout", gone);
+      li.classList.toggle("is-few", !!max);
+      if (max) li.setAttribute("data-max", max); else li.removeAttribute("data-max");
+      if (max && qOf(li) > max) { reduced.push(li.getAttribute("data-name")); setQty(li, max); }
       if (!gone) return;
       if (li.getAttribute("data-key").indexOf("synodeytika:") === 0)
         sidesOut[li.getAttribute("data-name")] = true;
@@ -790,6 +811,7 @@
     // Ό,τι έφυγε από το καλάθι το λέμε — αλλιώς ο πελάτης θα έβλεπε απλώς
     // μικρότερο σύνολο χωρίς να ξέρει γιατί.
     if (removed.length) showToast("Μόλις τελείωσε: " + removed.join(", ") + ". Βγήκε από την παραγγελία σου.");
+    else if (reduced.length) showToast("Έμειναν λίγες μερίδες από: " + reduced.join(", ") + ". Η ποσότητα μειώθηκε.");
     else if (lostSide) showToast("Τελείωσε ένα συνοδευτικό που είχες διαλέξει — διάλεξε άλλο.");
   }
 
@@ -799,7 +821,9 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         if (!j) return;                    // δεν υπάρχει ακόμη αρχείο: όλα διαθέσιμα
-        applySoldout(j.date_iso === MENU_ISO && Array.isArray(j.items) ? j.items : []);
+        var today = j.date_iso === MENU_ISO;
+        applySoldout(today && Array.isArray(j.items) ? j.items : [],
+                     today && j.few && typeof j.few === "object" ? j.few : {});
       })
       .catch(function () { /* χωρίς δίκτυο: μένει ό,τι ξέραμε */ });
   }
